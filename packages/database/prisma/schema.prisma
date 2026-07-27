@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+
+}
+
+enum InterviewStatus {
+  DRAFT
+  SCHEDULED
+  INPROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ParticipantRole {
+  INTERVIEWER
+  CANDIDATE
+  OBSERVER
+}
+
+enum ParticipantStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum TestCaseVisibility {
+  HIDDEN
+  VISIBLE
+}
+
+enum ProgrammingLanguage {
+  JAVA
+  PYTHON
+  CPP
+  C
+  RUST
+  GO
+  JAVASCRIPT
+  TYPESCRIPT
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum EvaluationStatus {
+  PASSED
+  FAILED
+  PENDING
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  clerkId   String   @unique
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdInterviews Interview[]   @relation("InterviewCreator")
+  participants      Participant[]
+  sentInvites       Invite[]      @relation("InviteSender")
+  receivedInvites   Invite[]      @relation("InviteReceiver")
+  questions         Question[]
+}
+
+model Interview {
+  id              String          @id @default(uuid()) @db.Uuid
+  title           String
+  description     String?
+  status          InterviewStatus
+  scheduledAt     DateTime?
+  durationMinutes Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  createdById String @db.Uuid
+  createdBy   User   @relation("InterviewCreator", fields: [createdById], references: [id])
+
+  participants Participant[]
+  invites      Invite[]
+  questions    InterviewQuestion[]
+}
+
+model Participant {
+  id        String            @id @default(uuid()) @db.Uuid
+  role      ParticipantRole
+  status    ParticipantStatus @default(ACTIVE)
+  joinedAt  DateTime?
+  leftAt    DateTime?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  interviewId String    @db.Uuid
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  codeRuns    RunCode[]
+  submissions Submission[]
+
+  @@unique([interviewId, userId])
+  @@index([userId])
+  @@index([interviewId])
+}
+
+model Invite {
+  id          String       @id @default(uuid()) @db.Uuid
+  status      InviteStatus @default(PENDING)
+  expiresAt   DateTime?
+  respondedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  interviewId String    @db.Uuid
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  senderId String @db.Uuid
+  sender   User   @relation("InviteSender", fields: [senderId], references: [id])
+
+  receiverId String @db.Uuid
+  receiver   User   @relation("InviteReceiver", fields: [receiverId], references: [id])
+
+  @@unique([interviewId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([interviewId])
+}
+
+model Question {
+  id          String             @id @default(uuid()) @db.Uuid
+  title       String
+  description String
+  difficulty  QuestionDifficulty
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  createdById String @db.Uuid
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  interviewQuestions InterviewQuestion[]
+  testCases          TestCase[]
+
+  @@index([createdById])
+}
+
+model InterviewQuestion {
+  id            String   @id @default(uuid()) @db.Uuid
+  questionOrder Int
+  points        Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  belongingInterviewId String    @db.Uuid
+  belongingInterview   Interview @relation(fields: [belongingInterviewId], references: [id], onDelete: Cascade)
+
+  usedQuestionId String   @db.Uuid
+  usedQuestion   Question @relation(fields: [usedQuestionId], references: [id], onDelete: Cascade)
+
+  codeRuns    RunCode[]
+  submissions Submission[]
+
+  @@unique([belongingInterviewId, usedQuestionId])
+  @@unique([belongingInterviewId, questionOrder])
+  @@index([belongingInterviewId])
+  @@index([usedQuestionId])
+}
+
+model TestCase {
+  id             String             @id @default(uuid()) @db.Uuid
+  input          Json
+  expectedOutput Json
+  visibility     TestCaseVisibility @default(HIDDEN)
+  createdAt      DateTime           @default(now())
+
+  forQuestionId String   @db.Uuid
+  forQuestion   Question @relation(fields: [forQuestionId], references: [id], onDelete: Cascade)
+
+  @@index([forQuestionId])
+}
+
+model RunCode {
+  id              String              @id @default(uuid()) @db.Uuid
+  language        ProgrammingLanguage
+  sourceCode      String
+  status          ExecutionStatus     @default(PENDING)
+  stdout          String?
+  stderr          String?
+  executionTimeMS Int?
+  memoryBytes     BigInt?
+  createdAt       DateTime            @default(now())
+
+  RanByParticipantId String      @db.Uuid
+  RanByParticipant   Participant @relation(fields: [RanByParticipantId], references: [id], onDelete: Cascade)
+
+  RanInterviewQuestionId String            @db.Uuid
+  RanInterviewQuestion   InterviewQuestion @relation(fields: [RanInterviewQuestionId], references: [id], onDelete: Cascade)
+
+  @@index([RanByParticipantId])
+  @@index([RanInterviewQuestionId])
+}
+
+model Submission {
+  id          String              @id @default(uuid()) @db.Uuid
+  language    ProgrammingLanguage
+  sourceCode  String
+  submittedAt DateTime            @default(now())
+
+  submittedQuestionId String            @db.Uuid
+  submittedQuestion   InterviewQuestion @relation(fields: [submittedQuestionId], references: [id], onDelete: Cascade)
+
+  submittedByParticipantId String      @db.Uuid
+  submittedByParticipant   Participant @relation(fields: [submittedByParticipantId], references: [id], onDelete: Cascade)
+
+  evaluation Evaluation?
+
+  @@index([submittedQuestionId])
+  @@index([submittedByParticipantId])
+}
+
+model Evaluation {
+  id              String           @id @default(uuid()) @db.Uuid
+  status          EvaluationStatus @default(PENDING)
+  score           Int
+  passedTests     Int
+  totalTests      Int
+  executionTimeMS Int?
+  memoryBytes     BigInt?
+  feedback        String?
+  createdAt       DateTime         @default(now())
+
+  evaluatedSubmissionId String     @unique @db.Uuid
+  evaluatedSubmission   Submission @relation(fields: [evaluatedSubmissionId], references: [id], onDelete: Cascade)
+}

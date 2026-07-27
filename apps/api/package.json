@@ -13,9 +13,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@clerk/express": "^2.1.44",
     "@interview-os/config": "workspace:*",
     "@interview-os/logger": "workspace:*",
     "@interview-os/validation": "workspace:*",
+    "@interview-os/database": "workspace:*",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
