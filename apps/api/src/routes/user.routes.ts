@@ -5,6 +5,6 @@ const router = Router();
 const userController = new UserController();
 
 router.get("/me", userController.getMe);
-console.log("REACHED /me")
+router.patch("/me",userController.updateMe)
 
 export default router;

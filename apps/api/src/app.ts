@@ -7,6 +7,7 @@ import { validate, z } from "../../../packages/validation/src";
 import {clerkMiddleware} from "@clerk/express"
 import { authMiddleware } from "./middleware/auth.middleware";
 import userRoutes from "./routes/user.routes";
+import resumeRoutes from "./routes/resumes.routes";
 import cors from "cors";
 
 const app = express();
@@ -18,18 +19,17 @@ app.use(cors({
 app.use(requestIdMiddleware);
 app.use(loggerMiddleware);
 app.use(express.json());
-console.log({
-  pk: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  sk: process.env.CLERK_SECRET_KEY ? "present" : "missing",
-});
-app.use(
-  clerkMiddleware({
-    publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!,
-    secretKey: process.env.CLERK_SECRET_KEY!,
-  })
+
+console.log("CLERK_PUBLISHABLE_KEY =", process.env.CLERK_PUBLISHABLE_KEY);
+console.log(
+  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =",
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 );
+console.log("CLERK_SECRET_KEY =", !!process.env.CLERK_SECRET_KEY);
+app.use(clerkMiddleware());
 
 app.use("/user", authMiddleware, userRoutes)
+app.use("/resumes", authMiddleware, resumeRoutes)
 
 app.use(errorHandler);
 

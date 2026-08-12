@@ -14,4 +14,13 @@ export class UserRepository {
       data
     })
   }
+
+  async updateUser(id:string, data:Object){
+    return prisma.user.update({
+      where: {
+        id
+      },
+      data: data
+    })
+  }
 }
