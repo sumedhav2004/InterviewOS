@@ -8,6 +8,7 @@ import {clerkMiddleware} from "@clerk/express"
 import { authMiddleware } from "./middleware/auth.middleware";
 import userRoutes from "./routes/user.routes";
 import resumeRoutes from "./routes/resumes.routes";
+import interviewRoutes from "./routes/interview.routes"
 import cors from "cors";
 
 const app = express();
@@ -30,6 +31,7 @@ app.use(clerkMiddleware());
 
 app.use("/user", authMiddleware, userRoutes)
 app.use("/resumes", authMiddleware, resumeRoutes)
+app.use("/interviews",authMiddleware, interviewRoutes )
 
 app.use(errorHandler);
 

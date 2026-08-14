@@ -91,7 +91,7 @@ model Interview {
   id              String          @id @default(uuid()) @db.Uuid
   title           String
   description     String?
-  status          InterviewStatus
+  status          InterviewStatus @default(DRAFT)
   scheduledAt     DateTime?
   durationMinutes Int
   createdAt       DateTime        @default(now())
