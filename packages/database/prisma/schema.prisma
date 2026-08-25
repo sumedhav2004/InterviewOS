@@ -120,7 +120,7 @@ model Participant {
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
-  codeRuns    RunCode[]
+  codeRuns    CodeRun[]
   submissions Submission[]
 
   @@unique([interviewId, userId])
@@ -131,6 +131,7 @@ model Participant {
 model Invite {
   id          String       @id @default(uuid()) @db.Uuid
   status      InviteStatus @default(PENDING)
+  role        ParticipantRole
   expiresAt   DateTime?
   respondedAt DateTime?
   createdAt   DateTime     @default(now())
@@ -175,19 +176,19 @@ model InterviewQuestion {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  belongingInterviewId String    @db.Uuid
-  belongingInterview   Interview @relation(fields: [belongingInterviewId], references: [id], onDelete: Cascade)
+  interviewId String    @db.Uuid
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
-  usedQuestionId String   @db.Uuid
-  usedQuestion   Question @relation(fields: [usedQuestionId], references: [id], onDelete: Cascade)
+  questionId String   @db.Uuid
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
 
-  codeRuns    RunCode[]
+  codeRuns    CodeRun[]
   submissions Submission[]
 
-  @@unique([belongingInterviewId, usedQuestionId])
-  @@unique([belongingInterviewId, questionOrder])
-  @@index([belongingInterviewId])
-  @@index([usedQuestionId])
+  @@unique([interviewId, questionId])
+  @@unique([interviewId, questionOrder])
+  @@index([interviewId])
+  @@index([questionId])
 }
 
 model TestCase {
@@ -197,49 +198,49 @@ model TestCase {
   visibility     TestCaseVisibility @default(HIDDEN)
   createdAt      DateTime           @default(now())
 
-  forQuestionId String   @db.Uuid
-  forQuestion   Question @relation(fields: [forQuestionId], references: [id], onDelete: Cascade)
+  questionId String   @db.Uuid
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  @@index([forQuestionId])
+  @@index([questionId])
 }
 
-model RunCode {
-  id              String              @id @default(uuid()) @db.Uuid
-  language        ProgrammingLanguage
-  sourceCode      String
-  status          ExecutionStatus     @default(PENDING)
-  stdout          String?
-  stderr          String?
-  executionTimeMS Int?
-  memoryBytes     BigInt?
-  createdAt       DateTime            @default(now())
+model CodeRun {
+  id                  String              @id @default(uuid()) @db.Uuid
+  language            ProgrammingLanguage
+  sourceCode          String
+  status              ExecutionStatus     @default(PENDING)
+  stdout              String?
+  stderr              String?
+  executionTimeMS     Int?
+  memoryBytes         BigInt?
+  createdAt           DateTime            @default(now())
 
-  RanByParticipantId String      @db.Uuid
-  RanByParticipant   Participant @relation(fields: [RanByParticipantId], references: [id], onDelete: Cascade)
+  participantId       String              @db.Uuid
+  participant         Participant         @relation(fields: [participantId], references: [id], onDelete: Cascade)
 
-  RanInterviewQuestionId String            @db.Uuid
-  RanInterviewQuestion   InterviewQuestion @relation(fields: [RanInterviewQuestionId], references: [id], onDelete: Cascade)
+  interviewQuestionId String              @db.Uuid
+  interviewQuestion   InterviewQuestion   @relation(fields: [interviewQuestionId], references: [id], onDelete: Cascade)
 
-  @@index([RanByParticipantId])
-  @@index([RanInterviewQuestionId])
+  @@index([participantId])
+  @@index([interviewQuestionId])
 }
 
 model Submission {
-  id          String              @id @default(uuid()) @db.Uuid
-  language    ProgrammingLanguage
-  sourceCode  String
-  submittedAt DateTime            @default(now())
+  id                  String             @id @default(uuid()) @db.Uuid
+  language            ProgrammingLanguage
+  sourceCode          String
+  submittedAt         DateTime           @default(now())
 
-  submittedQuestionId String            @db.Uuid
-  submittedQuestion   InterviewQuestion @relation(fields: [submittedQuestionId], references: [id], onDelete: Cascade)
+  interviewQuestionId String             @db.Uuid
+  interviewQuestion   InterviewQuestion  @relation(fields: [interviewQuestionId], references: [id], onDelete: Cascade)
 
-  submittedByParticipantId String      @db.Uuid
-  submittedByParticipant   Participant @relation(fields: [submittedByParticipantId], references: [id], onDelete: Cascade)
+  participantId       String             @db.Uuid
+  participant         Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
 
-  evaluation Evaluation?
+  evaluation          Evaluation?
 
-  @@index([submittedQuestionId])
-  @@index([submittedByParticipantId])
+  @@index([interviewQuestionId])
+  @@index([participantId])
 }
 
 model Evaluation {
@@ -253,8 +254,8 @@ model Evaluation {
   feedback        String?
   createdAt       DateTime         @default(now())
 
-  evaluatedSubmissionId String     @unique @db.Uuid
-  evaluatedSubmission   Submission @relation(fields: [evaluatedSubmissionId], references: [id], onDelete: Cascade)
+  submissionId String     @unique @db.Uuid
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 }
 
 model Resume {

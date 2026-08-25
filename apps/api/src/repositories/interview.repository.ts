@@ -1,4 +1,4 @@
-import { prisma } from "@interview-os/database";
+import { InterviewStatus, prisma } from "@interview-os/database";
 import { createInterviewData, updateInterviewData } from "../types/interview";
 
 export class InterviewRepository{
@@ -45,4 +45,32 @@ export class InterviewRepository{
             },
         })
     }
+
+    async updateInterviewSchedule(
+        id: string,
+        status: InterviewStatus,
+        scheduledAt: Date
+    ) {
+        return prisma.interview.update({
+            where: {
+                id,
+            },
+            data: {
+                status,
+                scheduledAt
+            },
+        });
+    }
+
+    async updateInterviewStatus(id: string, status: InterviewStatus){
+        return prisma.interview.update({
+            where: {
+                id,
+            },
+            data: {
+                status
+            }
+        })
+    }
+
 }

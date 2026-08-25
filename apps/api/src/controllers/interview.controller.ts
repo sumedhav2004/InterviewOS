@@ -44,4 +44,37 @@ export class InterviewController{
         const updatedInterview = await this.interviewService.updateInterview(id, userId, data);
         return res.status(200).json(updatedInterview)
     }
+    
+    async scheduleInterview(req:Request, res:Response){
+        const id = req.params.id
+        const userId = req.user.id
+        const data = req.body
+
+        const scheduledInterview = await this.interviewService.scheduleInterview(userId,id, data)
+        return res.status(200).json(scheduledInterview)
+    }   
+
+    async startInterview(req:Request, res: Response){
+        const id = req.params.id
+        const userId = req.user.id
+
+        const startedInterview = await this.interviewService.startInterview(userId, id)
+        return res.status(200).json(startedInterview)
+    }
+
+    async completeInterview(req:Request, res: Response){
+        const id = req.params.id
+        const userId = req.user.id
+
+        const completedInterview = await this.interviewService.completeInterview(userId, id)
+        return res.status(200).json(completedInterview)
+    }
+
+    async cancelInterview(req:Request, res: Response){
+        const id = req.params.id
+        const userId = req.user.id
+
+        const cancelledInterview = await this.interviewService.cancelInterview(userId, id)
+        return res.status(200).json(cancelledInterview)
+    }
 }

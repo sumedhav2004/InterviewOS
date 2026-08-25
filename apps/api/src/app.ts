@@ -9,7 +9,11 @@ import { authMiddleware } from "./middleware/auth.middleware";
 import userRoutes from "./routes/user.routes";
 import resumeRoutes from "./routes/resumes.routes";
 import interviewRoutes from "./routes/interview.routes"
+import inviteRoutes from "./routes/invite.routes"
 import cors from "cors";
+import participantRoutes from "./routes/participant.routes";
+import questionRoutes from "./routes/question.routes"
+import interviewQuestionRoutes from "./routes/interviewQuestion.route"
 
 const app = express();
 
@@ -32,6 +36,10 @@ app.use(clerkMiddleware());
 app.use("/user", authMiddleware, userRoutes)
 app.use("/resumes", authMiddleware, resumeRoutes)
 app.use("/interviews",authMiddleware, interviewRoutes )
+app.use("/interviews", authMiddleware, participantRoutes)
+app.use("/", authMiddleware, inviteRoutes )
+app.use("/questions", authMiddleware, questionRoutes)
+app.use("/interviews", authMiddleware, interviewQuestionRoutes)
 
 app.use(errorHandler);
 

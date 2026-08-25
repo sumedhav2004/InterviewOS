@@ -9,5 +9,9 @@ router.get("/:id", interviewController.findInterviewById.bind(interviewControlle
 router.post("/", interviewController.createInterview.bind(interviewController))
 router.delete("/", interviewController.deleteInterview.bind(interviewController))
 router.patch("/:id", interviewController.updateInterview.bind(interviewController))
+router.patch("/:id/schedule", interviewController.scheduleInterview.bind(interviewController))
+router.patch("/:id/start", interviewController.startInterview.bind(interviewController))
+router.patch("/:id/complete", interviewController.completeInterview.bind(interviewController))
+router.patch("/:id/cancel", interviewController.cancelInterview.bind(interviewController))
 
 export default router
