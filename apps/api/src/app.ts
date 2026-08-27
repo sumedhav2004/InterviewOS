@@ -13,7 +13,8 @@ import inviteRoutes from "./routes/invite.routes"
 import cors from "cors";
 import participantRoutes from "./routes/participant.routes";
 import questionRoutes from "./routes/question.routes"
-import interviewQuestionRoutes from "./routes/interviewQuestion.route"
+import interviewQuestionRoutes from "./routes/interviewQuestion.routes"
+
 
 const app = express();
 

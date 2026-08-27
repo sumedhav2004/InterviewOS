@@ -1,5 +1,6 @@
 packages:
   - "apps/*"
+  - "apps/workers/*"
   - "packages/*"
 allowBuilds:
   sharp: set this to true or false

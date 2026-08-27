@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { QuestionController } from "../controllers/question.contoller";
+import { QuestionController } from "../controllers/question.controller";
+
 
 const router = Router()
 const questionController = new QuestionController
