@@ -6,3 +6,18 @@ export interface ExecutionResult {
     outputLimitExceeded: boolean;
     executionTimeMs: number;
 }
+
+export type ExecutionJob = {
+    id: string;
+    language: "PYTHON";
+    sourceCode: string;
+    timeoutMs?: number;
+    memoryLimitMB?: number;
+    status: ExecutionJobStatus;
+};
+
+export type ExecutionJobStatus =
+    | "QUEUED"
+    | "RUNNING"
+    | "COMPLETED"
+    | "FAILED";

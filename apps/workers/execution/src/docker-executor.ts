@@ -1,17 +1,42 @@
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { ExecutionResult } from "./types";
 
 const TIMEOUT_MS = 5000;
 const MAX_OUTPUT_BYTES = 1024 * 1024;
+
+function runDocker(args: string[]): Promise<void> {
+    return new Promise((resolve) => {
+        const process = spawn("docker", args);
+
+        process.on("close", () => {
+            resolve();
+        });
+
+        process.on("error", () => {
+            resolve();
+        });
+    });
+}
 
 export function executePython(
     sourceCode: string
 ): Promise<ExecutionResult> {
     return new Promise((resolve) => {
         const start = Date.now();
+        const containerName = `interviewos-exec-${randomUUID()}`;
+
+        let stdout = "";
+        let stderr = "";
+        let finished = false;
+        let outputBytes = 0;
+        let outputLimitExceeded = false;
+        let timedOut = false;
 
         const child = spawn("docker", [
             "run",
+            "--name",
+            containerName,
             "--rm",
             "--memory",
             "128m",
@@ -27,18 +52,21 @@ export function executePython(
             sourceCode,
         ]);
 
-        let stdout = "";
-        let stderr = "";
-        let finished = false;
-        let outputBytes = 0;
-        let outputLimitExceeded = false;
-        let timedOut = false;
+        let cleanupStarted = false;
 
-        const finish = (result: ExecutionResult) => {
+        const cleanup = async () => {
+            if (cleanupStarted) return;
+            cleanupStarted = true;
+            await runDocker(["rm", "-f", containerName]);
+        };
+
+        const finish = async (result: ExecutionResult) => {
             if (finished) return;
 
             finished = true;
             clearTimeout(timeout);
+
+            await cleanup();
 
             resolve(result);
         };
@@ -49,7 +77,7 @@ export function executePython(
             if (outputBytes > MAX_OUTPUT_BYTES) {
                 outputLimitExceeded = true;
 
-                child.kill("SIGKILL");
+                void cleanup();
 
                 return;
             }
@@ -63,7 +91,7 @@ export function executePython(
             if (outputBytes > MAX_OUTPUT_BYTES) {
                 outputLimitExceeded = true;
 
-                child.kill("SIGKILL");
+                void cleanup();
 
                 return;
             }
@@ -76,11 +104,11 @@ export function executePython(
 
             timedOut = true;
 
-            child.kill("SIGKILL");
+            void cleanup();
         }, TIMEOUT_MS);
 
         child.on("error", (error) => {
-            finish({
+            void finish({
                 stdout,
                 stderr: stderr || error.message,
                 exitCode: null,
@@ -90,9 +118,8 @@ export function executePython(
             });
         });
 
-        child.on("close", (code, signal) => {
-
-            finish({
+        child.on("close", (code) => {
+            void finish({
                 stdout,
                 stderr,
                 exitCode: code,

@@ -1,15 +1,12 @@
-import { executePython } from "./docker-executor";
+import { executeJob } from "./executor";
 
 async function main() {
-    const result = await executePython(`
-import urllib.request
-
-try:
-    urllib.request.urlopen("https://example.com", timeout=2)
-    print("NETWORK ACCESS WORKED")
-except Exception as e:
-    print(type(e).__name__)
-`);
+    const result = await executeJob({
+        id: "job-1",
+        language: "PYTHON",
+        sourceCode: 'print("Hello from execution job")',
+        status: 'QUEUED'
+    });
 
     console.log(result);
 }
