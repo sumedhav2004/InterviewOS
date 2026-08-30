@@ -5,22 +5,9 @@ import { ExecutionResult } from "./types";
 const TIMEOUT_MS = 5000;
 const MAX_OUTPUT_BYTES = 1024 * 1024;
 
-function runDocker(args: string[]): Promise<void> {
-    return new Promise((resolve) => {
-        const process = spawn("docker", args);
-
-        process.on("close", () => {
-            resolve();
-        });
-
-        process.on("error", () => {
-            resolve();
-        });
-    });
-}
-
 export function executePython(
-    sourceCode: string
+    sourceCode: string,
+    input?: string
 ): Promise<ExecutionResult> {
     return new Promise((resolve) => {
         const start = Date.now();
@@ -32,44 +19,101 @@ export function executePython(
         let outputBytes = 0;
         let outputLimitExceeded = false;
         let timedOut = false;
-
-        const child = spawn("docker", [
-            "run",
-            "--name",
-            containerName,
-            "--rm",
-            "--memory",
-            "128m",
-            "--cpus",
-            "0.5",
-            "--pids-limit",
-            "64",
-            "--network",
-            "none",
-            "python:3.12-slim",
-            "python",
-            "-c",
-            sourceCode,
-        ]);
-
         let cleanupStarted = false;
 
-        const cleanup = async () => {
+        const cleanup = () => {
             if (cleanupStarted) return;
+
             cleanupStarted = true;
-            await runDocker(["rm", "-f", containerName]);
+
+            // Explicitly remove the actual container.
+            //
+            // --rm is also present on docker run, so this is
+            // an additional safety net for abnormal termination.
+            const cleanupProcess = spawn("docker", [
+                "rm",
+                "-f",
+                containerName,
+            ]);
+
+            cleanupProcess.on("error", () => {
+                // Cleanup is best-effort here.
+                //
+                // --rm on the original container provides
+                // another cleanup mechanism.
+            });
         };
 
-        const finish = async (result: ExecutionResult) => {
+        const finish = (result: ExecutionResult) => {
             if (finished) return;
 
             finished = true;
+
             clearTimeout(timeout);
 
-            await cleanup();
+            cleanup();
 
             resolve(result);
         };
+
+        const child = spawn(
+            "docker",
+            [
+                "run",
+
+                "--interactive",
+
+                "--name",
+                containerName,
+
+                // Automatically remove the container when it exits.
+                "--rm",
+
+                // Resource limits.
+                "--memory",
+                "128m",
+
+                "--cpus",
+                "0.5",
+
+                "--pids-limit",
+                "64",
+
+                // No network access.
+                "--network",
+                "none",
+
+                // Do not persist container stdout/stderr
+                // as Docker logs.
+                "--log-driver",
+                "none",
+
+                // Python sandbox image.
+                "python:3.12-slim",
+
+                "python",
+                "-c",
+                sourceCode,
+            ],
+            {
+                stdio: ["pipe", "pipe", "pipe"],
+            }
+        );
+
+        const timeout = setTimeout(() => {
+            if (finished) return;
+
+            timedOut = true;
+
+            finish({
+                stdout,
+                stderr,
+                exitCode: null,
+                timedOut: true,
+                outputLimitExceeded,
+                executionTimeMs: Date.now() - start,
+            });
+        }, TIMEOUT_MS);
 
         child.stdout.on("data", (data: Buffer) => {
             outputBytes += data.length;
@@ -77,7 +121,14 @@ export function executePython(
             if (outputBytes > MAX_OUTPUT_BYTES) {
                 outputLimitExceeded = true;
 
-                void cleanup();
+                finish({
+                    stdout,
+                    stderr,
+                    exitCode: null,
+                    timedOut: false,
+                    outputLimitExceeded: true,
+                    executionTimeMs: Date.now() - start,
+                });
 
                 return;
             }
@@ -91,7 +142,14 @@ export function executePython(
             if (outputBytes > MAX_OUTPUT_BYTES) {
                 outputLimitExceeded = true;
 
-                void cleanup();
+                finish({
+                    stdout,
+                    stderr,
+                    exitCode: null,
+                    timedOut: false,
+                    outputLimitExceeded: true,
+                    executionTimeMs: Date.now() - start,
+                });
 
                 return;
             }
@@ -99,16 +157,8 @@ export function executePython(
             stderr += data.toString();
         });
 
-        const timeout = setTimeout(() => {
-            if (finished) return;
-
-            timedOut = true;
-
-            void cleanup();
-        }, TIMEOUT_MS);
-
         child.on("error", (error) => {
-            void finish({
+            finish({
                 stdout,
                 stderr: stderr || error.message,
                 exitCode: null,
@@ -119,7 +169,7 @@ export function executePython(
         });
 
         child.on("close", (code) => {
-            void finish({
+            finish({
                 stdout,
                 stderr,
                 exitCode: code,
@@ -128,5 +178,11 @@ export function executePython(
                 executionTimeMs: Date.now() - start,
             });
         });
+
+        if (input !== undefined) {
+            child.stdin.write(input);
+        }
+
+        child.stdin.end();
     });
 }

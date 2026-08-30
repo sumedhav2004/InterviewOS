@@ -9,6 +9,8 @@ export interface ExecutionResult {
 
 export type ExecutionJob = {
     id: string;
+    participantId: string;
+    interviewQuestionId: string;
     language: "PYTHON";
     sourceCode: string;
     timeoutMs?: number;
