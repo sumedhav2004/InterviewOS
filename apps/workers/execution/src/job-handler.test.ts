@@ -12,6 +12,8 @@ describe("handleExecutionJob", () => {
     it("should process an execution job", async () => {
         const job = {
             id: "job-1",
+            participantId: "participant-1",
+            interviewQuestionId: "question-1",
             language: "PYTHON" as const,
             sourceCode: 'print("hello")',
             status: "QUEUED" as const,

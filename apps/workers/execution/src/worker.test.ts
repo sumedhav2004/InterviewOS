@@ -10,6 +10,8 @@ describe("processJob", () => {
     it("should mark a successful job as COMPLETED", async () => {
         const job = {
             id: "job-1",
+            participantId: "participant-1",
+            interviewQuestionId: "question-1",
             language: "PYTHON" as const,
             sourceCode: 'print("hello")',
             status: "QUEUED" as const,
@@ -37,6 +39,8 @@ describe("processJob", () => {
     it("should mark a failed execution as FAILED", async () => {
         const job = {
             id: "job-2",
+            participantId: "participant-1",
+            interviewQuestionId: "question-1",
             language: "PYTHON" as const,
             sourceCode: "raise Exception()",
             status: "QUEUED" as const,
