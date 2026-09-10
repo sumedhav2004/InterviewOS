@@ -91,7 +91,7 @@ Each technology exists for a reason rather than simply to be included.
 
 ### Testing
 
-- Jest
+- Vitest
 - Playwright
 - React Testing Library
 
