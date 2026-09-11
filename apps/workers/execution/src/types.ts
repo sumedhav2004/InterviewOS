@@ -1,3 +1,5 @@
+type executionLanguage = "PYTHON" | "JAVASCRIPT"
+
 export interface ExecutionResult {
     stdout: string;
     stderr: string;
@@ -13,7 +15,7 @@ export type ExecutionJob = {
     participantId: string;
     interviewQuestionId: string;
 
-    language: "PYTHON";
+    language: executionLanguage;
 
     sourceCode: string;
 

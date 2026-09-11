@@ -5,7 +5,7 @@ import { ExecutionResult } from "./types";
 const TIMEOUT_MS = 5000;
 const MAX_OUTPUT_BYTES = 1024 * 1024;
 
-export function executePython(
+export function executeJS(
     sourceCode: string,
     input?: string
 ): Promise<ExecutionResult> {
@@ -89,10 +89,10 @@ export function executePython(
                 "none",
 
                 // Python sandbox image.
-                "python:3.12-slim",
+                "node:22.12-slim",
 
-                "python",
-                "-c",
+                "node",
+                "-e",
                 sourceCode,
             ],
             {
@@ -184,5 +184,5 @@ export function executePython(
         }
 
         child.stdin.end();
-    });
+    })
 }
