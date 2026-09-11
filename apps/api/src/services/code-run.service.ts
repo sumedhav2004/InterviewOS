@@ -142,7 +142,8 @@ export class CodeRunService{
         }
 
         if (codeRun.language !== "PYTHON" &&
-            codeRun.language !== "JAVASCRIPT"
+            codeRun.language !== "JAVASCRIPT" &&
+            codeRun.language !== "JAVA"
         ) {
             throw new AppError(
                 "This language is not supported for execution yet",

@@ -1,6 +1,7 @@
 import { ExecutionJob, ExecutionResult } from "./types";
 import { executePython } from "./docker-executor";
 import { executeJS } from "./javascript-executor";
+import { executeJava } from "./java-executor";
 
 export async function executeJob(
     job: ExecutionJob
@@ -14,6 +15,12 @@ export async function executeJob(
 
         case "JAVASCRIPT":
             return executeJS(
+                job.sourceCode,
+                job.input
+            )
+
+        case "JAVA":
+            return executeJava(
                 job.sourceCode,
                 job.input
             )
