@@ -1,4 +1,4 @@
-type executionLanguage = "PYTHON" | "JAVASCRIPT" | "JAVA"
+type executionLanguage = "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP"
 
 export interface ExecutionResult {
     stdout: string;
