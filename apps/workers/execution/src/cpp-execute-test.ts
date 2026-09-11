@@ -1,11 +1,11 @@
-import { executeCpp } from "./cpp-executor";
+import { executeC } from "./c-executor";
 
 async function main() {
-    const result = await executeCpp(`
-#include <iostream>
+    const result = await executeC(`
+#include <stdio.h>
 
 int main() {
-    std::cout << "Hello from C++!" << std::endl
+    printf("Hello from C!\\n")
     return 0;
 }
     `);

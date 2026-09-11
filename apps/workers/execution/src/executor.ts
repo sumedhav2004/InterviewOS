@@ -3,6 +3,7 @@ import { executePython } from "./docker-executor";
 import { executeJS } from "./javascript-executor";
 import { executeJava } from "./java-executor";
 import { executeCpp } from "./cpp-executor";
+import { executeC } from "./c-executor";
 
 export async function executeJob(
     job: ExecutionJob
@@ -27,10 +28,16 @@ export async function executeJob(
             )
 
         case "CPP":
-        return executeCpp(
-            job.sourceCode,
-            job.input
-        );
+            return executeCpp(
+                job.sourceCode,
+                job.input
+            );
+
+        case "C":
+            return executeC(
+                job.sourceCode,
+                job.input
+            );
         default:
             throw new Error(`Unsupported language: ${job.language}`);
     }

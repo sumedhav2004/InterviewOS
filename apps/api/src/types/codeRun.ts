@@ -17,7 +17,7 @@ export type ExecutionJob = {
     id: string;
     participantId: string;
     interviewQuestionId: string;
-    language: "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP";
+    language: "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP" | "C" | "GO" | "RUST";
     sourceCode: string;
     input?: string;
     timeoutMs?: number;
