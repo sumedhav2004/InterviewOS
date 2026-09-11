@@ -6,6 +6,7 @@
     "dev": "tsx src/index.ts"
   },
   "dependencies": {
+    "@interview-os/redis": "workspace:*",
     "tsx": "^4.19.0",
     "typescript": "^5.0.0"
   },

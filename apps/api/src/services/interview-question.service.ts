@@ -63,8 +63,10 @@ export class InterviewQuestionService{
             )
         }
 
-        const participant = await this.participantRepository.findParticipant(interviewId, requesterId);
+        const participant = await this.participantRepository.findParticipant(requesterId, interviewId);
         if(!participant || participant.role !== ParticipantRole.INTERVIEWER){
+            console.log("participant: ", participant)
+            console.log("interview: ", interview)
             throw new AppError(
                 "Unauthorized",
                 403,

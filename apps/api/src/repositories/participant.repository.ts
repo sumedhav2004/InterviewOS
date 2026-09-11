@@ -2,7 +2,12 @@ import { Prisma, prisma } from "@interview-os/database";
 import { CreateParticipantData, UpdateParticipantData } from "../types/participant";
 
 export class ParticipantRepository{
-    async createParticipant(userId: string, interviewId: string, data: CreateParticipantData, db: Prisma.TransactionClient | typeof prisma = prisma){
+    async createParticipant(
+        db: Prisma.TransactionClient | typeof prisma,
+        userId: string,
+        interviewId: string,
+        data: CreateParticipantData
+    ){
         const participant = await db.participant.create({
             data: {
                 ...data,
@@ -66,6 +71,14 @@ export class ParticipantRepository{
                     userId,
                     interviewId
                 }
+            }
+        })
+    }
+
+    async findById(id: string){
+        return prisma.participant.findFirst({
+            where: {
+                id
             }
         })
     }

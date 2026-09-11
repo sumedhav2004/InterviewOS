@@ -1,12 +1,19 @@
-import { InterviewStatus, prisma } from "@interview-os/database";
+import { InterviewStatus, Prisma, prisma } from "@interview-os/database";
 import { createInterviewData, updateInterviewData } from "../types/interview";
 
 export class InterviewRepository{
-    async createInterview(userId: string, data: createInterviewData){
-        return prisma.interview.create({
+    async createInterview(
+        db: Prisma.TransactionClient | typeof prisma,
+        userId: string,
+        data: createInterviewData
+    ){
+        return db.interview.create({
             data: {
-                ...data,
-                createdById: userId,
+                title: data.title,
+                description: data.description,
+                scheduledAt: data.scheduledAt,
+                durationMinutes: data.durationMinutes,
+                createdById: userId
             }
         })
     }

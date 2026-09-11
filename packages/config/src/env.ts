@@ -4,8 +4,12 @@ import path from "node:path";
 
 console.log("__dirname:", __dirname);
 console.log("cwd:", process.cwd());
+console.log(
+  "env path:",
+  path.resolve(__dirname, "../../../infrastructure/.env")
+);
 loadEnv({
-  path: path.resolve(process.cwd(), "../../infrastructure/.env"),
+  path: path.resolve(__dirname, "../../../infrastructure/.env"),
 });
 
 const envSchema = z.object({
@@ -15,6 +19,7 @@ const envSchema = z.object({
 
     PORT: z.coerce.number().default(3001),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+    REDIS_URL: z.string().min(1, "REDIS_URL is required"),
     CLERK_SECRET_KEY: z.string().min(1),
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
 });

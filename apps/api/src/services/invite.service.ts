@@ -119,12 +119,12 @@ export class InviteService{
 
             const participant =
                 await this.participantRepository.createParticipant(
+                    tx,
                     receiverId,
                     invite.interviewId,
                     {
                         role: invite.role
                     },
-                    tx
                 );
 
             return {

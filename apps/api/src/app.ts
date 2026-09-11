@@ -14,7 +14,8 @@ import cors from "cors";
 import participantRoutes from "./routes/participant.routes";
 import questionRoutes from "./routes/question.routes"
 import interviewQuestionRoutes from "./routes/interviewQuestion.routes"
-
+import codeRunRoutes from "./routes/code-run.routes"
+import testCaseRoutes from "./routes/test-case.routes"
 
 const app = express();
 
@@ -41,6 +42,8 @@ app.use("/interviews", authMiddleware, participantRoutes)
 app.use("/", authMiddleware, inviteRoutes )
 app.use("/questions", authMiddleware, questionRoutes)
 app.use("/interviews", authMiddleware, interviewQuestionRoutes)
+app.use("/coderun", authMiddleware, codeRunRoutes )
+app.use("/questions", authMiddleware, testCaseRoutes)
 
 app.use(errorHandler);
 

@@ -1,11 +1,14 @@
-import { InterviewStatus } from "@interview-os/database";
+import { InterviewStatus, prisma } from "@interview-os/database";
 import { AppError } from "../../core/errors/app-error";
 import { InterviewRepository } from "../repositories/interview.repository";
 import { createInterviewData, updateInterviewData } from "../types/interview";
+import { ParticipantRepository } from "../repositories/participant.repository";
+import { CreateParticipantData } from "../types/participant";
 
 export class InterviewService{
     constructor(
-        private readonly interviewRepository = new InterviewRepository
+        private readonly interviewRepository = new InterviewRepository,
+        private readonly participantRepository = new ParticipantRepository
     ){}
 
     async findInterviewById(id: string){
@@ -13,9 +16,25 @@ export class InterviewService{
         return interview
     }
 
-    async createInterview(userId: string, data: createInterviewData){
-        const interview = await this.interviewRepository.createInterview(userId, data);
-        return interview
+    async createInterview(userId: string, interviewData: createInterviewData) {
+        return prisma.$transaction(async (tx) => {
+
+            const interview =
+                await this.interviewRepository.createInterview(
+                    tx,
+                    userId,
+                    interviewData
+                )
+            await this.participantRepository.createParticipant(
+                tx,
+                userId,
+                interview.id, 
+                {
+                    role: interviewData.createdAs
+                }
+            )
+            return interview
+        })
     }
 
     async updateInterview(id: string, userId: string, data: updateInterviewData){
@@ -193,8 +212,5 @@ export class InterviewService{
 
         const cancelledInterview = await this.interviewRepository.updateInterviewStatus(id, InterviewStatus.CANCELLED)
         return cancelledInterview
-        
     }
-
-
 }
