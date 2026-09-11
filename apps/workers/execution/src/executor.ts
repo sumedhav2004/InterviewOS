@@ -4,6 +4,7 @@ import { executeJS } from "./javascript-executor";
 import { executeJava } from "./java-executor";
 import { executeCpp } from "./cpp-executor";
 import { executeC } from "./c-executor";
+import { executeRust } from "./rust-executor";
 
 export async function executeJob(
     job: ExecutionJob
@@ -35,6 +36,12 @@ export async function executeJob(
 
         case "C":
             return executeC(
+                job.sourceCode,
+                job.input
+            );
+
+        case "RUST":
+            return executeRust(
                 job.sourceCode,
                 job.input
             );
