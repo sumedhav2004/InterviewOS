@@ -1,10 +1,13 @@
-import { executeRust } from "./rust-executor";
+import { executeGo } from "./go-executor";
 
 async function main() {
-    const result = await executeRust(`
-fn main() {
-    println!("Hello from Rust!")
-    println!("This should fail");
+    const result = await executeGo(`
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello from Go!"
 }
     `);
 

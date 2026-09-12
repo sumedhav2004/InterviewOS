@@ -5,6 +5,7 @@ import { executeJava } from "./java-executor";
 import { executeCpp } from "./cpp-executor";
 import { executeC } from "./c-executor";
 import { executeRust } from "./rust-executor";
+import { executeGo } from "./go-executor";
 
 export async function executeJob(
     job: ExecutionJob
@@ -45,6 +46,13 @@ export async function executeJob(
                 job.sourceCode,
                 job.input
             );
+
+        case "GO":
+            return executeGo(
+                job.sourceCode,
+                job.input
+            );
+        
         default:
             throw new Error(`Unsupported language: ${job.language}`);
     }
