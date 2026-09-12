@@ -24,7 +24,7 @@ export async function runTestCase(
         expectedOutput: testCase.expectedOutput,
         actualOutput: result.stdout,
         stderr: result.stderr,
-        executionTimeMs: result.executionTimeMs,
+        executionTimeMS: result.executionTimeMS,
         timedOut: result.timedOut,
         outputLimitExceeded: result.outputLimitExceeded,
         exitCode: result.exitCode,

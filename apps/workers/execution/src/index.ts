@@ -41,6 +41,7 @@ async function main() {
             const event: ExecutionCompletedEvent = {
                 type: "EXECUTION_COMPLETED",
                 codeRunId: job.id,
+                testCaseId: job.testCaseId,
                 status: result.exitCode === 0 && !result.timedOut && !result.outputLimitExceeded
                     ? "SUCCESS"
                     : "FAILED",

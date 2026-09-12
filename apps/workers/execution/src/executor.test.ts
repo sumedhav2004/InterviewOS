@@ -8,6 +8,7 @@ describe("executeJob", () => {
 
             participantId: "participant-1",
             interviewQuestionId: "question-1",
+            testCaseId: "test-case-1",
 
             language: "PYTHON",
 

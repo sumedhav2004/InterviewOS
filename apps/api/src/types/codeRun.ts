@@ -17,6 +17,7 @@ export type ExecutionJob = {
     id: string;
     participantId: string;
     interviewQuestionId: string;
+    testCaseId: string;
     language: "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP" | "C" | "GO" | "RUST";
     sourceCode: string;
     input?: string;
@@ -33,6 +34,7 @@ export type ExecutionJobStatus =
 
 export type ExecutionCompletedEvent = {
     type: "EXECUTION_COMPLETED"
+    testCaseId: string;
     codeRunId: string;
     status: "SUCCESS" | "FAILED";
     stdout: string;

@@ -8,6 +8,7 @@ describe("test-case-runner", () => {
                 id: "job-1",
                 participantId: "participant-1",
                 interviewQuestionId: "question-1",
+                testCaseId: "test-case-1",
                 language: "PYTHON",
                 sourceCode: `
 x = int(input())
@@ -34,6 +35,7 @@ print(x * x)
                 id: "job-2",
                 participantId: "participant-1",
                 interviewQuestionId: "question-1",
+                testCaseId: "test-case-1",
                 language: "PYTHON",
                 sourceCode: `
 x = int(input())
@@ -60,6 +62,7 @@ print(x + 1)
                 id: "job-3",
                 participantId: "participant-1",
                 interviewQuestionId: "question-1",
+                testCaseId: "test-case-1",
                 language: "PYTHON",
                 sourceCode: `
 x = int(input())

@@ -14,6 +14,7 @@ describe("handleExecutionJob", () => {
             id: "job-1",
             participantId: "participant-1",
             interviewQuestionId: "question-1",
+            testCaseId: "test-case-1",
             language: "PYTHON" as const,
             sourceCode: 'print("hello")',
             status: "QUEUED" as const,
@@ -30,7 +31,7 @@ describe("handleExecutionJob", () => {
                 exitCode: 0,
                 timedOut: false,
                 outputLimitExceeded: false,
-                executionTimeMs: 100,
+                executionTimeMS: 100,
             },
         });
 

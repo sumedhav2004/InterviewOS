@@ -12,6 +12,7 @@ describe("processJob", () => {
             id: "job-1",
             participantId: "participant-1",
             interviewQuestionId: "question-1",
+            testCaseId: "test-case-1",
             language: "PYTHON" as const,
             sourceCode: 'print("hello")',
             status: "QUEUED" as const,
@@ -23,7 +24,7 @@ describe("processJob", () => {
             exitCode: 0,
             timedOut: false,
             outputLimitExceeded: false,
-            executionTimeMs: 100,
+            executionTimeMS: 100,
         });
 
         const result = await processJob(job);
@@ -41,6 +42,7 @@ describe("processJob", () => {
             id: "job-2",
             participantId: "participant-1",
             interviewQuestionId: "question-1",
+            testCaseId: "test-case-1",
             language: "PYTHON" as const,
             sourceCode: "raise Exception()",
             status: "QUEUED" as const,
@@ -52,7 +54,7 @@ describe("processJob", () => {
             exitCode: 1,
             timedOut: false,
             outputLimitExceeded: false,
-            executionTimeMs: 100,
+            executionTimeMS: 100,
         });
 
         const result = await processJob(job);

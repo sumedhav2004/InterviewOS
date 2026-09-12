@@ -14,6 +14,7 @@ export type ExecutionJob = {
 
     participantId: string;
     interviewQuestionId: string;
+    testCaseId: string,
 
     language: executionLanguage;
 
@@ -74,6 +75,7 @@ export type SubmissionMode =
 export type ExecutionCompletedEvent = {
     type: "EXECUTION_COMPLETED";
     codeRunId: string;
+    testCaseId: string;
     status: "SUCCESS" | "FAILED";
     stdout: string;
     stderr: string;
