@@ -54,7 +54,6 @@ enum ProgrammingLanguage {
   RUST
   GO
   JAVASCRIPT
-  TYPESCRIPT
 }
 
 enum ExecutionStatus {
@@ -201,6 +200,8 @@ model TestCase {
   questionId String   @db.Uuid
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
+  codeRunTestCaseResults CodeRunTestCaseResult[]
+
   @@index([questionId])
 }
 
@@ -209,10 +210,6 @@ model CodeRun {
   language            ProgrammingLanguage
   sourceCode          String
   status              ExecutionStatus     @default(PENDING)
-  stdout              String?
-  stderr              String?
-  executionTimeMS     Int?
-  memoryBytes         BigInt?
   createdAt           DateTime            @default(now())
 
   participantId       String              @db.Uuid
@@ -220,6 +217,8 @@ model CodeRun {
 
   interviewQuestionId String              @db.Uuid
   interviewQuestion   InterviewQuestion   @relation(fields: [interviewQuestionId], references: [id], onDelete: Cascade)
+
+  codeRunTestCaseResults CodeRunTestCaseResult[]
 
   @@index([participantId])
   @@index([interviewQuestionId])
@@ -269,4 +268,28 @@ model Resume {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+model CodeRunTestCaseResult {
+  id              String          @id @default(uuid()) @db.Uuid
+
+  codeRunId       String          @db.Uuid
+  codeRun         CodeRun         @relation(fields: [codeRunId], references: [id], onDelete: Cascade)
+
+  testCaseId      String          @db.Uuid
+  testCase        TestCase        @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+
+  status          ExecutionStatus
+  passed          Boolean
+
+  stdout          String?
+  stderr          String?
+  executionTimeMS Int?
+  memoryBytes     BigInt?
+
+  createdAt       DateTime        @default(now())
+
+  @@unique([codeRunId, testCaseId])
+  @@index([codeRunId])
+  @@index([testCaseId])
 }

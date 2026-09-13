@@ -7,14 +7,11 @@ export type CreateCodeRunData = {
 
 export type UpdateCodeRunData = {
     status: ExecutionStatus
-    stdout?: string 
-    stderr?: string 
-    executionTimeMS?: number
-    memoryBytes?: number
 }
 
 export type ExecutionJob = {
     id: string;
+    codeRunId: string
     participantId: string;
     interviewQuestionId: string;
     testCaseId: string;
@@ -40,4 +37,15 @@ export type ExecutionCompletedEvent = {
     stdout: string;
     stderr: string;
     executionTimeMS: number;
+};
+
+export type CreateCodeRunTestCaseResultData = {
+    codeRunId: string;
+    testCaseId: string;
+    status: ExecutionStatus;
+    passed: boolean;
+    stdout?: string;
+    stderr?: string;
+    executionTimeMS?: number;
+    memoryBytes?: number;
 };

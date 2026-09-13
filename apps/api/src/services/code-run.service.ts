@@ -6,13 +6,16 @@ import { AppError } from "../../core/errors/app-error"
 import { ExecutionStatus, ParticipantRole } from "@interview-os/database";
 import { TestCaseRepository } from "../repositories/testCase.repository";
 import { RedisQueue } from "@interview-os/redis";
+import { randomUUID } from "node:crypto";
+import { CodeRunTestCaseResultRepository } from "../repositories/code-run-testCase-result.repository";
 
 export class CodeRunService{
     constructor(
         private readonly codeRunRepository = new CodeRunRepository,
         private readonly interviewQuestionRepository = new InterviewQuestionRepository,
         private readonly participantRepository = new ParticipantRepository,
-        private readonly testCaseRepository = new TestCaseRepository
+        private readonly testCaseRepository = new TestCaseRepository,
+        private readonly codeRunTestCaseResultRepository = new CodeRunTestCaseResultRepository
     ){}
 
     async createCodeRun(interviewQuestionId:string, participantId:string, requesterId:string, data:CreateCodeRunData){
@@ -165,19 +168,26 @@ export class CodeRunService{
             )
         }
 
-        const job:ExecutionJob = {
-            id: codeRun.id,
-            participantId: codeRun.participantId,
-            interviewQuestionId: codeRun.interviewQuestionId,
-            language: codeRun.language,
-            sourceCode: codeRun.sourceCode,
-            status: "QUEUED",
-            input: visibleTestCases[0].input as string
-        };
+        const queue = new RedisQueue()
 
-        const queue = new RedisQueue<ExecutionJob>()
+        for (const testCase of visibleTestCases) {
+            const job: ExecutionJob = {
+                id: randomUUID(),
+                codeRunId: codeRun.id,
+                testCaseId: testCase.id,
+                participantId: codeRun.participantId,
+                interviewQuestionId: codeRun.interviewQuestionId,
+                language: codeRun.language,
+                sourceCode: codeRun.sourceCode,
+                status: "QUEUED",
+                input: testCase.input as string,
+            };
 
-        await queue.enqueue(job)
+            await queue.enqueue(job);
+        }
+        await this.codeRunRepository.updateCodeRun(id, {
+            status: ExecutionStatus.RUNNING
+        });
     }
 
     async handleExecutionCompleted(event: ExecutionCompletedEvent) {
@@ -190,21 +200,80 @@ export class CodeRunService{
                 "CORRESPONDING_CODERUN_NOT_EXIST"
             );
         }
+        const interviewQuestion =
+            await this.interviewQuestionRepository.findById(
+                codeRun.interviewQuestionId
+            );
+
+        if (!interviewQuestion) {
+            throw new AppError(
+                "InterviewQuestion Not Found",
+                404,
+                "INTERVIEWQUESTION_NOT_FOUND"
+            );
+        }
+
+        const testCase = await this.testCaseRepository.findById(event.testCaseId);
+
+        if (!testCase) {
+            throw new AppError(
+                "Test Case Not Found",
+                404,
+                "TEST_CASE_NOT_FOUND"
+            );
+        }
+
         const status =
             event.status === "SUCCESS"
                 ? ExecutionStatus.SUCCESS
                 : ExecutionStatus.FAILED;
 
-        const data: UpdateCodeRunData = {
+        if (typeof testCase.expectedOutput !== "string") {
+            throw new AppError(
+                "Test Case Expected Output Must Be A String",
+                500,
+                "INVALID_TEST_CASE_EXPECTED_OUTPUT"
+            );
+        }
+
+        const passed =
+            status === ExecutionStatus.SUCCESS &&
+            event.stdout.trim() === testCase.expectedOutput.trim();
+
+        await this.codeRunTestCaseResultRepository.createResult({
+            codeRunId: event.codeRunId,
+            testCaseId: event.testCaseId,
+            status,
+            passed,
             stdout: event.stdout,
             stderr: event.stderr,
-            status,
             executionTimeMS: event.executionTimeMS,
-        };
+        });
 
-        await this.codeRunRepository.updateCodeRun(
-            event.codeRunId,
-            data
-        );
+        const visibleTestCases =
+            await this.testCaseRepository.getVisibleTestCasesForAQuestion(
+                interviewQuestion.questionId
+            );
+
+        const results =
+            await this.codeRunTestCaseResultRepository.getResultsForCodeRun(
+                event.codeRunId
+            );
+
+        if (results.length === visibleTestCases.length) {
+            const executionFailed = results.some(
+                result => result.status === ExecutionStatus.FAILED
+            );
+
+            await this.codeRunRepository.updateCodeRun(
+                event.codeRunId,
+                {
+                    status: executionFailed
+                        ? ExecutionStatus.FAILED
+                        : ExecutionStatus.SUCCESS
+                }
+            );
+        }
+        
     }
 }

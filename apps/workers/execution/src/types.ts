@@ -11,20 +11,15 @@ export interface ExecutionResult {
 
 export type ExecutionJob = {
     id: string;
-
+    codeRunId: string,
     participantId: string;
     interviewQuestionId: string;
     testCaseId: string,
-
     language: executionLanguage;
-
     sourceCode: string;
-
     input?: string;
-
     timeoutMs?: number;
     memoryLimitMB?: number;
-
     status: ExecutionJobStatus;
 };
 

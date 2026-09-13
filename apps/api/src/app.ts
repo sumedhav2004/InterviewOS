@@ -42,7 +42,7 @@ app.use("/interviews", authMiddleware, participantRoutes)
 app.use("/", authMiddleware, inviteRoutes )
 app.use("/questions", authMiddleware, questionRoutes)
 app.use("/interviews", authMiddleware, interviewQuestionRoutes)
-app.use("/coderun", authMiddleware, codeRunRoutes )
+app.use("/coderuns", authMiddleware, codeRunRoutes )
 app.use("/questions", authMiddleware, testCaseRoutes)
 
 app.use(errorHandler);
