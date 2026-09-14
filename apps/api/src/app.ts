@@ -16,6 +16,7 @@ import questionRoutes from "./routes/question.routes"
 import interviewQuestionRoutes from "./routes/interviewQuestion.routes"
 import codeRunRoutes from "./routes/code-run.routes"
 import testCaseRoutes from "./routes/test-case.routes"
+import submissionRoutes from "./routes/submission.routes";
 
 const app = express();
 
@@ -26,13 +27,6 @@ app.use(cors({
 app.use(requestIdMiddleware);
 app.use(loggerMiddleware);
 app.use(express.json());
-
-console.log("CLERK_PUBLISHABLE_KEY =", process.env.CLERK_PUBLISHABLE_KEY);
-console.log(
-  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =",
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-);
-console.log("CLERK_SECRET_KEY =", !!process.env.CLERK_SECRET_KEY);
 app.use(clerkMiddleware());
 
 app.use("/user", authMiddleware, userRoutes)
@@ -44,6 +38,7 @@ app.use("/questions", authMiddleware, questionRoutes)
 app.use("/interviews", authMiddleware, interviewQuestionRoutes)
 app.use("/coderuns", authMiddleware, codeRunRoutes )
 app.use("/questions", authMiddleware, testCaseRoutes)
+app.use("/submissions", authMiddleware, submissionRoutes);
 
 app.use(errorHandler);
 

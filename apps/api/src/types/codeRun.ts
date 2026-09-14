@@ -9,19 +9,54 @@ export type UpdateCodeRunData = {
     status: ExecutionStatus
 }
 
+type ExecutionTarget =
+    | {
+        type: "CODE_RUN";
+        codeRunId: string;
+    }
+    | {
+        type: "SUBMISSION";
+        submissionId: string;
+    };
+
 export type ExecutionJob = {
     id: string;
-    codeRunId: string
     participantId: string;
     interviewQuestionId: string;
     testCaseId: string;
-    language: "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP" | "C" | "GO" | "RUST";
+
+    language:
+        | "PYTHON"
+        | "JAVASCRIPT"
+        | "JAVA"
+        | "CPP"
+        | "C"
+        | "GO"
+        | "RUST";
+
     sourceCode: string;
     input?: string;
     timeoutMs?: number;
     memoryLimitMB?: number;
     status: ExecutionJobStatus;
+
+    target: ExecutionTarget;
 };
+
+
+// export type ExecutionJob = {
+//     id: string;
+//     codeRunId: string
+//     participantId: string;
+//     interviewQuestionId: string;
+//     testCaseId: string;
+//     language: "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP" | "C" | "GO" | "RUST";
+//     sourceCode: string;
+//     input?: string;
+//     timeoutMs?: number;
+//     memoryLimitMB?: number;
+//     status: ExecutionJobStatus;
+// };
 
 export type ExecutionJobStatus =
     | "QUEUED"
@@ -30,12 +65,19 @@ export type ExecutionJobStatus =
     | "FAILED";
 
 export type ExecutionCompletedEvent = {
-    type: "EXECUTION_COMPLETED"
+    type: "EXECUTION_COMPLETED";
+    target: ExecutionTarget;
     testCaseId: string;
-    codeRunId: string;
+
     status: "SUCCESS" | "FAILED";
+
     stdout: string;
     stderr: string;
+
+    exitCode: number | null;
+    timedOut: boolean;
+    outputLimitExceeded: boolean;
+
     executionTimeMS: number;
 };
 

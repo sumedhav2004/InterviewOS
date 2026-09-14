@@ -173,7 +173,10 @@ export class CodeRunService{
         for (const testCase of visibleTestCases) {
             const job: ExecutionJob = {
                 id: randomUUID(),
-                codeRunId: codeRun.id,
+                target: {
+                    type: "CODE_RUN",
+                    codeRunId: codeRun.id,
+                },
                 testCaseId: testCase.id,
                 participantId: codeRun.participantId,
                 interviewQuestionId: codeRun.interviewQuestionId,
@@ -191,7 +194,17 @@ export class CodeRunService{
     }
 
     async handleExecutionCompleted(event: ExecutionCompletedEvent) {
-        const codeRun = await this.codeRunRepository.findById(event.codeRunId);
+        if (event.target.type !== "CODE_RUN") {
+            throw new AppError(
+                "Unsupported Execution Target",
+                500,
+                "UNSUPPORTED_EXECUTION_TARGET"
+            );
+        }
+
+        const codeRun = await this.codeRunRepository.findById(
+            event.target.codeRunId
+        );
 
         if (!codeRun) {
             throw new AppError(
@@ -241,7 +254,7 @@ export class CodeRunService{
             event.stdout.trim() === testCase.expectedOutput.trim();
 
         await this.codeRunTestCaseResultRepository.createResult({
-            codeRunId: event.codeRunId,
+            codeRunId: event.target.codeRunId,
             testCaseId: event.testCaseId,
             status,
             passed,
@@ -257,7 +270,7 @@ export class CodeRunService{
 
         const results =
             await this.codeRunTestCaseResultRepository.getResultsForCodeRun(
-                event.codeRunId
+                event.target.codeRunId
             );
 
         if (results.length === visibleTestCases.length) {
@@ -266,7 +279,7 @@ export class CodeRunService{
             );
 
             await this.codeRunRepository.updateCodeRun(
-                event.codeRunId,
+                event.target.codeRunId,
                 {
                     status: executionFailed
                         ? ExecutionStatus.FAILED

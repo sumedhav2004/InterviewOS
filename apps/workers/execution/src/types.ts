@@ -8,19 +8,38 @@ export interface ExecutionResult {
     outputLimitExceeded: boolean;
     executionTimeMS: number;
 }
+export type ExecutionTarget =
+    | {
+        type: "CODE_RUN";
+        codeRunId: string;
+    }
+    | {
+        type: "SUBMISSION";
+        submissionId: string;
+    };
 
 export type ExecutionJob = {
     id: string;
-    codeRunId: string,
     participantId: string;
     interviewQuestionId: string;
-    testCaseId: string,
-    language: executionLanguage;
+    testCaseId: string;
+
+    language:
+        | "PYTHON"
+        | "JAVASCRIPT"
+        | "JAVA"
+        | "CPP"
+        | "C"
+        | "GO"
+        | "RUST";
+
     sourceCode: string;
     input?: string;
     timeoutMs?: number;
     memoryLimitMB?: number;
     status: ExecutionJobStatus;
+
+    target: ExecutionTarget;
 };
 
 export type ExecutionJobStatus =
@@ -69,10 +88,17 @@ export type SubmissionMode =
 
 export type ExecutionCompletedEvent = {
     type: "EXECUTION_COMPLETED";
-    codeRunId: string;
+    target: ExecutionTarget;
     testCaseId: string;
+
     status: "SUCCESS" | "FAILED";
+
     stdout: string;
     stderr: string;
+
+    exitCode: number | null;
+    timedOut: boolean;
+    outputLimitExceeded: boolean;
+
     executionTimeMS: number;
 };

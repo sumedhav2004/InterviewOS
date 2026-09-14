@@ -40,14 +40,20 @@ async function main() {
             console.log("RESULT:", result);
             const event: ExecutionCompletedEvent = {
                 type: "EXECUTION_COMPLETED",
-                codeRunId: job.codeRunId,
+                target: job.target,
                 testCaseId: job.testCaseId,
-                status: result.exitCode === 0 && !result.timedOut && !result.outputLimitExceeded
-                    ? "SUCCESS"
-                    : "FAILED",
+                status:
+                    result.exitCode === 0 &&
+                    !result.timedOut &&
+                    !result.outputLimitExceeded
+                        ? "SUCCESS"
+                        : "FAILED",
                 stdout: result.stdout,
                 stderr: result.stderr,
                 executionTimeMS: result.executionTimeMS,
+                exitCode: result.exitCode,
+                timedOut: result.timedOut,
+                outputLimitExceeded: result.outputLimitExceeded,
             };
             await publish(
                 "execution:results",

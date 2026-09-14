@@ -201,6 +201,7 @@ model TestCase {
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   codeRunTestCaseResults CodeRunTestCaseResult[]
+  submissionTestCaseResults SubmissionTestCaseResult[]
 
   @@index([questionId])
 }
@@ -235,7 +236,7 @@ model Submission {
 
   participantId       String             @db.Uuid
   participant         Participant        @relation(fields: [participantId], references: [id], onDelete: Cascade)
-
+  submissionTestCaseResults SubmissionTestCaseResult[]
   evaluation          Evaluation?
 
   @@index([interviewQuestionId])
@@ -291,5 +292,28 @@ model CodeRunTestCaseResult {
 
   @@unique([codeRunId, testCaseId])
   @@index([codeRunId])
+  @@index([testCaseId])
+}
+
+model SubmissionTestCaseResult {
+  id String @id @default(uuid()) @db.Uuid
+
+  submissionId String     @db.Uuid
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  testCaseId String   @db.Uuid
+  testCase   TestCase @relation(fields: [testCaseId],references: [id],onDelete: Cascade)
+
+  status          ExecutionStatus
+  passed          Boolean
+  stdout          String?
+  stderr          String?
+  executionTimeMS Int?
+  memoryBytes     BigInt?
+
+  createdAt DateTime @default(now())
+
+  @@unique([submissionId, testCaseId])
+  @@index([submissionId])
   @@index([testCaseId])
 }
