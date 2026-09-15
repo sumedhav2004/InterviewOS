@@ -1,0 +1,3 @@
+import { Circle } from "lucide-react"
+
+export function MiniNotes(){return <div className="h-32 rounded-md border border-border bg-background p-3"><div className="flex items-center justify-between"><span className="font-mono text-[8px] text-muted-foreground">EVALUATION</span><span className="text-[9px] text-success">Strong signal</span></div>{["Problem solving","Communication","Code quality"].map((x,i)=><div key={x} className="mt-3 grid grid-cols-[1fr_auto] items-center text-[9px]"><span>{x}</span><span className="flex gap-0.5">{[0,1,2,3,4].map(n=><Circle key={n} className={`h-2 w-2 ${n<=3+(i%2)?"fill-primary text-primary":"text-border"}`}/>)}</span></div>)}</div>}

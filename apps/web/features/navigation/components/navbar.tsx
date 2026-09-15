@@ -5,8 +5,8 @@ import { ArrowUpRight, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Mark } from "@/features/branding";
 
-import { Mark } from "./mark";
 
 const navigationItems = [
   { label: "Product", href: "#product" },

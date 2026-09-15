@@ -1,0 +1,3 @@
+import { Check } from "lucide-react";
+
+export function MiniEvaluation(){return <div className="grid h-32 grid-cols-[auto_1fr] gap-3 rounded-md border border-border bg-background p-3"><div className="grid h-9 w-9 place-items-center rounded-full bg-success/10 text-success"><Check className="h-4 w-4"/></div><div><p className="text-[10px] font-medium">Recommendation</p><p className="mt-1 text-[9px] leading-4 text-muted-foreground">Evidence grouped by signal, not scattered across tabs.</p><div className="mt-3 h-1 overflow-hidden rounded bg-muted"><div className="h-full w-4/5 bg-success"/></div></div></div>}

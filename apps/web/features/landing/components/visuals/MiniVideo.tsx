@@ -1,0 +1,3 @@
+import { Mic } from "lucide-react";
+
+export function MiniVideo(){return <div className="grid h-32 grid-cols-2 gap-2"><div className="relative grid place-items-center rounded-md border border-primary/40 bg-background"><span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 font-mono text-xs">AM</span><Mic className="absolute bottom-2 right-2 h-3 w-3 text-success"/></div><div className="relative grid place-items-center rounded-md border border-border bg-background"><span className="grid h-9 w-9 place-items-center rounded-full bg-cyan/10 font-mono text-xs">JL</span><span className="absolute left-2 top-2 h-1.5 w-1.5 rounded-full bg-success"/></div></div>}
