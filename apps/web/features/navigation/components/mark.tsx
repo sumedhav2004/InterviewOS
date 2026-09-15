@@ -1,0 +1,1 @@
+export function Mark(){return <span className="relative grid h-7 w-7 place-items-center rounded-md border border-primary/40 bg-primary/10"><span className="h-2.5 w-2.5 rotate-45 border border-cyan shadow-[0_0_10px_var(--cyan)]"/></span>}
