@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { userApi } from "@/lib/api";
+import { Container, Page, Stack } from "@/components/layout";
 
 export default function DashboardPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -36,16 +37,21 @@ export default function DashboardPage() {
   }, [isLoaded]);
 
   return (
-    <pre>
-      {JSON.stringify(
-        {
-          isSignedIn,
-          clerkUserId: clerkUser?.id,
-          backendUser,
-        },
-        null,
-        2
-      )}
-    </pre>
+    <Page>
+      <Container>
+        <Stack gap="xl">
+          <Stack gap="sm">
+            <h1>Interview Dashboard</h1>
+            <p className="text-muted-foreground">
+              Manage your upcoming interviews and candidate evaluations.
+            </p>
+          </Stack>
+
+          <section>
+            <h2>Upcoming interviews</h2>
+          </section>
+        </Stack>
+      </Container>
+    </Page>
   );
 }
