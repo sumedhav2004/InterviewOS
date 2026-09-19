@@ -14,6 +14,14 @@ export class InviteController{
         const invite = await this.inviteService.createInvite(senderId, receiverId, interviewId, data)
         return res.status(201).json(invite)
     }
+    
+    async getReceivedInvites(req: Request, res: Response) {
+        const receiverId = req.user.id;
+
+        const invites = await this.inviteService.getReceivedInvites(receiverId);
+
+        return res.status(200).json(invites);
+    }
 
     async acceptInvite(req:Request, res:Response){
         const receiverId = req.user.id
@@ -37,5 +45,12 @@ export class InviteController{
 
         const invite = await this.inviteService.cancelInvite(inviteId, senderId)
         return res.status(200).json(invite)
+    }
+
+    async getSentInvites(req:Request, res:Response){
+        const senderId = req.user.id 
+
+        const invites = await this.inviteService.getSentInvites(senderId)
+        return res.status(200).json(invites)
     }
 }

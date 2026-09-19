@@ -42,16 +42,25 @@ export class InterviewRepository{
         })
     }
 
-    async findByUserId(userId: string){
+    async findByUserId(userId: string) {
         return prisma.interview.findMany({
             where: {
-                createdById: userId
+            OR: [
+                { createdById: userId },
+                {
+                participants: {
+                    some: {
+                    userId,
+                    },
+                },
+                },
+            ],
             },
             orderBy: {
-                createdAt: "desc",
+            createdAt: "desc",
             },
-        })
-    }
+        });
+        }
 
     async updateInterviewSchedule(
         id: string,

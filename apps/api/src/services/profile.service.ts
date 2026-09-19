@@ -15,4 +15,8 @@ export class ProfileService{
             const updatedUser = await this.userRepository.updateUser(id,data)
             return updatedUser;   
     }
+
+    async findUser(id:string){
+        return this.userRepository.findById(id)
+    }
 }

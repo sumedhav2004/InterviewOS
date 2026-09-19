@@ -6,6 +6,7 @@ import { ArrowUpRight, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Mark } from "@/features/branding";
+import Link from "next/link";
 
 
 const navigationItems = [
@@ -66,9 +67,11 @@ export function Navigation() {
         </div>
 
         <div className="hidden items-center gap-2 sm:flex">
-          <Button variant="ghost" size="sm">
-            Sign in
-          </Button>
+          <Link href="/sign-in">
+            <Button variant="ghost" size="sm">
+                Sign in
+            </Button>
+            </Link>
 
           <Button size="sm">
             Get started

@@ -26,4 +26,10 @@ router.patch(
     inviteController.cancelInvite.bind(inviteController)
 );
 
+router.get("/invites", inviteController.getReceivedInvites.bind(inviteController));
+router.get(
+  "/invites/sent",
+  inviteController.getSentInvites.bind(inviteController),
+);
+
 export default router;

@@ -19,4 +19,11 @@ export class UserController{
 
     return res.json(user);
 }
+    async findUserById(req:Request, res:Response){
+        const userId = req.params.userId 
+
+        const user = await this.profileService.findUser(userId)
+        return res.status(200).json(user)
+        
+    }
 }

@@ -76,6 +76,10 @@ export class InviteService{
 
     }
 
+    async getReceivedInvites(userId: string) {
+        return this.inviteRepository.getReceivedInvites(userId);
+    }
+
     async acceptInvite(
         inviteId: string,
         receiverId: string
@@ -193,5 +197,9 @@ export class InviteService{
 
         return this.inviteRepository.updateInviteStatus(inviteId, InviteStatus.CANCELLED)
 
+    }
+
+    async getSentInvites(userId: string) {
+    return this.inviteRepository.getSentInvites(userId);
     }
 }
