@@ -1,8 +1,11 @@
+import { createServer } from "http";
 import { config } from "@interview-os/config";
 import { logger } from "@interview-os/logger";
-import { connectRedis, redis } from "@interview-os/redis";
+import { connectRedis } from "@interview-os/redis";
+
 import app from "./app";
 import { ExecutionResultsService } from "./services/execution-result.service";
+import { RealtimeWebSocketServer } from "./realtime/websocket/websocket-server";
 
 async function main() {
     logger.info("Starting the server...");
@@ -14,8 +17,12 @@ async function main() {
     const executionResultsService = new ExecutionResultsService();
     await executionResultsService.start();
 
-    app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
+    const httpServer = createServer(app);
+
+    new RealtimeWebSocketServer(httpServer);
+
+    httpServer.listen(port, () => {
+        logger.info(`Server is running on port ${port}`);
     });
 }
 

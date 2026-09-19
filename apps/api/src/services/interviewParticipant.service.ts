@@ -57,8 +57,8 @@ export class InterviewParticipantService {
         // 4. Check duplicate participation
         const existing =
             await this.participantRepository.findParticipant(
-                interviewId,
-                targetId
+                targetId,
+                interviewId
             );
 
         if (existing) {
@@ -146,14 +146,57 @@ export class InterviewParticipantService {
 
         const participant = await this.participantRepository.findParticipant(userId, interviewId)
 
-        if((interview.createdById !== userId) || (participant?.userId !== userId)){
+        if (
+    interview.createdById !== userId &&
+        participant?.userId !== userId
+    ) {
+        throw new AppError(
+            "Unauthorized",
+            403,
+            "UNAUTHORIZED"
+        );
+    }
+
+        return this.participantRepository.findParticipantsForInterview(interviewId)
+    }
+
+    async authorizeParticipant(
+        userId: string,
+        interviewId: string,
+    ) {
+        const interview =
+            await this.interviewRepository.findById(interviewId);
+
+        if (!interview) {
+            throw new AppError(
+                "Interview Not Found",
+                404,
+                "INTERVIEW_NOT_FOUND"
+            );
+        }
+
+        console.log({
+            userId,
+            interviewId,
+        });
+
+        const participant =
+            await this.participantRepository.findParticipant(
+                userId,
+                interviewId
+            );
+
+        if (
+            interview.createdById !== userId &&
+            !participant
+        ) {
             throw new AppError(
                 "Unauthorized",
                 403,
                 "UNAUTHORIZED"
-            )
+            );
         }
 
-        return this.participantRepository.findParticipantsForInterview(interviewId)
+        return participant;
     }
 }

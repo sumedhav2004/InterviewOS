@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@clerk/backend": "^3.18.1",
     "@clerk/express": "^2.1.44",
     "@interview-os/config": "workspace:*",
     "@interview-os/database": "workspace:*",
@@ -24,13 +25,15 @@
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "pino-http": "^11.0.0",
-    "uuid": "^14.0.1"
+    "uuid": "^14.0.1",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^20",
     "@types/uuid": "^11.0.0",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2"
   }
