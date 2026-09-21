@@ -4,7 +4,26 @@ import { Code2, FileText } from "lucide-react";
 
 import { VideoPanel } from "./video-panel";
 
-export function InterviewLayout() {
+type ParticipantMediaState = {
+  cameraEnabled: boolean;
+  microphoneEnabled: boolean;
+};
+
+type InterviewLayoutProps = {
+  localStream: MediaStream | null;
+  participantIds: string[];
+  remoteStreams: Map<string, MediaStream>;
+  localMediaState: ParticipantMediaState;
+  remoteMediaStates: Map<string, ParticipantMediaState>;
+};
+
+export function InterviewLayout({
+  localStream,
+  participantIds,
+  remoteStreams,
+  localMediaState,
+  remoteMediaStates,
+}: InterviewLayoutProps) {
   return (
     <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
       <section className="technical-grid min-h-0 border-b border-border lg:border-b-0 lg:border-r">
@@ -28,9 +47,13 @@ export function InterviewLayout() {
               <div>
                 <span className="mr-5 text-border">01</span>
                 <span className="text-primary">function</span>{" "}
-                <span className="text-foreground">solution</span>
-                <span className="text-muted-foreground">()</span>
-                {" {"}
+                <span className="text-foreground">
+                  solution
+                </span>
+                <span className="text-muted-foreground">
+                  ()
+                </span>{" "}
+                {"{"}
               </div>
 
               <div>
@@ -55,7 +78,13 @@ export function InterviewLayout() {
       </section>
 
       <aside className="flex min-h-0 flex-col bg-card/20">
-        <VideoPanel />
+        <VideoPanel
+          localStream={localStream}
+          participantIds={participantIds}
+          remoteStreams={remoteStreams}
+          localMediaState={localMediaState}
+          remoteMediaStates={remoteMediaStates}
+        />
 
         <section className="hidden min-h-[180px] flex-1 flex-col border-t border-border md:flex">
           <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3">

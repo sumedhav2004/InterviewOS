@@ -69,6 +69,26 @@ export class RealtimeWebSocketServer {
                             return;
                         }
 
+                        if (
+                            message.type === "WEBRTC_OFFER" ||
+                            message.type === "WEBRTC_ANSWER" ||
+                            message.type === "WEBRTC_ICE_CANDIDATE"
+                        ) {
+                            this.interviewGateway.handleWebRTCSignal(
+                                socket,
+                                message,
+                            );
+                        }
+
+                        if (message.type === "MEDIA_STATE") {
+                            this.interviewGateway.handleMediaState(
+                                socket,
+                                message,
+                            );
+
+                            return;
+                        }
+
                         logger.info(
                             {
                                 userId: socket.userId,

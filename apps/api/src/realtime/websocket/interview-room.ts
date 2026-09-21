@@ -49,6 +49,28 @@ export class InterviewRoom {
         return Array.from(room.keys());
     }
 
+    sendToParticipant(
+        interviewId: string,
+        userId: string,
+        message: unknown,
+    ) {
+        const room = this.rooms.get(interviewId);
+
+        if (!room) {
+            return false;
+        }
+
+        const socket = room.get(userId);
+
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            return false;
+        }
+
+        socket.send(JSON.stringify(message));
+
+        return true;
+    }
+
     broadcast(
         interviewId: string,
         message: unknown,

@@ -95,6 +95,78 @@ export class InterviewGateway {
         socket.interviewId = undefined;
     }
 
+    handleWebRTCSignal(
+        socket: AuthenticatedSocket,
+        message: {
+            type:
+                | "WEBRTC_OFFER"
+                | "WEBRTC_ANSWER"
+                | "WEBRTC_ICE_CANDIDATE";
+            targetUserId: string;
+            offer?: RTCSessionDescriptionInit;
+            answer?: RTCSessionDescriptionInit;
+            candidate?: RTCIceCandidateInit;
+        },
+    ) {
+        if (!socket.userId || !socket.interviewId) {
+            this.sendError(socket, "Not joined to an interview");
+            return;
+        }
+
+        if (!message.targetUserId) {
+            this.sendError(socket, "Target participant is required");
+            return;
+        }
+
+        const payload = {
+            type: message.type,
+            fromUserId: socket.userId,
+            ...(message.type === "WEBRTC_OFFER"
+                ? { offer: message.offer }
+                : {}),
+            ...(message.type === "WEBRTC_ANSWER"
+                ? { answer: message.answer }
+                : {}),
+            ...(message.type === "WEBRTC_ICE_CANDIDATE"
+                ? { candidate: message.candidate }
+                : {}),
+        };
+
+        this.room.sendToParticipant(
+            socket.interviewId,
+            message.targetUserId,
+            payload,
+        );
+
+    }
+
+    handleMediaState(
+        socket: AuthenticatedSocket,
+        message: {
+            type: "MEDIA_STATE";
+            cameraEnabled: boolean;
+            microphoneEnabled: boolean;
+        },
+    ) {
+        if (!socket.userId || !socket.interviewId) {
+            this.sendError(socket, "Not joined to an interview");
+            return;
+        }
+
+        const payload = {
+            type: "MEDIA_STATE",
+            userId: socket.userId,
+            cameraEnabled: message.cameraEnabled,
+            microphoneEnabled: message.microphoneEnabled,
+        };
+
+        this.room.broadcast(
+            socket.interviewId,
+            payload,
+            socket.userId,
+        );
+    }
+
     private sendError(
         socket: WebSocket,
         message: string,

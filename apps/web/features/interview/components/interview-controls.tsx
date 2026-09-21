@@ -2,8 +2,10 @@
 
 import {
   Camera,
+  CameraOff,
   Code2,
   Mic,
+  MicOff,
   MonitorUp,
   Network,
   PhoneOff,
@@ -13,24 +15,46 @@ import {
 
 import { Button } from "@/components/ui/button";
 
-export function InterviewControls() {
+type InterviewControlsProps = {
+  cameraEnabled: boolean;
+  microphoneEnabled: boolean;
+  onToggleCamera: () => void;
+  onToggleMicrophone: () => void;
+};
+
+export function InterviewControls({
+  cameraEnabled,
+  microphoneEnabled,
+  onToggleCamera,
+  onToggleMicrophone,
+}: InterviewControlsProps) {
   return (
     <footer className="flex h-16 shrink-0 items-center justify-between border-t border-border bg-background/90 px-3 backdrop-blur-xl sm:px-5">
-      <div className="hidden items-center gap-1 sm:flex">
+      <div className="flex items-center gap-1">
         <Button
           size="icon"
-          variant="ghost"
-          title="Microphone"
+          variant={microphoneEnabled ? "ghost" : "destructive"}
+          title={
+            microphoneEnabled
+              ? "Turn microphone off"
+              : "Turn microphone on"
+          }
+          onClick={onToggleMicrophone}
         >
-          <Mic />
+          {microphoneEnabled ? <Mic /> : <MicOff />}
         </Button>
 
         <Button
           size="icon"
-          variant="ghost"
-          title="Camera"
+          variant={cameraEnabled ? "ghost" : "destructive"}
+          title={
+            cameraEnabled
+              ? "Turn camera off"
+              : "Turn camera on"
+          }
+          onClick={onToggleCamera}
         >
-          <Camera />
+          {cameraEnabled ? <Camera /> : <CameraOff />}
         </Button>
 
         <Button
