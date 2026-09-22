@@ -283,6 +283,11 @@ export function InterviewPage({
                 return;
             }
 
+            if (message.type === "CODE_SNAPSHOT") {
+                setCode(message.code);
+                return;
+            }
+
             if (message.type === "CODE_CHANGE") {
                 setCode(message.code);
                 return;

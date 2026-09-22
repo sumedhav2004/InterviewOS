@@ -1,7 +1,19 @@
 import WebSocket from "ws";
 
+const DEFAULT_CODE = `function solution() {
+  // Start coding...
+}`;
+
 export class InterviewRoom {
-    private readonly rooms = new Map<string, Map<string, WebSocket>>();
+    private readonly rooms = new Map<
+        string,
+        Map<string, WebSocket>
+    >();
+
+    private readonly codeSnapshots = new Map<
+        string,
+        string
+    >();
 
     join(
         interviewId: string,
@@ -13,6 +25,11 @@ export class InterviewRoom {
         if (!room) {
             room = new Map();
             this.rooms.set(interviewId, room);
+
+            this.codeSnapshots.set(
+                interviewId,
+                DEFAULT_CODE,
+            );
         }
 
         const alreadyJoined = room.has(userId);
@@ -36,6 +53,7 @@ export class InterviewRoom {
 
         if (room.size === 0) {
             this.rooms.delete(interviewId);
+            this.codeSnapshots.delete(interviewId);
         }
     }
 
@@ -47,6 +65,20 @@ export class InterviewRoom {
         }
 
         return Array.from(room.keys());
+    }
+
+    getCodeSnapshot(interviewId: string) {
+        return this.codeSnapshots.get(interviewId);
+    }
+
+    setCodeSnapshot(
+        interviewId: string,
+        code: string,
+    ) {
+        this.codeSnapshots.set(
+            interviewId,
+            code,
+        );
     }
 
     sendToParticipant(
@@ -62,7 +94,10 @@ export class InterviewRoom {
 
         const socket = room.get(userId);
 
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
+        if (
+            !socket ||
+            socket.readyState !== WebSocket.OPEN
+        ) {
             return false;
         }
 

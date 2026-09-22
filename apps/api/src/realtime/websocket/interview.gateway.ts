@@ -13,6 +13,7 @@ export class InterviewGateway {
     constructor(
         private readonly room: InterviewRoom,
         private readonly participantService = new InterviewParticipantService(),
+        
     ) {}
 
     async joinInterview(
@@ -47,6 +48,18 @@ export class InterviewGateway {
                 userId: socket.userId,
                 participants: existingParticipants,
             }));
+
+            const codeSnapshot =
+                this.room.getCodeSnapshot(interviewId);
+
+            if (codeSnapshot !== undefined) {
+                socket.send(
+                    JSON.stringify({
+                        type: "CODE_SNAPSHOT",
+                        code: codeSnapshot,
+                    }),
+                );
+            }
 
             this.room.broadcast(
                 interviewId,
@@ -179,6 +192,11 @@ export class InterviewGateway {
             return;
         }
 
+        this.room.setCodeSnapshot(
+            socket.interviewId,
+            message.code,
+        );
+
         const payload = {
             type: "CODE_CHANGE",
             userId: socket.userId,
@@ -191,6 +209,7 @@ export class InterviewGateway {
             socket.userId,
         );
     }
+
 
     private sendError(
         socket: WebSocket,
