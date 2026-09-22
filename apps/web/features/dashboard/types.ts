@@ -1,3 +1,4 @@
+import { User } from "@interview-os/database";
 
 
 export type InviteStatus =
@@ -23,6 +24,11 @@ export type Invite = {
   interviewId: string;
   senderId: string;
   receiverId: string;
+};
+
+export type InviteWithDetails = Invite & {
+  sender: User;
+  interview: Interview;
 };
 
 export type InterviewStatus =

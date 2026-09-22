@@ -5,11 +5,8 @@ import { useEffect, useState } from "react";
 import { dashboardApi } from "../api/dashboard-api";
 import type { Invite, Interview } from "../types";
 import type { User } from "@/features/auth/types";
+import type { InviteWithDetails } from "../types";
 
-type InviteWithSender = Invite & {
-  sender: User;
-  interview: Interview;
-};
 
 type UseInvitationsOptions = {
   isLoaded: boolean;
@@ -20,7 +17,7 @@ export const useInvitations = ({
   isLoaded,
   isSignedIn,
 }: UseInvitationsOptions) => {
-  const [invitations, setInvitations] = useState<InviteWithSender[]>([]);
+  const [invitations, setInvitations] = useState<InviteWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,23 +63,7 @@ export const useInvitations = ({
     async function loadInvitations() {
       try {
         const data = await dashboardApi.getReceivedInvites();
-
-        const invitationsWithDetails = await Promise.all(
-          data.map(async (invite) => {
-            const [sender, interview] = await Promise.all([
-              dashboardApi.getSender(invite.senderId),
-              dashboardApi.getInterview(invite.interviewId),
-            ]);
-
-            return {
-              ...invite,
-              sender,
-              interview,
-            };
-          }),
-        );
-
-        setInvitations(invitationsWithDetails);
+        setInvitations(data);
       } catch (error) {
         setError(
           error instanceof Error

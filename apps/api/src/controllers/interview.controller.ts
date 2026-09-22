@@ -8,8 +8,9 @@ export class InterviewController{
 
     async findInterviewById(req: Request, res: Response){
         const id = req.params.id
+        const userId = req.user.id
 
-        const interview = await this.interviewService.findInterviewById(id)
+        const interview = await this.interviewService.findInterviewById(id, userId)
         return res.status(200).json(interview)
     }
 

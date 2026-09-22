@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/api-client";
 import type { User } from "@/features/auth/types";
 import { useAccessToken } from "@/lib/auth";
-import { Interview, Invite } from "../types";
+import { Interview, Invite, InviteWithDetails} from "../types";
 
 export const dashboardApi = {
   getCurrentUser() {
@@ -9,8 +9,8 @@ export const dashboardApi = {
   },
 
   getReceivedInvites() {
-    return apiClient.get<Invite[]>("/invites");
-    },
+  return apiClient.get<InviteWithDetails[]>("/invites");
+},
 
     getSender(userId:string){
         return apiClient.get<User>(`/user/${userId}`)

@@ -2,20 +2,28 @@ import { InviteStatus, prisma, Prisma } from "@interview-os/database";
 import { CreateInviteData, UpdateInviteData } from "../types/invite";
 
 export class InvitesRepository{
-    async getSentInvites(userId : string){
+    async getSentInvites(userId: string) {
         return prisma.invite.findMany({
             where: {
-                senderId: userId
-            }
-        })
+                senderId: userId,
+            },
+            include: {
+                sender: true,
+                interview: true,
+            },
+        });
     }
 
-    async getReceivedInvites(userId : string){
+    async getReceivedInvites(userId: string) {
         return prisma.invite.findMany({
             where: {
-                receiverId: userId
-            }
-        })
+                receiverId: userId,
+            },
+            include: {
+                sender: true,
+                interview: true,
+            },
+        });
     }
 
     async createInvite(senderId:string, receiverId:string, interviewId:string, data: CreateInviteData){

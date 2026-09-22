@@ -11,10 +11,37 @@ export class InterviewService{
         private readonly participantRepository = new ParticipantRepository
     ){}
 
-    async findInterviewById(id: string){
-        const interview = await this.interviewRepository.findById(id);
-        return interview
+    async findInterviewById(id: string, userId: string) {
+    const interview =
+        await this.interviewRepository.findById(id);
+
+    if (!interview) {
+        throw new AppError(
+            "Interview Not Found",
+            404,
+            "INTERVIEW_NOT_FOUND"
+        );
     }
+
+    const participant =
+        await this.participantRepository.findParticipant(
+            userId,
+            id
+        );
+
+    if (
+        interview.createdById !== userId &&
+        !participant
+    ) {
+        throw new AppError(
+            "Unauthorized",
+            403,
+            "UNAUTHORIZED"
+        );
+    }
+
+    return interview;
+}
 
     async createInterview(userId: string, interviewData: createInterviewData) {
         return prisma.$transaction(async (tx) => {
@@ -38,7 +65,7 @@ export class InterviewService{
     }
 
     async updateInterview(id: string, userId: string, data: updateInterviewData){
-        const interview = await this.findInterviewById(id)
+        const interview = await this.findInterviewById(id,userId)
         if(!interview){
             throw new AppError(
                 "Interview Not Found",
@@ -64,7 +91,7 @@ export class InterviewService{
     }
 
     async deleteInterview(id: string, userId: string){
-        const interview = await this.findInterviewById(id)
+        const interview = await this.findInterviewById(id,userId)
 
         if(!interview){
             throw new AppError(
@@ -85,7 +112,7 @@ export class InterviewService{
     }
 
     async scheduleInterview(userId:string, id:string, scheduledAt: Date){
-        const interview = await this.findInterviewById(id)
+        const interview = await this.findInterviewById(id,userId)
 
         if(!interview){
             throw new AppError(
@@ -123,7 +150,7 @@ export class InterviewService{
     }
 
     async startInterview(userId:string, id:string){
-        const interview = await this.findInterviewById(id)
+        const interview = await this.findInterviewById(id,userId)
 
         if(!interview){
             throw new AppError(
@@ -154,7 +181,7 @@ export class InterviewService{
     }
 
     async completeInterview(userId:string, id:string){
-        const interview = await this.findInterviewById(id)
+        const interview = await this.findInterviewById(id,userId)
 
         if(!interview){
             throw new AppError(
@@ -185,7 +212,7 @@ export class InterviewService{
     }
 
     async cancelInterview(userId:string, id:string){
-        const interview = await this.findInterviewById(id)
+        const interview = await this.findInterviewById(id, userId)
 
         if(!interview){
             throw new AppError(
