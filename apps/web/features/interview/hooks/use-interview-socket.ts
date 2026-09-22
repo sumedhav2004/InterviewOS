@@ -158,6 +158,8 @@ export function useInterviewSocket(
                 return;
             }
 
+            console.log("[WS] sending:", message);
+
             socketRef.current.send(
                 JSON.stringify(message),
             );

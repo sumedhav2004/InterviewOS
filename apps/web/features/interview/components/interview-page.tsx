@@ -40,6 +40,10 @@ export function InterviewPage({
     const [participantIds, setParticipantIds] =
         useState<Set<string>>(new Set());
 
+    
+
+    const [code, setCode] = useState('');
+
     const [
         remoteMediaStates,
         setRemoteMediaStates,
@@ -278,6 +282,11 @@ export function InterviewPage({
 
                 return;
             }
+
+            if (message.type === "CODE_CHANGE") {
+                setCode(message.code);
+                return;
+            }
         },
     );
 
@@ -439,6 +448,19 @@ export function InterviewPage({
             />
 
             <InterviewLayout
+                code={code}
+                onCodeChange={(nextCode) => {
+                    setCode(nextCode);
+
+                    if (!joined) {
+                        return;
+                    }
+
+                    sendMessage({
+                        type: "CODE_CHANGE",
+                        code: nextCode,
+                    });
+                }}
                 localStream={localStream}
                 participantIds={[
                     ...participantIds,

@@ -167,6 +167,31 @@ export class InterviewGateway {
         );
     }
 
+    handleCodeChange(
+        socket: AuthenticatedSocket,
+        message: {
+            type: "CODE_CHANGE";
+            code: string;
+        },
+    ) {
+        if (!socket.userId || !socket.interviewId) {
+            this.sendError(socket, "Not joined to an interview");
+            return;
+        }
+
+        const payload = {
+            type: "CODE_CHANGE",
+            userId: socket.userId,
+            code: message.code,
+        };
+
+        this.room.broadcast(
+            socket.interviewId,
+            payload,
+            socket.userId,
+        );
+    }
+
     private sendError(
         socket: WebSocket,
         message: string,

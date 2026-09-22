@@ -54,6 +54,10 @@ export type ServerMessage =
       participants: string[];
     }
   | {
+        type: "CODE_SNAPSHOT";
+        code: string;
+    }
+  | {
       type: "CODE_CHANGE";
       userId: string;
       code: string;

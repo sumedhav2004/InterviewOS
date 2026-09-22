@@ -33,7 +33,7 @@ export class RealtimeWebSocketServer {
                 socket.on("message", async (data) => {
                     try {
                         const message = JSON.parse(data.toString());
-
+                        console.log("[WS SERVER] received:", message);
                         logger.info(
                             {
                                 message,
@@ -82,6 +82,15 @@ export class RealtimeWebSocketServer {
 
                         if (message.type === "MEDIA_STATE") {
                             this.interviewGateway.handleMediaState(
+                                socket,
+                                message,
+                            );
+
+                            return;
+                        }
+
+                        if (message.type === "CODE_CHANGE") {
+                            this.interviewGateway.handleCodeChange(
                                 socket,
                                 message,
                             );

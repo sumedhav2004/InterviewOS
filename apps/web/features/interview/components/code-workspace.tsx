@@ -1,27 +1,28 @@
 "use client";
 
 import Editor, { BeforeMount } from "@monaco-editor/react";
-import { useState } from "react";
 import { spaceCadetTheme } from "@/lib/monaco/themes/space-cadet";
-
-const DEFAULT_CODE = `function solution() {
-  // Start coding...
-}`;
 
 const handleBeforeMount: BeforeMount = (monaco) => {
   monaco.editor.defineTheme("space-cadet", spaceCadetTheme);
 };
 
-export function CodeWorkspace() {
-  const [code, setCode] = useState(DEFAULT_CODE);
+type CodeWorkspaceProps = {
+  code: string;
+  onCodeChange: (code: string) => void;
+};
 
+export function CodeWorkspace({
+  code,
+  onCodeChange,
+}: CodeWorkspaceProps) {
   return (
     <div className="h-full min-h-0 overflow-hidden">
       <Editor
         height="100%"
         defaultLanguage="typescript"
         value={code}
-        onChange={(value) => setCode(value ?? "")}
+        onChange={(value) => onCodeChange(value ?? "")}
         beforeMount={handleBeforeMount}
         theme="space-cadet"
         options={{

@@ -16,6 +16,8 @@ type InterviewLayoutProps = {
   remoteStreams: Map<string, MediaStream>;
   localMediaState: ParticipantMediaState;
   remoteMediaStates: Map<string, ParticipantMediaState>;
+  code: string;
+    onCodeChange: (code: string) => void;
 };
 
 export function InterviewLayout({
@@ -24,6 +26,8 @@ export function InterviewLayout({
   remoteStreams,
   localMediaState,
   remoteMediaStates,
+  code,
+  onCodeChange
 }: InterviewLayoutProps) {
   return (
     <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
@@ -44,7 +48,10 @@ export function InterviewLayout({
           </div>
 
           <div className="min-h-0 flex-1 overflow-hidden">
-            <CodeWorkspace />
+            <CodeWorkspace
+                code={code}
+                onCodeChange={onCodeChange}
+            />
           </div>
         </div>
       </section>
