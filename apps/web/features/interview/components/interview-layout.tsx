@@ -3,6 +3,7 @@
 import { Code2, FileText } from "lucide-react";
 
 import { VideoPanel } from "./video-panel";
+import { CodeWorkspace } from "./code-workspace";
 
 type ParticipantMediaState = {
   cameraEnabled: boolean;
@@ -42,37 +43,8 @@ export function InterviewLayout({
             </span>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden bg-background p-5">
-            <div className="font-mono text-[11px] leading-6 text-muted-foreground">
-              <div>
-                <span className="mr-5 text-border">01</span>
-                <span className="text-primary">function</span>{" "}
-                <span className="text-foreground">
-                  solution
-                </span>
-                <span className="text-muted-foreground">
-                  ()
-                </span>{" "}
-                {"{"}
-              </div>
-
-              <div>
-                <span className="mr-5 text-border">02</span>
-                <span className="pl-4 text-muted-foreground">
-                  // Start coding...
-                </span>
-              </div>
-
-              <div>
-                <span className="mr-5 text-border">03</span>
-                <span>{"}"}</span>
-              </div>
-
-              <div className="mt-5 flex items-center gap-2 text-[10px] text-muted-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Editor ready
-              </div>
-            </div>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <CodeWorkspace />
           </div>
         </div>
       </section>

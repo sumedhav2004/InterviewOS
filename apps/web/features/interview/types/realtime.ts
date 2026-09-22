@@ -39,6 +39,10 @@ export type ClientRealtimeMessage =
       type: "MEDIA_STATE";
       cameraEnabled: boolean;
       microphoneEnabled: boolean;
+    }
+  | {
+      type: "CODE_CHANGE";
+      code: string;
     };
 
 export type ServerMessage =
@@ -48,6 +52,11 @@ export type ServerMessage =
       interviewId: string;
       userId: string;
       participants: string[];
+    }
+  | {
+      type: "CODE_CHANGE";
+      userId: string;
+      code: string;
     }
   | { type: "PARTICIPANT_JOINED"; userId: string }
   | { type: "PARTICIPANT_LEFT"; userId: string }
