@@ -216,6 +216,106 @@ export class InterviewQuestionService{
         );
     }
 
+    async setActiveInterviewQuestion(
+        interviewId: string,
+        interviewQuestionId: string,
+        requesterId: string,
+    ) {
+        const interview = await this.interviewRepository.findById(interviewId);
+
+        if (!interview) {
+            throw new AppError(
+                "Interview Not Found",
+                404,
+                "INTERVIEW_NOT_FOUND",
+            );
+        }
+
+        if(interview.status !== "INPROGRESS"){
+            throw new AppError(
+                "Interview Status Not InProgress",
+                400,
+                "INTERVIEW_NOT_IN_PROGRESS"
+            )
+        }
+
+        if (interview.createdById !== requesterId) {
+            throw new AppError(
+                "Unauthorized",
+                403,
+                "UNAUTHORIZED",
+            );
+        }
+
+        const interviewQuestion =
+            await this.interviewQuestionRepository.findById(
+                interviewQuestionId,
+            );
+
+        if (!interviewQuestion) {
+            throw new AppError(
+                "Interview Question Not Found",
+                404,
+                "INTERVIEW_QUESTION_NOT_FOUND",
+            );
+        }
+
+        if (interviewQuestion.interviewId !== interviewId) {
+            throw new AppError(
+                "Question does not belong to this interview",
+                400,
+                "QUESTION_NOT_IN_INTERVIEW",
+            );
+        }
+
+        return this.interviewQuestionRepository.setActiveInterviewQuestion(
+            interviewId,
+            interviewQuestionId,
+        );
+    }
+
+    async findActiveInterviewQuestion(interviewId: string) {
+        const activeInterviewQuestionId =
+            await this.interviewRepository.findActiveInterviewQuestionId(
+                interviewId
+            );
+
+        if (!activeInterviewQuestionId) {
+            return null;
+        }
+
+        return this.interviewQuestionRepository.findById(
+            activeInterviewQuestionId
+        );
+    }
+
+    async clearActiveInterviewQuestion(
+        interviewId: string,
+        requesterId: string,
+    ) {
+        const interview = await this.interviewRepository.findById(interviewId);
+
+        if (!interview) {
+            throw new AppError(
+                "Interview Not Found",
+                404,
+                "INTERVIEW_NOT_FOUND",
+            );
+        }
+
+        if (interview.createdById !== requesterId) {
+            throw new AppError(
+                "Unauthorized",
+                403,
+                "UNAUTHORIZED",
+            );
+        }
+
+        return this.interviewQuestionRepository.clearActiveInterviewQuestion(
+            interviewId,
+        );
+    }
+
     async deleteInterviewQuestion(id:string, requesterId:string, interviewId:string, questionId:string){
         const interview = await this.interviewRepository.findById(interviewId)
         if(!interview){

@@ -35,6 +35,47 @@ export class InterviewQuestionController{
         const interviewQuestion = await this.interviewQuestionService.createInterviewQuestion(interviewId, questionId, requesterId, data)
         return res.status(201).json(interviewQuestion)
     }
+    async setActiveInterviewQuestion(
+        req: Request<{
+            interviewId: string;
+            interviewQuestionId: string;
+        }>,
+        res: Response,
+    ) {
+        const requesterId = req.user.id;
+
+        const {
+            interviewId,
+            interviewQuestionId,
+        } = req.params;
+
+        const interviewQuestion =
+            await this.interviewQuestionService.setActiveInterviewQuestion(
+                interviewId,
+                interviewQuestionId,
+                requesterId,
+            );
+
+        return res.status(200).json(interviewQuestion);
+    }
+
+    async clearActiveInterviewQuestion(
+        req: Request<{
+            interviewId: string;
+        }>,
+        res: Response,
+    ) {
+        const requesterId = req.user.id;
+        const { interviewId } = req.params;
+
+        const interview =
+            await this.interviewQuestionService.clearActiveInterviewQuestion(
+                interviewId,
+                requesterId,
+            );
+
+        return res.status(200).json(interview);
+    }
 
     async updateInterviewQuestion(req:Request<{interviewId:string, questionId:string, interviewQuestionId:string}>, res:Response){
         const {interviewId, questionId, interviewQuestionId} = req.params 

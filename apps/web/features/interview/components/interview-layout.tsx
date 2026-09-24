@@ -4,10 +4,30 @@ import { Code2, FileText } from "lucide-react";
 
 import { VideoPanel } from "./video-panel";
 import { CodeWorkspace } from "./code-workspace";
+import { ActiveQuestion } from "./active-question";
 
 type ParticipantMediaState = {
   cameraEnabled: boolean;
   microphoneEnabled: boolean;
+};
+
+type TestCase = {
+  id: string;
+  input: unknown;
+  expectedOutput: unknown;
+};
+
+type ActiveInterviewQuestion = {
+  id: string;
+  questionOrder: number;
+  points: number;
+  question: {
+    id: string;
+    title: string;
+    description: string;
+    difficulty: string;
+    testCases: TestCase[];
+  };
 };
 
 type InterviewLayoutProps = {
@@ -17,7 +37,8 @@ type InterviewLayoutProps = {
   localMediaState: ParticipantMediaState;
   remoteMediaStates: Map<string, ParticipantMediaState>;
   code: string;
-    onCodeChange: (code: string) => void;
+  onCodeChange: (code: string) => void;
+  activeInterviewQuestion: ActiveInterviewQuestion | null;
 };
 
 export function InterviewLayout({
@@ -27,7 +48,8 @@ export function InterviewLayout({
   localMediaState,
   remoteMediaStates,
   code,
-  onCodeChange
+  onCodeChange,
+  activeInterviewQuestion
 }: InterviewLayoutProps) {
   return (
     <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
@@ -47,7 +69,8 @@ export function InterviewLayout({
             </span>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden">
+          <div className="min-h-0 flex flex-1 ">
+            <ActiveQuestion question={activeInterviewQuestion} />
             <CodeWorkspace
                 code={code}
                 onCodeChange={onCodeChange}
@@ -74,11 +97,40 @@ export function InterviewLayout({
             </span>
           </div>
 
-          <div className="p-4">
-            <p className="font-mono text-[10px] leading-5 text-muted-foreground">
-              Waiting for interview activity...
+          <div className="flex-1 overflow-y-auto p-4">
+  {!activeInterviewQuestion ? (
+    <p className="font-mono text-[10px] leading-5 text-muted-foreground">
+      No active question.
+    </p>
+  ) : (
+    <div className="space-y-3">
+      <div>
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
+              Question {activeInterviewQuestion.questionOrder}
             </p>
+
+            <h2 className="mt-1 text-sm font-medium">
+              {activeInterviewQuestion.question.title}
+            </h2>
           </div>
+
+          <p className="font-mono text-[10px] leading-5 text-muted-foreground">
+            {activeInterviewQuestion.question.description}
+          </p>
+
+          <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+            <span>
+              Difficulty: {activeInterviewQuestion.question.difficulty}
+            </span>
+
+            <span>
+              Points: {activeInterviewQuestion.points}
+            </span>
+          </div>
+
+        </div>
+      )}
+    </div>
         </section>
       </aside>
     </main>

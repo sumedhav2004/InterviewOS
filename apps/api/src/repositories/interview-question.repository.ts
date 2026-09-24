@@ -6,7 +6,18 @@ export class InterviewQuestionRepository{
         return prisma.interviewQuestion.findUnique({
             where: {
                 id
-            }
+            },
+            include: {
+                question: {
+                    include: {
+                        testCases: {
+                            orderBy: {
+                                createdAt: "asc",
+                            },
+                        },
+                    },
+                },
+            },
         })
     }
 
@@ -58,6 +69,33 @@ export class InterviewQuestionRepository{
             },
             orderBy: {
                 questionOrder: "asc",
+            },
+        });
+    }
+
+    async setActiveInterviewQuestion(
+        interviewId: string,
+        interviewQuestionId: string,
+    ) {
+        return prisma.interview.update({
+            where: {
+                id: interviewId,
+            },
+            data: {
+                activeInterviewQuestionId: interviewQuestionId,
+            },
+        });
+    }
+
+    async clearActiveInterviewQuestion(
+        interviewId: string,
+    ) {
+        return prisma.interview.update({
+            where: {
+                id: interviewId,
+            },
+            data: {
+                activeInterviewQuestionId: null,
             },
         });
     }

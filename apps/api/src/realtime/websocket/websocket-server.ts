@@ -69,6 +69,15 @@ export class RealtimeWebSocketServer {
                             return;
                         }
 
+                        if (message.type === "SET_ACTIVE_QUESTION") {
+                            await this.interviewGateway.setActiveQuestion(
+                                socket,
+                                message.interviewQuestionId,
+                            );
+
+                            return;
+                        }
+
                         if (
                             message.type === "WEBRTC_OFFER" ||
                             message.type === "WEBRTC_ANSWER" ||

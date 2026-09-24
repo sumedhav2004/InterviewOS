@@ -3,6 +3,7 @@ import WebSocket from "ws";
 import { InterviewRoom } from "./interview-room";
 import { InterviewParticipantService } from "../../services/interviewParticipant.service";
 import { logger } from "@interview-os/logger";
+import { InterviewQuestionService } from "../../services/interview-question.service";
 
 type AuthenticatedSocket = WebSocket & {
     userId?: string;
@@ -13,6 +14,7 @@ export class InterviewGateway {
     constructor(
         private readonly room: InterviewRoom,
         private readonly participantService = new InterviewParticipantService(),
+        private readonly interviewQuestionService = new InterviewQuestionService(),
         
     ) {}
 
@@ -61,6 +63,18 @@ export class InterviewGateway {
                 );
             }
 
+            const activeInterviewQuestion =
+                await this.interviewQuestionService.findActiveInterviewQuestion(
+                    interviewId,
+                );
+
+            socket.send(
+                JSON.stringify({
+                    type: "ACTIVE_QUESTION_STATE",
+                    interviewQuestion: activeInterviewQuestion,
+                }),
+            );
+
             this.room.broadcast(
                 interviewId,
                 {
@@ -84,6 +98,50 @@ export class InterviewGateway {
                 error instanceof Error
                     ? error.message
                     : "Unable to join interview",
+            );
+        }
+    }
+
+    async setActiveQuestion(
+        socket: AuthenticatedSocket,
+        interviewQuestionId: string | null,
+    ) {
+        if (!socket.userId || !socket.interviewId) {
+            this.sendError(socket, "Not joined to an interview");
+            return;
+        }
+
+        try {
+            await this.interviewQuestionService.setActiveInterviewQuestion(
+                socket.interviewId,
+                interviewQuestionId,
+                socket.userId,
+            );
+
+            this.room.broadcast(
+                socket.interviewId,
+                {
+                    type: "ACTIVE_QUESTION_CHANGED",
+                    interviewQuestionId,
+                    changedByUserId: socket.userId,
+                },
+            );
+        } catch (error) {
+            logger.error(
+                {
+                    error,
+                    userId: socket.userId,
+                    interviewId: socket.interviewId,
+                    interviewQuestionId,
+                },
+                "Failed to set active interview question",
+            );
+
+            this.sendError(
+                socket,
+                error instanceof Error
+                    ? error.message
+                    : "Unable to set active interview question",
             );
         }
     }

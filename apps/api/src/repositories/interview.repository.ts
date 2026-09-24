@@ -42,6 +42,19 @@ export class InterviewRepository{
         })
     }
 
+    async findActiveInterviewQuestionId(interviewId: string) {
+        const interview = await prisma.interview.findUnique({
+            where: {
+                id: interviewId,
+            },
+            select: {
+                activeInterviewQuestionId: true,
+            },
+        });
+
+        return interview?.activeInterviewQuestionId ?? null;
+    }
+
     async findByUserId(userId: string) {
         return prisma.interview.findMany({
             where: {

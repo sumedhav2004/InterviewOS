@@ -23,6 +23,11 @@ type ParticipantMediaState = {
     microphoneEnabled: boolean;
 };
 
+type ActiveInterviewQuestion = Extract<
+    ServerMessage,
+    { type: "ACTIVE_QUESTION_STATE" }
+>["interviewQuestion"];
+
 export function InterviewPage({
     interviewId,
 }: InterviewPageProps) {
@@ -43,6 +48,8 @@ export function InterviewPage({
     
 
     const [code, setCode] = useState('');
+    const [activeInterviewQuestion, setActiveInterviewQuestion] =
+    useState<ActiveInterviewQuestion | null>(null);
 
     const [
         remoteMediaStates,
@@ -288,6 +295,14 @@ export function InterviewPage({
                 return;
             }
 
+            if (message.type === "ACTIVE_QUESTION_STATE") {
+                setActiveInterviewQuestion(
+                    message.interviewQuestion,
+                );
+
+                return;
+            }
+
             if (message.type === "CODE_CHANGE") {
                 setCode(message.code);
                 return;
@@ -454,6 +469,7 @@ export function InterviewPage({
 
             <InterviewLayout
                 code={code}
+                activeInterviewQuestion={activeInterviewQuestion}
                 onCodeChange={(nextCode) => {
                     setCode(nextCode);
 

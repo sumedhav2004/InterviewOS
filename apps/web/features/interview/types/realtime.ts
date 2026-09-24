@@ -41,6 +41,10 @@ export type ClientRealtimeMessage =
       microphoneEnabled: boolean;
     }
   | {
+      type: "SET_ACTIVE_QUESTION";
+      interviewQuestionId: string | null;
+    }
+  | {
       type: "CODE_CHANGE";
       code: string;
     };
@@ -57,6 +61,27 @@ export type ServerMessage =
         type: "CODE_SNAPSHOT";
         code: string;
     }
+  | {
+      type: "ACTIVE_QUESTION_CHANGED";
+      interviewQuestionId: string | null;
+      changedByUserId: string;
+    }
+
+  | {
+      type: "ACTIVE_QUESTION_STATE";
+      interviewQuestion: {
+          id: string;
+          questionId: string;
+          questionOrder: number;
+          points: number;
+          question: {
+              id: string;
+              title: string;
+              description: string;
+              difficulty: "EASY" | "MEDIUM" | "HARD";
+          };
+      } | null;
+  }
   | {
       type: "CODE_CHANGE";
       userId: string;

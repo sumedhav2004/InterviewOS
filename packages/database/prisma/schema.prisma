@@ -102,6 +102,8 @@ model Interview {
   participants Participant[]
   invites      Invite[]
   questions    InterviewQuestion[]
+  activeInterviewQuestionId String? @unique @db.Uuid
+  activeInterviewQuestion   InterviewQuestion? @relation("ActiveInterviewQuestion", fields: [activeInterviewQuestionId], references: [id], onDelete: SetNull)
 }
 
 model Participant {
@@ -183,6 +185,8 @@ model InterviewQuestion {
 
   codeRuns    CodeRun[]
   submissions Submission[]
+
+  activeForInterview Interview? @relation("ActiveInterviewQuestion")
 
   @@unique([interviewId, questionId])
   @@unique([interviewId, questionOrder])

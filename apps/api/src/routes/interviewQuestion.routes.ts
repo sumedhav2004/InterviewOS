@@ -9,6 +9,19 @@ router.get("/:interviewId/questions", interviewQuestionController.findByIntervie
 router.get("/:interviewId/questions/:questionId", interviewQuestionController.findInterviewQuestion.bind(interviewQuestionController))
 router.post("/:interviewId/questions/:questionId", interviewQuestionController.createInterviewQuestion.bind(interviewQuestionController))
 router.patch("/:interviewId/questions/:questionId/:interviewQuestionId", interviewQuestionController.updateInterviewQuestion.bind(interviewQuestionController))
+router.patch(
+    "/:interviewId/active-question/:interviewQuestionId",
+    interviewQuestionController.setActiveInterviewQuestion.bind(
+        interviewQuestionController,
+    ),
+);
+
+router.delete(
+    "/:interviewId/active-question",
+    interviewQuestionController.clearActiveInterviewQuestion.bind(
+        interviewQuestionController,
+    ),
+);
 router.delete("/:interviewId/questions/:questionId/:interviewQuestionId", interviewQuestionController.deleteInterviewQuestion.bind(interviewQuestionController))
 
 
