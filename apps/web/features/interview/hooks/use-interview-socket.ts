@@ -10,6 +10,8 @@ import {
 import { useAuth } from "@clerk/nextjs";
 
 import type { ServerMessage } from "../types/realtime";
+import { ParticipantRole } from "@interview-os/database";
+import { ProgrammingLanguage } from "../types/programming-language";
 
 type MessageHandler = (
     message: ServerMessage,
@@ -33,6 +35,9 @@ export function useInterviewSocket(
 
     const [joined, setJoined] =
         useState(false);
+
+    const [participantRole, setParticipantRole] =
+    useState<ParticipantRole>();
 
     useEffect(() => {
         if (!isLoaded || !isSignedIn) {
@@ -102,6 +107,7 @@ export function useInterviewSocket(
                     "INTERVIEW_JOINED"
                 ) {
                     setJoined(true);
+                    setParticipantRole(message.role);
                 }
             };
 
@@ -167,9 +173,21 @@ export function useInterviewSocket(
         [],
     );
 
+    const sendLanguageChange = useCallback(
+    (language: ProgrammingLanguage) => {
+        sendMessage({
+            type: "LANGUAGE_CHANGE",
+            language,
+        });
+    },
+    [sendMessage],
+);
+
     return {
         sendMessage,
         userId,
         joined,
+        participantRole,
+        sendLanguageChange
     };
 }

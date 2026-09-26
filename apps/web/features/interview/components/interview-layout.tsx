@@ -6,6 +6,9 @@ import { VideoPanel } from "./video-panel";
 import { CodeWorkspace } from "./code-workspace";
 import { ActiveQuestion } from "./active-question";
 
+import { LanguageSelector } from "./language-selector";
+import { ProgrammingLanguage } from "../types/programming-language";
+
 type ParticipantMediaState = {
   cameraEnabled: boolean;
   microphoneEnabled: boolean;
@@ -39,6 +42,13 @@ type InterviewLayoutProps = {
   code: string;
   onCodeChange: (code: string) => void;
   activeInterviewQuestion: ActiveInterviewQuestion | null;
+
+  participantRole: "INTERVIEWER" | "CANDIDATE" | "OBSERVER";
+
+  language: ProgrammingLanguage;
+  onLanguageChange: (
+    language: ProgrammingLanguage,
+  ) => void;
 };
 
 export function InterviewLayout({
@@ -49,8 +59,14 @@ export function InterviewLayout({
   remoteMediaStates,
   code,
   onCodeChange,
-  activeInterviewQuestion
+  activeInterviewQuestion,
+  participantRole,
+  language,
+  onLanguageChange
 }: InterviewLayoutProps) {
+
+  console.log("[InterviewLayout] role:", participantRole);
+console.log("[InterviewLayout] language:", language);
   return (
     <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
       <section className="technical-grid min-h-0 border-b border-border lg:border-b-0 lg:border-r">
@@ -64,9 +80,16 @@ export function InterviewLayout({
               </span>
             </div>
 
-            <span className="font-mono text-[9px] text-muted-foreground">
-              main.ts
-            </span>
+            {participantRole === "CANDIDATE" ? (
+              <LanguageSelector
+                value={language}
+                onChange={onLanguageChange}
+              />
+            ) : (
+              <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
+                {language}
+              </span>
+            )}
           </div>
 
           <div className="min-h-0 flex flex-1 ">
@@ -74,6 +97,7 @@ export function InterviewLayout({
             <CodeWorkspace
                 code={code}
                 onCodeChange={onCodeChange}
+                language={language}
             />
           </div>
         </div>

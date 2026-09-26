@@ -4,6 +4,7 @@ import { InterviewRoom } from "./interview-room";
 import { InterviewParticipantService } from "../../services/interviewParticipant.service";
 import { logger } from "@interview-os/logger";
 import { InterviewQuestionService } from "../../services/interview-question.service";
+import { InterviewRepository } from "../../repositories/interview.repository";
 
 type AuthenticatedSocket = WebSocket & {
     userId?: string;
@@ -15,6 +16,7 @@ export class InterviewGateway {
         private readonly room: InterviewRoom,
         private readonly participantService = new InterviewParticipantService(),
         private readonly interviewQuestionService = new InterviewQuestionService(),
+        private readonly interviewRepository = new InterviewRepository(),
         
     ) {}
 
@@ -33,12 +35,14 @@ export class InterviewGateway {
         }
 
         try {
-            await this.participantService.authorizeParticipant(
-                socket.userId,
-                interviewId,
-            );
+            const participant =
+                await this.participantService.authorizeParticipant(
+                    socket.userId,
+                    interviewId,
+                );
 
-            const existingParticipants = this.room.getParticipants(interviewId);
+            const existingParticipants =
+                this.room.getParticipants(interviewId);
 
             socket.interviewId = interviewId;
 
@@ -48,6 +52,7 @@ export class InterviewGateway {
                 type: "INTERVIEW_JOINED",
                 interviewId,
                 userId: socket.userId,
+                role: participant?.role ?? "INTERVIEWER",
                 participants: existingParticipants,
             }));
 
@@ -63,6 +68,18 @@ export class InterviewGateway {
                 );
             }
 
+            const languageSnapshot =
+                this.room.getLanguageSnapshot(interviewId);
+
+            if (languageSnapshot !== undefined) {
+                socket.send(
+                    JSON.stringify({
+                        type: "LANGUAGE_SNAPSHOT",
+                        language: languageSnapshot,
+                    }),
+                );
+            }
+            
             const activeInterviewQuestion =
                 await this.interviewQuestionService.findActiveInterviewQuestion(
                     interviewId,
@@ -118,11 +135,18 @@ export class InterviewGateway {
                 socket.userId,
             );
 
+            const activeInterviewQuestion =
+                interviewQuestionId
+                    ? await this.interviewQuestionService.findById(
+                        interviewQuestionId,
+                    )
+                    : null;
+
             this.room.broadcast(
                 socket.interviewId,
                 {
                     type: "ACTIVE_QUESTION_CHANGED",
-                    interviewQuestionId,
+                    interviewQuestion: activeInterviewQuestion,
                     changedByUserId: socket.userId,
                 },
             );
@@ -146,6 +170,80 @@ export class InterviewGateway {
         }
     }
 
+    async handleLanguageChange(
+        socket: AuthenticatedSocket,
+        message: {
+            type: "LANGUAGE_CHANGE";
+            language: string;
+        },
+    ) {
+        if (!socket.userId || !socket.interviewId) {
+            this.sendError(socket, "Not joined to an interview");
+            return;
+        }
+
+        if (!message.language) {
+            this.sendError(socket, "Programming language is required");
+            return;
+        }
+
+        try {
+            const participant =
+                await this.participantService.authorizeParticipant(
+                    socket.userId,
+                    socket.interviewId,
+                );
+
+            if (!participant) {
+                this.sendError(socket, "Participant not found");
+                return;
+            }
+
+            if (participant.role !== "CANDIDATE") {
+                this.sendError(
+                    socket,
+                    "Only the candidate can change the programming language",
+                );
+                return;
+            }
+
+            await this.interviewRepository.updateInterview(
+                socket.interviewId,
+                {
+                    language: message.language,
+                },
+            );
+
+            this.room.setLanguageSnapshot(
+                socket.interviewId,
+                message.language,
+            );
+
+            this.room.broadcast(
+                socket.interviewId,
+                {
+                    type: "LANGUAGE_CHANGED",
+                    language: message.language,
+                    changedByUserId: socket.userId,
+                },
+            );
+        } catch (error) {
+            logger.error(
+                {
+                    error,
+                    userId: socket.userId,
+                    interviewId: socket.interviewId,
+                    language: message.language,
+                },
+                "Failed to change programming language",
+            );
+
+            this.sendError(
+                socket,
+                "Unable to change programming language",
+            );
+        }
+    }
     leaveInterview(socket: AuthenticatedSocket) {
         if (!socket.userId || !socket.interviewId) {
             return;

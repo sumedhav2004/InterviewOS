@@ -13,6 +13,7 @@ import { InterviewLayout } from "./interview-layout";
 import { InterviewControls } from "./interview-controls";
 
 import type { ServerMessage } from "../types/realtime";
+import { ProgrammingLanguage } from "@interview-os/database";
 
 type InterviewPageProps = {
     interviewId: string;
@@ -33,23 +34,14 @@ export function InterviewPage({
 }: InterviewPageProps) {
     const { isLoaded, isSignedIn } = useAuth();
 
-    /*
-     * All currently connected participants in this room.
-     *
-     * This does NOT include the current user.
-     *
-     * Example:
-     *
-     * ["user-b", "user-c", "user-d"]
-     */
     const [participantIds, setParticipantIds] =
         useState<Set<string>>(new Set());
 
-    
-
     const [code, setCode] = useState('');
     const [activeInterviewQuestion, setActiveInterviewQuestion] =
-    useState<ActiveInterviewQuestion | null>(null);
+        useState<ActiveInterviewQuestion | null>(null);
+    const [language, setLanguage] =
+        useState<ProgrammingLanguage>("PYTHON");
 
     const [
         remoteMediaStates,
@@ -132,6 +124,8 @@ export function InterviewPage({
         sendMessage,
         userId,
         joined,
+        participantRole,
+        sendLanguageChange
     } = useInterviewSocket(
         interviewId,
         (message) => {
@@ -307,8 +301,25 @@ export function InterviewPage({
                 setCode(message.code);
                 return;
             }
+
+            if (message.type === "LANGUAGE_CHANGED") {
+                setLanguage(message.language);
+                return;
+            }
+
+            if (message.type === "LANGUAGE_SNAPSHOT") {
+                setLanguage(message.language);
+                return;
+            }
         },
     );
+
+    const handleLanguageChange = (
+        nextLanguage: ProgrammingLanguage,
+    ) => {
+        setLanguage(nextLanguage);
+        sendLanguageChange(nextLanguage);
+    };
 
     const {
         ensureConnection,
@@ -470,6 +481,7 @@ export function InterviewPage({
             <InterviewLayout
                 code={code}
                 activeInterviewQuestion={activeInterviewQuestion}
+
                 onCodeChange={(nextCode) => {
                     setCode(nextCode);
 
@@ -482,17 +494,28 @@ export function InterviewPage({
                         code: nextCode,
                     });
                 }}
+
                 localStream={localStream}
+
                 participantIds={[
                     ...participantIds,
                 ]}
+
                 remoteStreams={
                     remoteStreams
                 }
+
                 localMediaState={{
                     cameraEnabled,
                     microphoneEnabled,
                 }}
+
+                participantRole={participantRole}
+
+                language={language}
+
+                onLanguageChange={handleLanguageChange}
+
                 remoteMediaStates={
                     remoteMediaStates
                 }

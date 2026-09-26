@@ -14,6 +14,7 @@ export class InterviewRoom {
         string,
         string
     >();
+    private readonly languageSnapshots = new Map<string, string>();
 
     join(
         interviewId: string,
@@ -79,6 +80,14 @@ export class InterviewRoom {
             interviewId,
             code,
         );
+    }
+
+    setLanguageSnapshot(interviewId: string, language: string) {
+        this.languageSnapshots.set(interviewId, language);
+    }
+
+    getLanguageSnapshot(interviewId: string) {
+        return this.languageSnapshots.get(interviewId);
     }
 
     sendToParticipant(

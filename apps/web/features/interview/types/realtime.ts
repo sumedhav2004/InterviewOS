@@ -1,3 +1,10 @@
+import { ProgrammingLanguage } from "./programming-language";
+
+export type ParticipantRole =
+    | "INTERVIEWER"
+    | "CANDIDATE"
+    | "OBSERVER";
+
 export type InterviewRealtimeEvent =
   | {
       type: "PARTICIPANT_JOINED";
@@ -47,15 +54,20 @@ export type ClientRealtimeMessage =
   | {
       type: "CODE_CHANGE";
       code: string;
-    };
+    }
+  | {
+      type: "LANGUAGE_CHANGE";
+      language: ProgrammingLanguage;
+    }
 
 export type ServerMessage =
   | { type: "AUTHENTICATED"; userId: string }
   | {
-      type: "INTERVIEW_JOINED";
-      interviewId: string;
-      userId: string;
-      participants: string[];
+        type: "INTERVIEW_JOINED";
+        interviewId: string;
+        userId: string;
+        role: ParticipantRole;
+        participants: string[];
     }
   | {
         type: "CODE_SNAPSHOT";
@@ -87,6 +99,16 @@ export type ServerMessage =
       userId: string;
       code: string;
     }
+    | {
+      type: "LANGUAGE_SNAPSHOT";
+      language: ProgrammingLanguage;
+    }
+
+  | {
+      type: "LANGUAGE_CHANGED";
+      userId: string;
+      language: ProgrammingLanguage;
+    }
   | { type: "PARTICIPANT_JOINED"; userId: string }
   | { type: "PARTICIPANT_LEFT"; userId: string }
   | {
@@ -111,3 +133,24 @@ export type ServerMessage =
       microphoneEnabled: boolean;
     }
   | { type: "ERROR"; message: string };
+
+export type ActiveQuestionChangedMessage = {
+  type: "ACTIVE_QUESTION_CHANGED";
+  interviewId: string;
+  activeInterviewQuestion: {
+    id: string;
+    questionOrder: number;
+    points: number;
+    question: {
+      id: string;
+      title: string;
+      description: string;
+      difficulty: string;
+      testCases: {
+        id: string;
+        input: unknown;
+        expectedOutput: unknown;
+      }[];
+    };
+  } | null;
+};

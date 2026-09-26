@@ -95,6 +95,7 @@ model Interview {
   durationMinutes Int
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  language        ProgrammingLanguage       @default(PYTHON)
 
   createdById String @db.Uuid
   createdBy   User   @relation("InterviewCreator", fields: [createdById], references: [id])

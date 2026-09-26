@@ -107,6 +107,15 @@ export class RealtimeWebSocketServer {
                             return;
                         }
 
+                        if (message.type === "LANGUAGE_CHANGE") {
+                            await this.interviewGateway.handleLanguageChange(
+                                socket,
+                                message,
+                            );
+
+                            return;
+                        }
+
                         logger.info(
                             {
                                 userId: socket.userId,
