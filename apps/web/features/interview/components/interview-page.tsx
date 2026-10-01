@@ -1,7 +1,14 @@
 "use client";
 
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+
 import { useAuth } from "@/lib/auth";
-import { useEffect, useRef, useState } from "react";
 
 import { useInterview } from "../hooks/use-interview";
 import { useInterviewSocket } from "../hooks/use-interview-socket";
@@ -12,8 +19,12 @@ import { InterviewHeader } from "./interview-header";
 import { InterviewLayout } from "./interview-layout";
 import { InterviewControls } from "./interview-controls";
 
-import type { ServerMessage } from "../types/realtime";
-import { ProgrammingLanguage } from "@interview-os/database";
+import type {
+    Participant,
+    ServerMessage,
+} from "../types/realtime";
+import type { ProgrammingLanguage } from "../types/programming-language";
+import { useCodeRun } from "../hooks/use-coderun";
 
 type InterviewPageProps = {
     interviewId: string;
@@ -29,17 +40,35 @@ type ActiveInterviewQuestion = Extract<
     { type: "ACTIVE_QUESTION_STATE" }
 >["interviewQuestion"];
 
+type WebRTCSignal =
+    | {
+          type: "WEBRTC_OFFER";
+          fromUserId: string;
+          offer: RTCSessionDescriptionInit;
+      }
+    | {
+          type: "WEBRTC_ANSWER";
+          fromUserId: string;
+          answer: RTCSessionDescriptionInit;
+      }
+    | {
+          type: "WEBRTC_ICE_CANDIDATE";
+          fromUserId: string;
+          candidate: RTCIceCandidateInit;
+      };
+
 export function InterviewPage({
     interviewId,
 }: InterviewPageProps) {
     const { isLoaded, isSignedIn } = useAuth();
 
-    const [participantIds, setParticipantIds] =
-        useState<Set<string>>(new Set());
+    const [code, setCode] = useState("");
 
-    const [code, setCode] = useState('');
-    const [activeInterviewQuestion, setActiveInterviewQuestion] =
-        useState<ActiveInterviewQuestion | null>(null);
+    const [
+        activeInterviewQuestion,
+        setActiveInterviewQuestion,
+    ] = useState<ActiveInterviewQuestion | null>(null);
+
     const [language, setLanguage] =
         useState<ProgrammingLanguage>("PYTHON");
 
@@ -49,33 +78,6 @@ export function InterviewPage({
     ] = useState<
         Map<string, ParticipantMediaState>
     >(new Map());
-
-    /*
-     * WebRTC signals arrive through the WebSocket.
-     *
-     * The socket is created before useWebRTC because
-     * useWebRTC needs sendMessage().
-     *
-     * Refs let the socket callback always reach the
-     * current WebRTC handlers without recreating the
-     * WebSocket connection.
-     */
-    type WebRTCSignal =
-        | {
-            type: "WEBRTC_OFFER";
-            fromUserId: string;
-            offer: RTCSessionDescriptionInit;
-        }
-        | {
-            type: "WEBRTC_ANSWER";
-            fromUserId: string;
-            answer: RTCSessionDescriptionInit;
-        }
-        | {
-            type: "WEBRTC_ICE_CANDIDATE";
-            fromUserId: string;
-            candidate: RTCIceCandidateInit;
-        };
 
     const signalHandlerRef = useRef<
         ((message: WebRTCSignal) => void) | null
@@ -111,28 +113,36 @@ export function InterviewPage({
         startMedia,
     ]);
 
-    /*
-     * WebSocket:
-     *
-     * - tells us who is in the room
-     * - tells us who joined
-     * - tells us who left
-     * - carries WebRTC signaling
-     * - carries media-state events
-     */
     const {
-        sendMessage,
-        userId,
-        joined,
-        participantRole,
-        sendLanguageChange
-    } = useInterviewSocket(
-        interviewId,
-        (message) => {
+        codeRun,
+        results: codeRunResults,
+        isRunning: isCodeRunRunning,
+        error: codeRunError,
+        run: runCode,
+        handleMessage: handleCodeRunMessage,
+    } = useCodeRun();
+
+    /*
+     * WebSocket message handling.
+     *
+     * Participant state itself is owned by
+     * useInterviewSocket.
+     *
+     * This callback only handles page-level concerns:
+     * - WebRTC signaling
+     * - remote media state
+     * - code
+     * - active question
+     * - language
+     * - WebRTC cleanup when someone leaves
+     */
+    const handleSocketMessage = useCallback(
+        (message: ServerMessage) => {
             console.log(
                 "[Interview] received:",
                 message,
             );
+            handleCodeRunMessage(message);
 
             /*
              * WebRTC signaling belongs to useWebRTC.
@@ -140,91 +150,33 @@ export function InterviewPage({
             if (
                 message.type === "WEBRTC_OFFER" ||
                 message.type === "WEBRTC_ANSWER" ||
-                message.type === "WEBRTC_ICE_CANDIDATE"
-            ) {
-                signalHandlerRef.current?.(message);
-            }
-
-            /*
-             * Initial room membership.
-             *
-             * The server gives the newly joined client
-             * every participant already in the room.
-             */
-            if (
                 message.type ===
-                "INTERVIEW_JOINED"
+                    "WEBRTC_ICE_CANDIDATE"
             ) {
-                console.log(
-                    "[Interview] room participants:",
-                    message.participants,
-                );
-
-                setParticipantIds(
-                    new Set(message.participants),
+                signalHandlerRef.current?.(
+                    message,
                 );
 
                 return;
             }
 
             /*
-             * A new participant joined.
+             * Participant membership is owned by
+             * useInterviewSocket.
              *
-             * Existing participants add that user to
-             * their room membership.
-             */
-            if (
-                message.type ===
-                "PARTICIPANT_JOINED"
-            ) {
-                console.log(
-                    "[Interview] participant joined:",
-                    message.userId,
-                );
-
-                setParticipantIds(
-                    (currentParticipants) => {
-                        const nextParticipants =
-                            new Set(
-                                currentParticipants,
-                            );
-
-                        nextParticipants.add(
-                            message.userId,
-                        );
-
-                        return nextParticipants;
-                    },
-                );
-
-                return;
-            }
-
-            /*
-             * A participant left.
+             * We only need to clean up resources
+             * associated with a participant who left.
              */
             if (
                 message.type ===
                 "PARTICIPANT_LEFT"
             ) {
+                const userId =
+                    message.participant.userId;
+
                 console.log(
                     "[Interview] participant left:",
-                    message.userId,
-                );
-
-                setParticipantIds(
-                    (currentParticipants) => {
-                        const nextParticipants =
-                            new Set(
-                                currentParticipants,
-                            );
-
-                        nextParticipants.delete(
-                            message.userId,
-                        );
-
-                        return nextParticipants;
-                    },
+                    userId,
                 );
 
                 setRemoteMediaStates(
@@ -235,7 +187,7 @@ export function InterviewPage({
                             );
 
                         nextStates.delete(
-                            message.userId,
+                            userId,
                         );
 
                         return nextStates;
@@ -247,7 +199,7 @@ export function InterviewPage({
                  * WebRTC connection.
                  */
                 removeParticipantRef.current?.(
-                    message.userId,
+                    userId,
                 );
 
                 return;
@@ -284,12 +236,25 @@ export function InterviewPage({
                 return;
             }
 
-            if (message.type === "CODE_SNAPSHOT") {
+            /*
+             * Initial code state.
+             */
+            if (
+                message.type ===
+                "CODE_SNAPSHOT"
+            ) {
                 setCode(message.code);
+
                 return;
             }
 
-            if (message.type === "ACTIVE_QUESTION_STATE") {
+            /*
+             * Active interview question.
+             */
+            if (
+                message.type ===
+                "ACTIVE_QUESTION_STATE"
+            ) {
                 setActiveInterviewQuestion(
                     message.interviewQuestion,
                 );
@@ -297,29 +262,96 @@ export function InterviewPage({
                 return;
             }
 
-            if (message.type === "CODE_CHANGE") {
+            /*
+             * Remote code changes.
+             */
+            if (
+                message.type ===
+                "CODE_CHANGE"
+            ) {
                 setCode(message.code);
+
                 return;
             }
 
-            if (message.type === "LANGUAGE_CHANGED") {
-                setLanguage(message.language);
+            /*
+             * Remote language changes.
+             */
+            if (
+                message.type ===
+                "LANGUAGE_CHANGED"
+            ) {
+                setLanguage(
+                    message.language,
+                );
+
                 return;
             }
 
-            if (message.type === "LANGUAGE_SNAPSHOT") {
-                setLanguage(message.language);
+            /*
+             * Initial language state.
+             */
+            if (
+                message.type ===
+                "LANGUAGE_SNAPSHOT"
+            ) {
+                setLanguage(
+                    message.language,
+                );
+
                 return;
             }
         },
+        [handleCodeRunMessage],
     );
 
-    const handleLanguageChange = (
-        nextLanguage: ProgrammingLanguage,
-    ) => {
-        setLanguage(nextLanguage);
-        sendLanguageChange(nextLanguage);
-    };
+    const {
+        sendMessage,
+        userId,
+        joined,
+        participant,
+        participants,
+        sendLanguageChange,
+    } = useInterviewSocket(
+        interviewId,
+        handleSocketMessage,
+    );
+
+    /*
+     * Derive the user IDs needed by WebRTC from the
+     * complete participant objects supplied by the
+     * socket hook.
+     *
+     * The participant objects remain the source of truth.
+     */
+    const participantIds = useMemo(
+        () =>
+            participants.map(
+                (currentParticipant) =>
+                    currentParticipant.userId,
+            ),
+        [participants],
+    );
+
+    const handleLanguageChange = useCallback(
+        (
+            nextLanguage: ProgrammingLanguage,
+        ) => {
+            setLanguage(nextLanguage);
+
+            if (!joined) {
+                return;
+            }
+
+            sendLanguageChange(
+                nextLanguage,
+            );
+        },
+        [
+            joined,
+            sendLanguageChange,
+        ],
+    );
 
     const {
         ensureConnection,
@@ -332,8 +364,8 @@ export function InterviewPage({
     );
 
     /*
-     * Keep the latest WebRTC handlers available to the
-     * WebSocket callback.
+     * Keep the latest WebRTC handlers available to
+     * the WebSocket callback.
      */
     signalHandlerRef.current =
         handleSignal;
@@ -342,16 +374,13 @@ export function InterviewPage({
         removeParticipant;
 
     /*
-     * This is the core N-participant orchestration.
+     * N-participant WebRTC orchestration.
      *
-     * For every participant in the room:
+     * The participant role has no bearing on WebRTC
+     * connection ownership.
      *
-     *     userId < participantId
-     *
-     * determines who creates the OFFER.
-     *
-     * This is deterministic and has nothing to do
-     * with who entered first.
+     * The userId comparison determines which side
+     * creates the OFFER.
      */
     useEffect(() => {
         if (
@@ -363,7 +392,9 @@ export function InterviewPage({
         }
 
         for (const participantId of participantIds) {
-            if (participantId === userId) {
+            if (
+                participantId === userId
+            ) {
                 continue;
             }
 
@@ -397,11 +428,12 @@ export function InterviewPage({
      * - we join the room
      * - our camera changes
      * - our microphone changes
-     * - the participant set changes
      *
-     * The participant-set dependency is important:
-     * when somebody new enters, we announce our current
-     * state to the room again.
+     * The participant list is intentionally not used
+     * as a dependency here. A participant joining does
+     * not require us to rebroadcast our state because
+     * the joining participant will receive the current
+     * room state through the existing realtime flow.
      */
     useEffect(() => {
         if (
@@ -421,7 +453,6 @@ export function InterviewPage({
         localStream,
         cameraEnabled,
         microphoneEnabled,
-        participantIds,
         sendMessage,
     ]);
 
@@ -432,13 +463,38 @@ export function InterviewPage({
     } = useInterview({
         interviewId,
         isLoaded,
-        isSignedIn: Boolean(isSignedIn),
+        isSignedIn: Boolean(
+            isSignedIn,
+        ),
     });
+
+    const handleRunCode = useCallback(async () => {
+        if (!activeInterviewQuestion || !participant) {
+            return;
+        }
+
+        await runCode({
+            interviewQuestionId:
+                activeInterviewQuestion.id,
+            participantId:
+                participant.id,
+            language,
+            sourceCode: code,
+        });
+    }, [
+        activeInterviewQuestion,
+        participant,
+        language,
+        code,
+        runCode,
+    ]);
 
     if (!isLoaded) {
         return (
             <InterviewShell>
-                <LoadingState label="Authenticating..." />
+                <LoadingState
+                    label="Authenticating..."
+                />
             </InterviewShell>
         );
     }
@@ -446,7 +502,9 @@ export function InterviewPage({
     if (!isSignedIn) {
         return (
             <InterviewShell>
-                <LoadingState label="Please sign in to enter this room." />
+                <LoadingState
+                    label="Please sign in to enter this room."
+                />
             </InterviewShell>
         );
     }
@@ -454,7 +512,9 @@ export function InterviewPage({
     if (loading) {
         return (
             <InterviewShell>
-                <LoadingState label="Loading interview..." />
+                <LoadingState
+                    label="Loading interview..."
+                />
             </InterviewShell>
         );
     }
@@ -480,8 +540,10 @@ export function InterviewPage({
 
             <InterviewLayout
                 code={code}
-                activeInterviewQuestion={activeInterviewQuestion}
-
+                activeInterviewQuestion={
+                    activeInterviewQuestion
+                }
+                participant={participant}
                 onCodeChange={(nextCode) => {
                     setCode(nextCode);
 
@@ -494,31 +556,25 @@ export function InterviewPage({
                         code: nextCode,
                     });
                 }}
-
                 localStream={localStream}
-
-                participantIds={[
-                    ...participantIds,
-                ]}
-
-                remoteStreams={
-                    remoteStreams
-                }
-
+                participantIds={participantIds}
+                remoteStreams={remoteStreams}
                 localMediaState={{
                     cameraEnabled,
                     microphoneEnabled,
                 }}
-
-                participantRole={participantRole}
-
                 language={language}
-
-                onLanguageChange={handleLanguageChange}
-
+                onLanguageChange={
+                    handleLanguageChange
+                }
                 remoteMediaStates={
                     remoteMediaStates
                 }
+                codeRun={codeRun}
+                results={codeRunResults}
+                isRunning={isCodeRunRunning}
+                error={codeRunError}
+                onRunCode={handleRunCode}
             />
 
             {mediaError && (

@@ -6,6 +6,7 @@ import { connectRedis } from "@interview-os/redis";
 import app from "./app";
 import { ExecutionResultsService } from "./services/execution-result.service";
 import { RealtimeWebSocketServer } from "./realtime/websocket/websocket-server";
+import { InterviewRoom } from "./realtime/websocket/interview-room";
 
 async function main() {
     logger.info("Starting the server...");
@@ -14,15 +15,24 @@ async function main() {
 
     await connectRedis();
 
-    const executionResultsService = new ExecutionResultsService();
+    const interviewRoom = new InterviewRoom();
+
+    const executionResultsService =
+        new ExecutionResultsService(interviewRoom);
+
     await executionResultsService.start();
 
     const httpServer = createServer(app);
 
-    new RealtimeWebSocketServer(httpServer);
+    new RealtimeWebSocketServer(
+        httpServer,
+        interviewRoom,
+    );
 
     httpServer.listen(port, () => {
-        logger.info(`Server is running on port ${port}`);
+        logger.info(
+            `Server is running on port ${port}`,
+        );
     });
 }
 

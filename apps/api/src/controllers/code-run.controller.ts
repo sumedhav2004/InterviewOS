@@ -13,6 +13,22 @@ export class CodeRunController{
         return res.status(201).json(createdCodeRun)
     }
 
+    async getCodeRunResults(
+        req: Request,
+        res: Response,
+    ) {
+        const id = req.params.id;
+        const requesterId = req.user.id;
+
+        const result =
+            await this.codeRunService.getCodeRunResults(
+                id,
+                requesterId,
+            );
+
+        return res.status(200).json(result);
+    }
+
     async updateCodeRun(req:Request, res:Response){
         const id = req.params.id 
         const requesterId = req.user.id

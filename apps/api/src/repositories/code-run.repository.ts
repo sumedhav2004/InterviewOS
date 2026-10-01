@@ -12,6 +12,17 @@ export class CodeRunRepository{
         })
     }
 
+    async getCodeRunWithResults(id: string) {
+        return prisma.codeRun.findUnique({
+            where: {
+                id,
+            },
+            include: {
+                codeRunTestCaseResults: true,
+            },
+        });
+    }
+
     async updateCodeRun(id:string, data: UpdateCodeRunData){
         return prisma.codeRun.update({
             where: {

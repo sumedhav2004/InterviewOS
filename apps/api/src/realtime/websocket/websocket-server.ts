@@ -12,14 +12,22 @@ type AuthenticatedSocket = WebSocket & {
 export class RealtimeWebSocketServer {
     private readonly wss: WebSocketServer;
     private readonly interviewGateway: InterviewGateway;
+    private readonly room: InterviewRoom;
 
-    constructor(server: HttpServer) {
+    constructor(
+        server: HttpServer,
+        room: InterviewRoom,
+    ) {
         this.wss = new WebSocketServer({
             server,
             path: "/ws",
         });
-        const room = new InterviewRoom();
-        this.interviewGateway = new InterviewGateway(room);
+
+        this.room = room;
+
+        this.interviewGateway = new InterviewGateway(
+            this.room,
+        );
 
         this.registerHandlers();
     }

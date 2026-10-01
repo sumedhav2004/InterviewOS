@@ -1,193 +1,274 @@
 "use client";
 
 import {
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 
 import { useAuth } from "@clerk/nextjs";
 
-import type { ServerMessage } from "../types/realtime";
-import { ParticipantRole } from "@interview-os/database";
+import type {
+  Participant,
+  ServerMessage,
+} from "../types/realtime";
 import { ProgrammingLanguage } from "../types/programming-language";
 
 type MessageHandler = (
-    message: ServerMessage,
+  message: ServerMessage,
 ) => void;
 
 export function useInterviewSocket(
-    interviewId: string,
-    onMessage?: MessageHandler,
+  interviewId: string,
+  onMessage?: MessageHandler,
 ) {
-    const {
-        getToken,
-        isLoaded,
-        isSignedIn,
-    } = useAuth();
+  const {
+    getToken,
+    isLoaded,
+    isSignedIn,
+  } = useAuth();
 
-    const socketRef =
-        useRef<WebSocket | null>(null);
+  const socketRef =
+    useRef<WebSocket | null>(null);
 
-    const [userId, setUserId] =
-        useState<string>();
+  const [userId, setUserId] =
+    useState<string>();
 
-    const [joined, setJoined] =
-        useState(false);
+  const [joined, setJoined] =
+    useState(false);
 
-    const [participantRole, setParticipantRole] =
-    useState<ParticipantRole>();
+  /**
+   * The current user's complete interview
+   * participant.
+   */
+  const [participant, setParticipant] =
+    useState<Participant | null>(null);
 
-    useEffect(() => {
-        if (!isLoaded || !isSignedIn) {
+  /**
+   * All participants currently known to the
+   * interview room.
+   */
+  const [participants, setParticipants] =
+    useState<Participant[]>([]);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      return;
+    }
+
+    let socket: WebSocket | null = null;
+    let cancelled = false;
+
+    const connect = async () => {
+      const token = await getToken();
+
+      if (cancelled) {
+        return;
+      }
+
+      if (!token) {
+        console.error(
+          "[WS] No Clerk token available",
+        );
+
+        return;
+      }
+
+      socket = new WebSocket(
+        "ws://localhost:3001/ws",
+      );
+
+      socket.onopen = () => {
+        console.log("[WS] connected");
+
+        socket?.send(
+          JSON.stringify({
+            type: "AUTHENTICATE",
+            token,
+          }),
+        );
+      };
+
+      socket.onmessage = (event) => {
+        const message: ServerMessage =
+          JSON.parse(event.data);
+
+        console.log(
+          "[WS] message:",
+          message,
+        );
+
+        onMessage?.(message);
+
+        switch (message.type) {
+          case "AUTHENTICATED": {
+            setUserId(message.userId);
+
+            socket?.send(
+              JSON.stringify({
+                type: "JOIN_INTERVIEW",
+                interviewId,
+              }),
+            );
+
             return;
+          }
+
+          case "INTERVIEW_JOINED": {
+            setJoined(true);
+
+            setParticipant(
+              message.participant,
+            );
+
+            setParticipants(
+              message.participants,
+            );
+
+            return;
+          }
+
+          case "PARTICIPANT_JOINED": {
+            setParticipants(
+              (currentParticipants) => {
+                const alreadyExists =
+                  currentParticipants.some(
+                    (currentParticipant) =>
+                      currentParticipant.id ===
+                      message.participant.id,
+                  );
+
+                if (alreadyExists) {
+                  return currentParticipants;
+                }
+
+                return [
+                  ...currentParticipants,
+                  message.participant,
+                ];
+              },
+            );
+
+            return;
+          }
+
+          case "PARTICIPANT_LEFT": {
+            setParticipants(
+              (currentParticipants) =>
+                currentParticipants.filter(
+                  (currentParticipant) =>
+                    currentParticipant.id !==
+                    message.participant.id,
+                ),
+            );
+
+            return;
+          }
+
+          default: {
+            return;
+          }
         }
+      };
 
-        let socket: WebSocket | null = null;
+      socket.onerror = (error) => {
+        console.error(
+          "[WS] error:",
+          error,
+        );
+      };
 
-        const connect = async () => {
-            const token = await getToken();
+      socket.onclose = () => {
+        console.log(
+          "[WS] disconnected",
+        );
 
-            if (!token) {
-                console.error(
-                    "[WS] No Clerk token available",
-                );
-                return;
-            }
+        setJoined(false);
+        setParticipant(null);
+        setParticipants([]);
+        setUserId(undefined);
+      };
 
-            socket = new WebSocket(
-                "ws://localhost:3001/ws",
-            );
+      socketRef.current = socket;
+    };
 
-            socket.onopen = () => {
-                console.log(
-                    "[WS] connected",
-                );
+    void connect();
 
-                socket?.send(
-                    JSON.stringify({
-                        type: "AUTHENTICATE",
-                        token,
-                    }),
-                );
-            };
+    return () => {
+      cancelled = true;
 
-            socket.onmessage = (event) => {
-                const message: ServerMessage =
-                    JSON.parse(event.data);
+      setJoined(false);
+      setParticipant(null);
+      setParticipants([]);
+      setUserId(undefined);
 
-                console.log(
-                    "[WS] message:",
-                    message,
-                );
+      socket?.close();
 
-                onMessage?.(message);
+      socketRef.current = null;
+    };
+  }, [
+    getToken,
+    isLoaded,
+    isSignedIn,
+    interviewId,
+    onMessage,
+  ]);
 
-                if (
-                    message.type ===
-                    "AUTHENTICATED"
-                ) {
-                    setUserId(
-                        message.userId,
-                    );
+  const sendMessage = useCallback(
+    (message: unknown) => {
+      const socket =
+        socketRef.current;
 
-                    socket?.send(
-                        JSON.stringify({
-                            type: "JOIN_INTERVIEW",
-                            interviewId,
-                        }),
-                    );
+      if (!socket) {
+        console.error(
+          "[WS] Socket is not connected",
+        );
 
-                    return;
-                }
+        return;
+      }
 
-                if (
-                    message.type ===
-                    "INTERVIEW_JOINED"
-                ) {
-                    setJoined(true);
-                    setParticipantRole(message.role);
-                }
-            };
+      if (
+        socket.readyState !==
+        WebSocket.OPEN
+      ) {
+        console.error(
+          "[WS] Socket is not open",
+        );
 
-            socket.onerror = (error) => {
-                console.error(
-                    "[WS] error:",
-                    error,
-                );
-            };
+        return;
+      }
 
-            socket.onclose = () => {
-                console.log(
-                    "[WS] disconnected",
-                );
+      console.log(
+        "[WS] sending:",
+        message,
+      );
 
-                setJoined(false);
-            };
+      socket.send(
+        JSON.stringify(message),
+      );
+    },
+    [],
+  );
 
-            socketRef.current = socket;
-        };
-
-        void connect();
-
-        return () => {
-            setJoined(false);
-
-            socket?.close();
-
-            socketRef.current = null;
-        };
-    }, [
-        getToken,
-        isLoaded,
-        isSignedIn,
-        interviewId,
-    ]);
-
-    const sendMessage = useCallback(
-        (message: unknown) => {
-            if (!socketRef.current) {
-                console.error(
-                    "[WS] Socket is not connected",
-                );
-                return;
-            }
-
-            if (
-                socketRef.current.readyState !==
-                WebSocket.OPEN
-            ) {
-                console.error(
-                    "[WS] Socket is not open",
-                );
-                return;
-            }
-
-            console.log("[WS] sending:", message);
-
-            socketRef.current.send(
-                JSON.stringify(message),
-            );
-        },
-        [],
-    );
-
-    const sendLanguageChange = useCallback(
+  const sendLanguageChange = useCallback(
     (language: ProgrammingLanguage) => {
-        sendMessage({
-            type: "LANGUAGE_CHANGE",
-            language,
-        });
+      sendMessage({
+        type: "LANGUAGE_CHANGE",
+        language,
+      });
     },
     [sendMessage],
-);
+  );
 
-    return {
-        sendMessage,
-        userId,
-        joined,
-        participantRole,
-        sendLanguageChange
-    };
+  return {
+    sendMessage,
+    sendLanguageChange,
+
+    userId,
+    joined,
+
+    participant,
+    participants,
+  };
 }

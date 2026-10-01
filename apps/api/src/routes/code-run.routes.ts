@@ -6,6 +6,7 @@ const codeRunController = new CodeRunController
 
 router.post("/", codeRunController.createCodeRun.bind(codeRunController))
 router.patch("/:id", codeRunController.updateCodeRun.bind(codeRunController))
+router.get("/:id", codeRunController.getCodeRunResults.bind(codeRunController))
 router.post(
     "/:id/execute",
     codeRunController.executeCodeRun.bind(codeRunController)

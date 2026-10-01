@@ -21,40 +21,73 @@ export class InterviewGateway {
     ) {}
 
     async joinInterview(
-        socket: AuthenticatedSocket,
-        interviewId: unknown,
-    ) {
-        if (typeof interviewId !== "string") {
-            this.sendError(socket, "Interview ID is required");
+    socket: AuthenticatedSocket,
+    interviewId: unknown,
+) {
+    if (typeof interviewId !== "string") {
+        this.sendError(
+            socket,
+            "Interview ID is required",
+        );
+        return;
+    }
+
+    if (!socket.userId) {
+        this.sendError(
+            socket,
+            "Not authenticated",
+        );
+        return;
+    }
+
+    try {
+        const participant =
+            await this.participantService.authorizeParticipant(
+                socket.userId,
+                interviewId,
+            );
+
+        if (!participant) {
+            this.sendError(
+                socket,
+                "Participant not found",
+            );
             return;
         }
 
-        if (!socket.userId) {
-            this.sendError(socket, "Not authenticated");
-            return;
-        }
+        const roomParticipant = {
+            id: participant.id,
+            userId: participant.userId,
+            role: participant.role,
+        };
 
-        try {
-            const participant =
-                await this.participantService.authorizeParticipant(
-                    socket.userId,
-                    interviewId,
-                );
+        const existingParticipants =
+            this.room.getParticipants(
+                interviewId,
+            );
 
-            const existingParticipants =
-                this.room.getParticipants(interviewId);
+        socket.interviewId =
+            interviewId;
 
-            socket.interviewId = interviewId;
+        this.room.join(
+            interviewId,
+            socket.userId,
+            socket,
+            roomParticipant,
+        );
 
-            this.room.join(interviewId, socket.userId, socket);
-
-            socket.send(JSON.stringify({
+        socket.send(
+            JSON.stringify({
                 type: "INTERVIEW_JOINED",
                 interviewId,
                 userId: socket.userId,
-                role: participant?.role ?? "INTERVIEWER",
-                participants: existingParticipants,
-            }));
+                participant: roomParticipant,
+                participants:
+                    existingParticipants,
+            }),
+        );
+
+        // ... keep everything below this exactly as you already have it
 
             const codeSnapshot =
                 this.room.getCodeSnapshot(interviewId);
@@ -96,7 +129,7 @@ export class InterviewGateway {
                 interviewId,
                 {
                     type: "PARTICIPANT_JOINED",
-                    userId: socket.userId,
+                    participant: roomParticipant,
                 },
                 socket.userId,
             );
