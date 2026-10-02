@@ -5,6 +5,7 @@ export type ParticipantRole =
     | "CANDIDATE"
     | "OBSERVER";
 
+
 export type CodeRunTestCaseResult = {
     id: string;
     codeRunId: string;
@@ -16,6 +17,42 @@ export type CodeRunTestCaseResult = {
     executionTimeMS: number | null;
 };
 
+
+export type SubmissionState =
+  | "IDLE"
+  | "SUBMITTING"
+  | "COMPLETED"
+  | "FAILED";
+
+export type CreateSubmissionRequest = {
+  interviewQuestionId: string;
+  participantId: string;
+  language: string;
+  sourceCode: string;
+};
+
+export type SubmissionTestCaseResult = {
+  id: string;
+  submissionId: string;
+  testCaseId: string;
+  status: string;
+  passed: boolean;
+  stdout: string | null;
+  stderr: string | null;
+  executionTimeMS: number | null;
+  memoryBytes?: string | null;
+};
+
+export type Submission = {
+  id: string;
+  interviewQuestionId: string;
+  participantId: string;
+  language: string;
+  sourceCode: string;
+  status: string;
+};
+
+
 export type Participant = {
     id: string;
     interviewId: string;
@@ -25,6 +62,7 @@ export type Participant = {
     joinedAt: string | null;
     leftAt: string | null;
 };
+
 
 export type InterviewRealtimeEvent =
     | {
@@ -43,6 +81,7 @@ export type InterviewRealtimeEvent =
     | {
           type: "INTERVIEW_ENDED";
       };
+
 
 export type ClientRealtimeMessage =
     | {
@@ -89,6 +128,7 @@ export type ClientRealtimeMessage =
           type: "LANGUAGE_CHANGE";
           language: ProgrammingLanguage;
       };
+
 
 export type ServerMessage =
     | {
@@ -166,6 +206,36 @@ export type ServerMessage =
               };
           } | null;
       }
+      /*
+ * Submission lifecycle
+ */
+        | {
+            type: "SUBMISSION_TEST_CASE_RESULT";
+            submissionId: string;
+            result: {
+                id: string;
+                submissionId: string;
+                testCaseId: string;
+                status: "PENDING" | "RUNNING" | "SUCCESS" | "FAILED";
+                passed: boolean;
+                stdout: string | null;
+                stderr: string | null;
+                executionTimeMS: number | null;
+            };
+        }
+        | {
+            type: "SUBMISSION_COMPLETED";
+            submissionId: string;
+            evaluation: {
+                id: string;
+                submissionId: string;
+                status: "PASSED" | "FAILED";
+                score: number;
+                passedTests: number;
+                totalTests: number;
+                executionTimeMS: number | null;
+            };
+        }
 
     /*
      * Participants
@@ -215,6 +285,7 @@ export type ServerMessage =
           type: "ERROR";
           message: string;
       };
+
 
 export type ActiveQuestionChangedMessage = {
     type: "ACTIVE_QUESTION_CHANGED";

@@ -21,4 +21,12 @@ export class SubmissionRepository {
             where: { id },
         });
     }
+
+    async findSubmissionsForInterviewQuestion(interviewQuestionId: string){
+        return prisma.submission.findMany({
+            where:{
+                interviewQuestionId
+            }
+        })
+    }
 }

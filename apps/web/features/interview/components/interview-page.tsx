@@ -25,6 +25,7 @@ import type {
 } from "../types/realtime";
 import type { ProgrammingLanguage } from "../types/programming-language";
 import { useCodeRun } from "../hooks/use-coderun";
+import { useSubmission } from "../hooks/use-submission";
 
 type InterviewPageProps = {
     interviewId: string;
@@ -122,6 +123,16 @@ export function InterviewPage({
         handleMessage: handleCodeRunMessage,
     } = useCodeRun();
 
+    const {
+        submission,
+        results: submissionResults,
+        evaluation,
+        isSubmitting,
+        error: submissionError,
+        submit,
+        handleMessage: handleSubmissionMessage,
+    } = useSubmission();
+
     /*
      * WebSocket message handling.
      *
@@ -134,6 +145,8 @@ export function InterviewPage({
      * - code
      * - active question
      * - language
+     * - code run results
+     * - submission results
      * - WebRTC cleanup when someone leaves
      */
     const handleSocketMessage = useCallback(
@@ -142,7 +155,9 @@ export function InterviewPage({
                 "[Interview] received:",
                 message,
             );
+
             handleCodeRunMessage(message);
+            handleSubmissionMessage(message);
 
             /*
              * WebRTC signaling belongs to useWebRTC.
@@ -302,7 +317,10 @@ export function InterviewPage({
                 return;
             }
         },
-        [handleCodeRunMessage],
+        [
+            handleCodeRunMessage,
+            handleSubmissionMessage,
+        ],
     );
 
     const {
@@ -489,6 +507,30 @@ export function InterviewPage({
         runCode,
     ]);
 
+    const handleSubmitCode = useCallback(async () => {
+        if (
+            !activeInterviewQuestion ||
+            !participant
+        ) {
+            return;
+        }
+
+        await submit({
+            interviewQuestionId:
+                activeInterviewQuestion.id,
+            participantId:
+                participant.id,
+            language,
+            sourceCode: code,
+        });
+    }, [
+        activeInterviewQuestion,
+        participant,
+        language,
+        code,
+        submit,
+    ]);
+
     if (!isLoaded) {
         return (
             <InterviewShell>
@@ -570,11 +612,29 @@ export function InterviewPage({
                 remoteMediaStates={
                     remoteMediaStates
                 }
+
+                /*
+                 * Code run
+                 */
                 codeRun={codeRun}
                 results={codeRunResults}
                 isRunning={isCodeRunRunning}
                 error={codeRunError}
                 onRunCode={handleRunCode}
+
+                /*
+                 * Submission
+                 */
+                submission={submission}
+                submissionResults={
+                    submissionResults
+                }
+                evaluation={evaluation}
+                isSubmitting={isSubmitting}
+                submissionError={
+                    submissionError
+                }
+                onSubmit={handleSubmitCode}
             />
 
             {mediaError && (

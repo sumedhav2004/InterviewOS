@@ -277,6 +277,7 @@ export class InterviewGateway {
             );
         }
     }
+    
     leaveInterview(socket: AuthenticatedSocket) {
         if (!socket.userId || !socket.interviewId) {
             return;

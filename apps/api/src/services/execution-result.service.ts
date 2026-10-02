@@ -7,11 +7,11 @@ import { InterviewRoom } from "../realtime/websocket/interview-room";
 const EXECUTION_RESULTS_CHANNEL = "execution:results";
 
 export class ExecutionResultsService {
-    private readonly codeRunService: CodeRunService;
+    private readonly codeRunService: CodeRunService
+    private readonly submissionService: SubmissionService;
     constructor(
         private readonly interviewRoom: InterviewRoom,
-        private readonly submissionService = new SubmissionService(),
-    ) {
+    ){
         this.codeRunService =
             new CodeRunService(
                 undefined,
@@ -21,6 +21,17 @@ export class ExecutionResultsService {
                 undefined,
                 interviewRoom,
             );
+        this.submissionService = new SubmissionService(
+            undefined, // submissionRepository
+            undefined, // interviewQuestionRepository
+            undefined, // participantRepository
+            undefined, // testCaseRepository
+            undefined, // queue
+            undefined, // submissionTestCaseResultRepository
+            undefined, // evaluationRepository
+            undefined, // interviewRepository
+            interviewRoom, // interviewRoom
+        );
     }
 
     async start(): Promise<void> {

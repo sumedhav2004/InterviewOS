@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import type {
   CodeRunTestCaseResult,
   Participant,
+  SubmissionTestCaseResult,
 } from "../types/realtime";
 
 type ParticipantMediaState = {
@@ -43,6 +44,14 @@ type ActiveInterviewQuestion = {
     difficulty: string;
     testCases: TestCase[];
   };
+};
+
+type SubmissionEvaluation = {
+  status: string;
+  score: number;
+  passedTests: number;
+  totalTests: number;
+  executionTimeMS: number | null;
 };
 
 type InterviewLayoutProps = {
@@ -75,6 +84,9 @@ type InterviewLayoutProps = {
     language: ProgrammingLanguage,
   ) => void;
 
+  /*
+   * Code run
+   */
   codeRun: {
     id: string;
     status: string;
@@ -87,7 +99,27 @@ type InterviewLayoutProps = {
   error: string | null;
 
   onRunCode: () => Promise<void>;
+
+  /*
+   * Submission
+   */
+  submission: {
+    id: string;
+    status: string;
+  } | null;
+
+  submissionResults: SubmissionTestCaseResult[];
+
+  evaluation: SubmissionEvaluation | null;
+
+  isSubmitting: boolean;
+
+  submissionError: string | null;
+
+  onSubmit: () => Promise<void>;
 };
+
+type TerminalMode = "RUN" | "SUBMIT" | null;
 
 export function InterviewLayout({
   localStream,
@@ -106,6 +138,12 @@ export function InterviewLayout({
   isRunning,
   error,
   onRunCode,
+  submission,
+  submissionResults,
+  evaluation,
+  isSubmitting,
+  submissionError,
+  onSubmit,
 }: InterviewLayoutProps) {
   const [terminalHeight, setTerminalHeight] =
     useState(180);
@@ -113,13 +151,43 @@ export function InterviewLayout({
   const [terminalOpen, setTerminalOpen] =
     useState(true);
 
+  /*
+   * This controls ONLY which current event the terminal
+   * displays.
+   *
+   * It does not replace any of the realtime state.
+   *
+   * RUN    -> show code-run state/results
+   * SUBMIT -> show submission state/results
+   */
+  const [terminalMode, setTerminalMode] =
+    useState<TerminalMode>(null);
+
   const isDragging = useRef(false);
 
   const isCandidate =
     participant?.role === "CANDIDATE";
 
   const handleRun = async () => {
+    /*
+     * Important:
+     * Switch the terminal immediately to RUN mode.
+     *
+     * This means an old submission evaluation can remain
+     * in props without taking over the terminal.
+     */
+    setTerminalMode("RUN");
+
     await onRunCode();
+  };
+
+  const handleSubmit = async () => {
+    /*
+     * Switch the terminal immediately to SUBMIT mode.
+     */
+    setTerminalMode("SUBMIT");
+
+    await onSubmit();
   };
 
   const handleTerminalResizeStart = (
@@ -178,6 +246,21 @@ export function InterviewLayout({
     );
   };
 
+  /*
+   * If this component has not explicitly selected a mode
+   * yet, infer it from whatever state is currently available.
+   *
+   * Once the user has clicked Run or Submit, terminalMode
+   * becomes authoritative for the terminal.
+   */
+  const activeTerminalMode: TerminalMode =
+    terminalMode ??
+    (evaluation || submission || isSubmitting
+      ? "SUBMIT"
+      : codeRun || results.length > 0 || isRunning
+        ? "RUN"
+        : null);
+
   return (
     <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
       <section className="technical-grid min-h-0 border-b border-border lg:border-b-0 lg:border-r">
@@ -227,15 +310,26 @@ export function InterviewLayout({
                     <Button
                       variant="outline"
                       onClick={handleRun}
-                      disabled={isRunning}
+                      disabled={
+                        isRunning ||
+                        isSubmitting
+                      }
                     >
                       {isRunning
                         ? "Running..."
                         : "Run"}
                     </Button>
 
-                    <Button>
-                      Submit
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={
+                        isRunning ||
+                        isSubmitting
+                      }
+                    >
+                      {isSubmitting
+                        ? "Submitting..."
+                        : "Submit"}
                     </Button>
                   </div>
                 )}
@@ -277,81 +371,219 @@ export function InterviewLayout({
 
                     {/* Terminal content */}
                     <div className="min-h-0 flex-1 overflow-auto p-3">
-                      {error ? (
-                        <pre className="font-mono text-[11px] leading-5 text-red-400">
-                          {error}
-                        </pre>
-                      ) : results.length > 0 ? (
-                        <div className="space-y-3">
-                          {results.map((result) => (
-                            <div
-                              key={result.id}
-                              className="border-b border-white/10 pb-3 last:border-b-0"
-                            >
-                              <div className="flex items-center justify-between gap-3">
-                                <span className="font-mono text-[10px] text-white/60">
-                                  Test Case{" "}
-                                  {result.testCaseId}
-                                </span>
 
-                                <span
-                                  className={`font-mono text-[10px] uppercase ${
-                                    result.passed
-                                      ? "text-green-400"
-                                      : "text-red-400"
-                                  }`}
-                                >
-                                  {result.passed
-                                    ? "PASSED"
-                                    : "FAILED"}
-                                </span>
+                      {/* ================================================== */}
+                      {/* RUN MODE                                            */}
+                      {/* ================================================== */}
+
+                      {activeTerminalMode === "RUN" ? (
+                        <>
+                          {/* Code run error */}
+                          {error ? (
+                            <pre className="font-mono text-[11px] leading-5 text-red-400">
+                              {error}
+                            </pre>
+                          ) : isRunning ? (
+                            /* Code run in progress */
+                            <pre className="font-mono text-[11px] leading-5 text-white/70">
+                              $ Running...
+                            </pre>
+                          ) : results.length > 0 ? (
+                            /* Code run results */
+                            <div className="space-y-3">
+                              <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/30">
+                                Code Run
                               </div>
 
-                              {result.stdout && (
-                                <div className="mt-2">
+                              {results.map((result) => (
+                                <div
+                                  key={result.id}
+                                  className="border-b border-white/10 pb-3 last:border-b-0"
+                                >
+                                  <div className="flex items-center justify-between gap-3">
+                                    <span className="font-mono text-[10px] text-white/60">
+                                      Test Case{" "}
+                                      {result.testCaseId}
+                                    </span>
+
+                                    <span
+                                      className={`font-mono text-[10px] uppercase ${
+                                        result.passed
+                                          ? "text-green-400"
+                                          : "text-red-400"
+                                      }`}
+                                    >
+                                      {result.passed
+                                        ? "PASSED"
+                                        : "FAILED"}
+                                    </span>
+                                  </div>
+
+                                  {result.stdout && (
+                                    <div className="mt-2">
+                                      <div className="font-mono text-[9px] uppercase tracking-wider text-white/30">
+                                        stdout
+                                      </div>
+
+                                      <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] leading-5 text-white/70">
+                                        {result.stdout}
+                                      </pre>
+                                    </div>
+                                  )}
+
+                                  {result.stderr && (
+                                    <div className="mt-2">
+                                      <div className="font-mono text-[9px] uppercase tracking-wider text-red-400/60">
+                                        stderr
+                                      </div>
+
+                                      <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] leading-5 text-red-400">
+                                        {result.stderr}
+                                      </pre>
+                                    </div>
+                                  )}
+
+                                  {result.executionTimeMS !==
+                                    null && (
+                                    <div className="mt-2 font-mono text-[9px] text-white/30">
+                                      {
+                                        result.executionTimeMS
+                                      }
+                                      ms
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : codeRun ? (
+                            /* Existing code run */
+                            <div className="space-y-2">
+                              <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/30">
+                                Code Run
+                              </div>
+
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="font-mono text-[11px] text-white/60">
+                                  {codeRun.id}
+                                </span>
+
+                                <span className="font-mono text-[10px] uppercase text-white/70">
+                                  {codeRun.status}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <pre className="font-mono text-[11px] leading-5 text-white/70">
+                              $ Ready to run your code...
+                            </pre>
+                          )}
+                        </>
+                      ) : activeTerminalMode === "SUBMIT" ? (
+                        /* ================================================== */
+                        /* SUBMIT MODE                                         */
+                        /* ================================================== */
+
+                        <>
+                          {/* Submission error */}
+                          {submissionError ? (
+                            <pre className="font-mono text-[11px] leading-5 text-red-400">
+                              {submissionError}
+                            </pre>
+                          ) : isSubmitting ? (
+                            /* Submission in progress */
+                            <pre className="font-mono text-[11px] leading-5 text-white/70">
+                              $ Submitting...
+                            </pre>
+                          ) : evaluation ? (
+                            /* Completed submission */
+                            <div className="space-y-3">
+                              <div className="border-b border-white/10 pb-3">
+                                <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/30">
+                                  Submission
+                                </div>
+
+                                <div className="mt-1 flex items-center justify-between gap-3">
+                                  <span className="font-mono text-[11px] text-white/70">
+                                    Evaluation
+                                  </span>
+
+                                  <span
+                                    className={`font-mono text-[10px] uppercase ${
+                                      evaluation.status ===
+                                      "PASSED"
+                                        ? "text-green-400"
+                                        : "text-red-400"
+                                    }`}
+                                  >
+                                    {evaluation.status}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
                                   <div className="font-mono text-[9px] uppercase tracking-wider text-white/30">
-                                    stdout
+                                    Score
                                   </div>
 
-                                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] leading-5 text-white/70">
-                                    {result.stdout}
-                                  </pre>
+                                  <div className="mt-1 font-mono text-[14px] text-white/80">
+                                    {evaluation.score}
+                                  </div>
                                 </div>
-                              )}
 
-                              {result.stderr && (
-                                <div className="mt-2">
-                                  <div className="font-mono text-[9px] uppercase tracking-wider text-red-400/60">
-                                    stderr
+                                <div>
+                                  <div className="font-mono text-[9px] uppercase tracking-wider text-white/30">
+                                    Tests
                                   </div>
 
-                                  <pre className="mt-1 whitespace-pre-wrap font-mono text-[11px] leading-5 text-red-400">
-                                    {result.stderr}
-                                  </pre>
+                                  <div className="mt-1 font-mono text-[14px] text-white/80">
+                                    {evaluation.passedTests}/
+                                    {evaluation.totalTests}
+                                  </div>
                                 </div>
-                              )}
+                              </div>
 
-                              {result.executionTimeMS !==
+                              {evaluation.executionTimeMS !==
                                 null && (
-                                <div className="mt-2 font-mono text-[9px] text-white/30">
+                                <div className="font-mono text-[9px] text-white/30">
+                                  Total execution time:{" "}
                                   {
-                                    result.executionTimeMS
+                                    evaluation.executionTimeMS
                                   }
                                   ms
                                 </div>
                               )}
                             </div>
-                          ))}
-                        </div>
-                      ) : codeRun ? (
-                        <pre className="font-mono text-[11px] leading-5 text-white/70">
-                          {isRunning
-                            ? "$ Running..."
-                            : `$ Code run ${codeRun.status}`}
-                        </pre>
+                          ) : submission ? (
+                            /* Existing submission */
+                            <div className="space-y-2">
+                              <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-white/30">
+                                Submission
+                              </div>
+
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="font-mono text-[11px] text-white/60">
+                                  {submission.id}
+                                </span>
+
+                                <span className="font-mono text-[10px] uppercase text-white/70">
+                                  {submission.status}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            <pre className="font-mono text-[11px] leading-5 text-white/70">
+                              $ Ready to submit...
+                            </pre>
+                          )}
+                        </>
                       ) : (
+                        /* ================================================== */
+                        /* INITIAL STATE                                       */
+                        /* ================================================== */
+
                         <pre className="font-mono text-[11px] leading-5 text-white/70">
-{`$ Ready to run your code...
+                          {`$ Ready to run your code...
 
 `}
                         </pre>
