@@ -58,6 +58,11 @@ type WebRTCSignal =
           candidate: RTCIceCandidateInit;
       };
 
+type InterviewWorkspace =
+    | "CODE"
+    | "WHITEBOARD"
+    | "FIGMA";
+
 export function InterviewPage({
     interviewId,
 }: InterviewPageProps) {
@@ -187,7 +192,7 @@ export function InterviewPage({
                 "PARTICIPANT_LEFT"
             ) {
                 const userId =
-                    message.participant.userId;
+                    message.userId;
 
                 console.log(
                     "[Interview] participant left:",

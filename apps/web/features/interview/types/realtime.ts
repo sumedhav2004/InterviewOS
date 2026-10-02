@@ -246,7 +246,7 @@ export type ServerMessage =
       }
     | {
           type: "PARTICIPANT_LEFT";
-          participant: Participant;
+          userId: string;
       }
 
     /*

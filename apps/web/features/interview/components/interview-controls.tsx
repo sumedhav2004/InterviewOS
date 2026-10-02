@@ -22,6 +22,8 @@ type InterviewControlsProps = {
   onToggleMicrophone: () => void;
 };
 
+
+
 export function InterviewControls({
   cameraEnabled,
   microphoneEnabled,

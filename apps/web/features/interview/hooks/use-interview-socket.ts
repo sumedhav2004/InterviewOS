@@ -158,8 +158,8 @@ export function useInterviewSocket(
               (currentParticipants) =>
                 currentParticipants.filter(
                   (currentParticipant) =>
-                    currentParticipant.id !==
-                    message.participant.id,
+                    currentParticipant.userId !==
+                    message.userId,
                 ),
             );
 
