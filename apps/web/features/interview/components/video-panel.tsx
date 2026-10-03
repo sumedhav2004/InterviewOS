@@ -6,12 +6,8 @@ import {
 } from "lucide-react";
 
 import { ParticipantTile } from "./participant-tile";
-import { Participant } from "../types/realtime";
+import { Participant, ParticipantMediaState } from "../types/participant";
 
-type ParticipantMediaState = {
-  cameraEnabled: boolean;
-  microphoneEnabled: boolean;
-};
 
 type VideoPanelProps = {
   localStream: MediaStream | null;

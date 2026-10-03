@@ -5,24 +5,10 @@ import { useCallback, useState } from "react";
 import { submissionApi } from "../api/submission-api";
 import type {
   ServerMessage,
-  SubmissionTestCaseResult,
 } from "../types/realtime";
 import { ProgrammingLanguage } from "../types/programming-language";
+import { CreateSubmissionRequest, SubmissionEvaluation, SubmissionTestCaseResult } from "../types/submission";
 
-type CreateSubmissionInput = {
-  interviewQuestionId: string;
-  participantId: string;
-  language: ProgrammingLanguage;
-  sourceCode: string;
-};
-
-type SubmissionEvaluation = {
-  status: string;
-  score: number;
-  passedTests: number;
-  totalTests: number;
-  executionTimeMS: number | null;
-};
 
 export function useSubmission(
   onMessage?: (message: ServerMessage) => void,
@@ -96,7 +82,7 @@ export function useSubmission(
   );
 
   const submit = async (
-    data: CreateSubmissionInput,
+    data: CreateSubmissionRequest,
   ) => {
     try {
       setIsSubmitting(true);

@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import { ProgrammingLanguage } from "../types/programming-language";
 import { codeRunApi } from "../api/codeRun-api";
-import type { CodeRunTestCaseResult } from "../types/realtime";
+
 import type { ServerMessage } from "../types/realtime";
+import { CodeRunTestCaseResult } from "../types/coderun";
 
 type RunCodeRunInput = {
   interviewQuestionId: string;

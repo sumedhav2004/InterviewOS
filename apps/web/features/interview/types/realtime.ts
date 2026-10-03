@@ -1,67 +1,8 @@
+import { CodeRunTestCaseResult } from "./coderun";
+import { Participant } from "./participant";
 import { ProgrammingLanguage } from "./programming-language";
 
-export type ParticipantRole =
-    | "INTERVIEWER"
-    | "CANDIDATE"
-    | "OBSERVER";
 
-
-export type CodeRunTestCaseResult = {
-    id: string;
-    codeRunId: string;
-    testCaseId: string;
-    status: "PENDING" | "RUNNING" | "SUCCESS" | "FAILED";
-    passed: boolean;
-    stdout: string | null;
-    stderr: string | null;
-    executionTimeMS: number | null;
-};
-
-
-export type SubmissionState =
-  | "IDLE"
-  | "SUBMITTING"
-  | "COMPLETED"
-  | "FAILED";
-
-export type CreateSubmissionRequest = {
-  interviewQuestionId: string;
-  participantId: string;
-  language: string;
-  sourceCode: string;
-};
-
-export type SubmissionTestCaseResult = {
-  id: string;
-  submissionId: string;
-  testCaseId: string;
-  status: string;
-  passed: boolean;
-  stdout: string | null;
-  stderr: string | null;
-  executionTimeMS: number | null;
-  memoryBytes?: string | null;
-};
-
-export type Submission = {
-  id: string;
-  interviewQuestionId: string;
-  participantId: string;
-  language: string;
-  sourceCode: string;
-  status: string;
-};
-
-
-export type Participant = {
-    id: string;
-    interviewId: string;
-    userId: string;
-    role: ParticipantRole;
-    status: string;
-    joinedAt: string | null;
-    leftAt: string | null;
-};
 
 
 export type InterviewRealtimeEvent =
@@ -307,3 +248,25 @@ export type ActiveQuestionChangedMessage = {
         };
     } | null;
 };
+
+export type ActiveInterviewQuestion = Extract<
+    ServerMessage,
+    { type: "ACTIVE_QUESTION_STATE" }
+>["interviewQuestion"];
+
+export type WebRTCSignal =
+    | {
+          type: "WEBRTC_OFFER";
+          fromUserId: string;
+          offer: RTCSessionDescriptionInit;
+      }
+    | {
+          type: "WEBRTC_ANSWER";
+          fromUserId: string;
+          answer: RTCSessionDescriptionInit;
+      }
+    | {
+          type: "WEBRTC_ICE_CANDIDATE";
+          fromUserId: string;
+          candidate: RTCIceCandidateInit;
+      };

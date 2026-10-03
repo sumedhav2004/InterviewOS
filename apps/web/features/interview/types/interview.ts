@@ -1,14 +1,4 @@
-export type InterviewStatus =
-  | "DRAFT"
-  | "SCHEDULED"
-  | "INPROGRESS"
-  | "COMPLETED"
-  | "CANCELLED";
-
-export type ParticipantRole =
-  | "INTERVIEWER"
-  | "CANDIDATE"
-  | "OBSERVER";
+import { InterviewStatus, ParticipantRole } from "@interview-os/database";
 
 export type Interview = {
   id: string;
@@ -31,3 +21,8 @@ export type InterviewParticipant = {
   userId: string;
   interviewId: string;
 };
+
+export type InterviewWorkspace =
+    | "CODE"
+    | "WHITEBOARD"
+    | "FIGMA";

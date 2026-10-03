@@ -16,107 +16,51 @@ import { LanguageSelector } from "./language-selector";
 import type { ProgrammingLanguage } from "../types/programming-language";
 import { Button } from "@/components/ui/button";
 
-import type {
-  CodeRunTestCaseResult,
-  Participant,
-  SubmissionTestCaseResult,
-} from "../types/realtime";
+import { Participant, ParticipantMediaState } from "../types/participant";
+import { ActiveInterviewQuestion } from "../types/active-question";
+import { SubmissionEvaluation, SubmissionTestCaseResult } from "../types/submission";
+import { CodeRunTestCaseResult } from "../types/coderun";
 
-type ParticipantMediaState = {
-  cameraEnabled: boolean;
-  microphoneEnabled: boolean;
-};
 
-type TestCase = {
-  id: string;
-  input: unknown;
-  expectedOutput: unknown;
-};
 
-type ActiveInterviewQuestion = {
-  id: string;
-  questionOrder: number;
-  points: number;
-  question: {
-    id: string;
-    title: string;
-    description: string;
-    difficulty: string;
-    testCases: TestCase[];
-  };
-};
-
-type SubmissionEvaluation = {
-  status: string;
-  score: number;
-  passedTests: number;
-  totalTests: number;
-  executionTimeMS: number | null;
-};
 
 type InterviewLayoutProps = {
   localStream: MediaStream | null;
-
   participantIds: string[];
   participants: Participant[];
-
   remoteStreams: Map<string, MediaStream>;
-
   localMediaState: ParticipantMediaState;
-
   remoteMediaStates: Map<
     string,
     ParticipantMediaState
   >;
-
   code: string;
-
   onCodeChange: (code: string) => void;
-
   activeInterviewQuestion:
     | ActiveInterviewQuestion
     | null;
-
   participant: Participant;
-
   language: ProgrammingLanguage;
-
   onLanguageChange: (
     language: ProgrammingLanguage,
   ) => void;
-
-  /*
-   * Code run
-   */
   codeRun: {
     id: string;
     status: string;
   } | null;
-
   results: CodeRunTestCaseResult[];
-
   isRunning: boolean;
-
   error: string | null;
-
   onRunCode: () => Promise<void>;
 
-  /*
-   * Submission
-   */
   submission: {
     id: string;
     status: string;
   } | null;
-
   submissionResults: SubmissionTestCaseResult[];
-
   evaluation: SubmissionEvaluation | null;
-
   isSubmitting: boolean;
-
   submissionError: string | null;
-
   onSubmit: () => Promise<void>;
 };
 

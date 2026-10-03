@@ -10,10 +10,10 @@ import {
 import { useAuth } from "@clerk/nextjs";
 
 import type {
-  Participant,
   ServerMessage,
 } from "../types/realtime";
 import { ProgrammingLanguage } from "../types/programming-language";
+import { Participant } from "../types/participant";
 
 type MessageHandler = (
   message: ServerMessage,

@@ -20,54 +20,24 @@ import { InterviewLayout } from "./interview-layout";
 import { InterviewControls } from "./interview-controls";
 
 import type {
-    Participant,
+    ActiveInterviewQuestion,
     ServerMessage,
+    WebRTCSignal,
 } from "../types/realtime";
 import type { ProgrammingLanguage } from "../types/programming-language";
 import { useCodeRun } from "../hooks/use-coderun";
 import { useSubmission } from "../hooks/use-submission";
+import { ParticipantMediaState } from "../types/participant";
 
 type InterviewPageProps = {
     interviewId: string;
 };
 
-type ParticipantMediaState = {
-    cameraEnabled: boolean;
-    microphoneEnabled: boolean;
-};
-
-type ActiveInterviewQuestion = Extract<
-    ServerMessage,
-    { type: "ACTIVE_QUESTION_STATE" }
->["interviewQuestion"];
-
-type WebRTCSignal =
-    | {
-          type: "WEBRTC_OFFER";
-          fromUserId: string;
-          offer: RTCSessionDescriptionInit;
-      }
-    | {
-          type: "WEBRTC_ANSWER";
-          fromUserId: string;
-          answer: RTCSessionDescriptionInit;
-      }
-    | {
-          type: "WEBRTC_ICE_CANDIDATE";
-          fromUserId: string;
-          candidate: RTCIceCandidateInit;
-      };
-
-type InterviewWorkspace =
-    | "CODE"
-    | "WHITEBOARD"
-    | "FIGMA";
-
 export function InterviewPage({
     interviewId,
 }: InterviewPageProps) {
-    const { isLoaded, isSignedIn } = useAuth();
 
+    const { isLoaded, isSignedIn } = useAuth();
     const [code, setCode] = useState("");
 
     const [

@@ -1,25 +1,8 @@
 "use client";
 
 import { FileText } from "lucide-react";
+import { ActiveInterviewQuestion } from "../types/active-question";
 
-type TestCase = {
-  id: string;
-  input: unknown;
-  expectedOutput: unknown;
-};
-
-type ActiveInterviewQuestion = {
-  id: string;
-  questionOrder: number;
-  points: number;
-  question: {
-    id: string;
-    title: string;
-    description: string;
-    difficulty: string;
-    testCases: TestCase[];
-  };
-};
 
 type ActiveQuestionProps = {
   question: ActiveInterviewQuestion | null;
