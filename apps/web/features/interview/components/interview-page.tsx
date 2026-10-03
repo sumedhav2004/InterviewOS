@@ -605,6 +605,7 @@ export function InterviewPage({
                 }}
                 localStream={localStream}
                 participantIds={participantIds}
+                participants={participants}
                 remoteStreams={remoteStreams}
                 localMediaState={{
                     cameraEnabled,

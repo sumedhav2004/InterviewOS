@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import { ParticipantTile } from "./participant-tile";
+import { Participant } from "../types/realtime";
 
 type ParticipantMediaState = {
   cameraEnabled: boolean;
@@ -15,6 +16,7 @@ type ParticipantMediaState = {
 type VideoPanelProps = {
   localStream: MediaStream | null;
   participantIds: string[];
+  participants: Participant[]
   remoteStreams: Map<string, MediaStream>;
   localMediaState: ParticipantMediaState;
   remoteMediaStates: Map<string, ParticipantMediaState>;
@@ -23,6 +25,7 @@ type VideoPanelProps = {
 export function VideoPanel({
   localStream,
   participantIds,
+  participants,
   remoteStreams,
   localMediaState,
   remoteMediaStates,
@@ -73,22 +76,22 @@ export function VideoPanel({
             isLocal
           />
 
-          {participantIds.map(
-            (participantId, index) => {
+          {participants.map(
+            (participant, index) => {
               const remoteStream =
                 remoteStreams.get(
-                  participantId,
+                  participant.userId,
                 );
 
               const remoteMediaState =
                 remoteMediaStates.get(
-                  participantId,
+                  participant.userId,
                 );
 
               return (
                 <ParticipantTile
-                  key={participantId}
-                  name={`Participant ${index + 1}`}
+                  key={participant.id}
+                  name={`${participant.role}`}
                   stream={remoteStream}
                   microphoneEnabled={
                     remoteMediaState

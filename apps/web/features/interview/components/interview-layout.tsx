@@ -58,6 +58,7 @@ type InterviewLayoutProps = {
   localStream: MediaStream | null;
 
   participantIds: string[];
+  participants: Participant[];
 
   remoteStreams: Map<string, MediaStream>;
 
@@ -124,6 +125,7 @@ type TerminalMode = "RUN" | "SUBMIT" | null;
 export function InterviewLayout({
   localStream,
   participantIds,
+  participants,
   remoteStreams,
   localMediaState,
   remoteMediaStates,
@@ -614,6 +616,7 @@ export function InterviewLayout({
         <VideoPanel
           localStream={localStream}
           participantIds={participantIds}
+          participants={participants}
           remoteStreams={remoteStreams}
           localMediaState={localMediaState}
           remoteMediaStates={remoteMediaStates}
