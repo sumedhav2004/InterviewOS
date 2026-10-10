@@ -291,12 +291,10 @@ describe("InviteService", () => {
 
             expect(mockParticipantRepository.createParticipant)
                 .toHaveBeenCalledWith(
+                    fakeTx,
                     receiverId,
                     interviewId,
-                    {
-                        role: invite.role
-                    },
-                    fakeTx
+                    { role: invite.role }
                 );
 
             expect(result).toEqual({

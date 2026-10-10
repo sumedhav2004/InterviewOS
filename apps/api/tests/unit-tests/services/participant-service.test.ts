@@ -76,7 +76,7 @@ describe("participantService", () => {
                 .toHaveBeenCalledWith(targetId);
 
             expect(mockParticipantRepository.findParticipant)
-                .toHaveBeenCalledWith(interviewId, targetId);
+                .toHaveBeenCalledWith(targetId, interviewId);
 
             expect(mockParticipantRepository.createParticipant)
                 .toHaveBeenCalledWith(targetId, interviewId, data);
@@ -244,7 +244,8 @@ describe("participantService", () => {
             const result = await service.updateParticipant(requesterId, targetId, interviewId, data)
 
             expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(interviewId, targetId)
+            expect(mockParticipantRepository.findParticipant)
+                .toHaveBeenCalledWith(targetId, interviewId);
             expect(result).toMatchObject(updatedParticipant)
         })
 

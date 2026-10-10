@@ -28,6 +28,9 @@ import type { ProgrammingLanguage } from "../types/programming-language";
 import { useCodeRun } from "../hooks/use-coderun";
 import { useSubmission } from "../hooks/use-submission";
 import { ParticipantMediaState } from "../types/participant";
+import InterviewWorkspace from "./interview-workspace/interview-workspace";
+import { InterviewWorkspaceType } from "../types/interview";
+import { InterviewRoomProvider } from "./interview-room-provider";
 
 type InterviewPageProps = {
     interviewId: string;
@@ -47,6 +50,7 @@ export function InterviewPage({
 
     const [language, setLanguage] =
         useState<ProgrammingLanguage>("PYTHON");
+    const [workspace, setWorkspace] = useState<InterviewWorkspaceType>()
 
     const [
         remoteMediaStates,
@@ -550,92 +554,94 @@ export function InterviewPage({
     }
 
     return (
-        <InterviewShell>
-            <InterviewHeader
-                interview={interview}
-            />
+        <InterviewRoomProvider>
+            <InterviewShell>
+                <InterviewHeader
+                    interview={interview}
+                />
 
-            <InterviewLayout
-                code={code}
-                activeInterviewQuestion={
-                    activeInterviewQuestion
-                }
-                participant={participant}
-                onCodeChange={(nextCode) => {
-                    setCode(nextCode);
+                <InterviewWorkspace
+                    code={code}
+                    activeInterviewQuestion={
+                        activeInterviewQuestion
+                    }
+                    participant={participant}
+                    onCodeChange={(nextCode) => {
+                        setCode(nextCode);
 
-                    if (!joined) {
-                        return;
+                        if (!joined) {
+                            return;
+                        }
+
+                        sendMessage({
+                            type: "CODE_CHANGE",
+                            code: nextCode,
+                        });
+                    }}
+                    localStream={localStream}
+                    participantIds={participantIds}
+                    participants={participants}
+                    remoteStreams={remoteStreams}
+                    localMediaState={{
+                        cameraEnabled,
+                        microphoneEnabled,
+                    }}
+                    language={language}
+                    onLanguageChange={
+                        handleLanguageChange
+                    }
+                    remoteMediaStates={
+                        remoteMediaStates
                     }
 
-                    sendMessage({
-                        type: "CODE_CHANGE",
-                        code: nextCode,
-                    });
-                }}
-                localStream={localStream}
-                participantIds={participantIds}
-                participants={participants}
-                remoteStreams={remoteStreams}
-                localMediaState={{
-                    cameraEnabled,
-                    microphoneEnabled,
-                }}
-                language={language}
-                onLanguageChange={
-                    handleLanguageChange
-                }
-                remoteMediaStates={
-                    remoteMediaStates
-                }
+                    /*
+                    * Code run
+                    */
+                    codeRun={codeRun}
+                    results={codeRunResults}
+                    isRunning={isCodeRunRunning}
+                    error={codeRunError}
+                    onRunCode={handleRunCode}
 
-                /*
-                 * Code run
-                 */
-                codeRun={codeRun}
-                results={codeRunResults}
-                isRunning={isCodeRunRunning}
-                error={codeRunError}
-                onRunCode={handleRunCode}
+                    /*
+                    * Submission
+                    */
+                    submission={submission}
+                    submissionResults={
+                        submissionResults
+                    }
+                    evaluation={evaluation}
+                    isSubmitting={isSubmitting}
+                    submissionError={
+                        submissionError
+                    }
+                    onSubmit={handleSubmitCode}
+                />
 
-                /*
-                 * Submission
-                 */
-                submission={submission}
-                submissionResults={
-                    submissionResults
-                }
-                evaluation={evaluation}
-                isSubmitting={isSubmitting}
-                submissionError={
-                    submissionError
-                }
-                onSubmit={handleSubmitCode}
-            />
+                {mediaError && (
+                    <div className="border-t border-border px-4 py-2">
+                        <p className="font-mono text-xs text-destructive">
+                            {mediaError}
+                        </p>
+                    </div>
+                )}
 
-            {mediaError && (
-                <div className="border-t border-border px-4 py-2">
-                    <p className="font-mono text-xs text-destructive">
-                        {mediaError}
-                    </p>
-                </div>
-            )}
-
-            <InterviewControls
-                cameraEnabled={
-                    cameraEnabled
-                }
-                microphoneEnabled={
-                    microphoneEnabled
-                }
-                onToggleCamera={
-                    toggleCamera
-                }
-                onToggleMicrophone={
-                    toggleMicrophone
-                }
-            />
-        </InterviewShell>
+                <InterviewControls
+                    cameraEnabled={
+                        cameraEnabled
+                    }
+                    microphoneEnabled={
+                        microphoneEnabled
+                    }
+                    onToggleCamera={
+                        toggleCamera
+                    }
+                    onToggleMicrophone={
+                        toggleMicrophone
+                    }
+                />
+            </InterviewShell>
+        </InterviewRoomProvider>
     );
 }
 

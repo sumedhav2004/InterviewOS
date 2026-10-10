@@ -189,7 +189,7 @@ describe("InterviewQuestion", () => {
             const result = await service.createInterviewQuestion(interviewId,questionId,requesterId,data)
 
             expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(interviewId, requesterId)
+            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(requesterId, interviewId)
             expect(mockQuestionRepository.findById).toHaveBeenCalledWith(questionId)
             expect(mockInterviewQuestionRepository.findInterviewQuestion).toHaveBeenCalledWith(interviewId, questionId)
             expect(mockInterviewQuestionRepository.findByInterview).toHaveBeenCalledWith(interviewId)
@@ -431,7 +431,7 @@ describe("InterviewQuestion", () => {
             const result = await service.updateInterviewQuestion(interviewQuestionId,interviewId,questionId,requesterId,data)
 
             expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(interviewId, requesterId)
+            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(requesterId, interviewId)
             expect(mockInterviewQuestionRepository.findById).toHaveBeenCalledWith(interviewQuestionId)
             expect(mockInterviewQuestionRepository.updateInterviewQuestion).toHaveBeenCalledWith(interviewQuestionId,data)
             expect(result).toMatchObject({
@@ -597,7 +597,7 @@ describe("InterviewQuestion", () => {
 
             expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
             expect(mockInterviewQuestionRepository.findById).toHaveBeenCalledWith(id)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(interviewId, requesterId)
+            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(requesterId, interviewId)
             expect(mockInterviewQuestionRepository.deleteInterviewQuestion).toHaveBeenCalledWith(id)
 
         })

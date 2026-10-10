@@ -9,12 +9,21 @@ describe("InterviewService", () => {
         findById: vi.fn(),
         findByUserId: vi.fn(),
     };
+    const mockParticipantRepository = {
+        findParticipant: vi.fn(),
+        createParticipant: vi.fn(),
+    };
 
+    
     let service: InterviewService;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        service = new InterviewService(mockRepository as any);
+
+        service = new InterviewService(
+            mockRepository as any,
+            mockParticipantRepository as any
+        );
     });
 
     describe("findInterviewById", () => {
@@ -135,7 +144,12 @@ describe("InterviewService", () => {
             mockRepository.createInterview.mockResolvedValue(createdInterview)
             const result  = await service.createInterview(userId, data)
 
-            expect(mockRepository.createInterview).toHaveBeenCalledWith(userId, data)
+            expect(mockRepository.createInterview)
+                .toHaveBeenCalledWith(
+                    expect.anything(),
+                    userId,
+                    data
+                );
             expect(result).toEqual(createdInterview)
         })
     })

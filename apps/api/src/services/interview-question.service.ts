@@ -143,8 +143,8 @@ export class InterviewQuestionService{
 
         const participant =
             await this.participantRepository.findParticipant(
+                requesterId,
                 interviewId,
-                requesterId
             );
 
         if (
@@ -350,8 +350,8 @@ export class InterviewQuestionService{
 
         const participant =
             await this.participantRepository.findParticipant(
+                requesterId,
                 interviewId,
-                requesterId
             );
 
         if (

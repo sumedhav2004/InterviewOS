@@ -110,8 +110,8 @@ export class InterviewParticipantService {
         // 3. Check that target user exists
         const participant =
             await this.participantRepository.findParticipant(
+                targetId,
                 interviewId,
-                targetId
             );
 
         if (!participant) {
