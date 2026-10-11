@@ -1,13 +1,13 @@
-import { TestCaseVisibility } from "@interview-os/database"
+import { Prisma, TestCaseVisibility } from "@interview-os/database";
 
 export type createTestCaseData = {
-    input: JSON,
-    expectedOutput: JSON,
-    visibility: TestCaseVisibility
-}
+    input: Prisma.InputJsonValue;
+    expectedOutput: Prisma.InputJsonValue;
+    visibility: TestCaseVisibility;
+};
 
 export type updateTestCaseData = {
-    input?: JSON,
-    expectedOutput?: JSON,
-    visibility:  TestCaseVisibility
-}
+    input?: Prisma.InputJsonValue;
+    expectedOutput?: Prisma.InputJsonValue;
+    visibility?: TestCaseVisibility;
+};

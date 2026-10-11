@@ -2,6 +2,7 @@ import { AppError } from "../../core/errors/app-error";
 import { InterviewRepository } from "../repositories/interview.repository";
 import { ParticipantRepository } from "../repositories/participant.repository";
 import { UserRepository } from "../repositories/user.repository";
+import { prisma } from "@interview-os/database";
 
 import {
     CreateParticipantData,
@@ -79,6 +80,7 @@ export class InterviewParticipantService {
 
         // 5. Finally create
         return this.participantRepository.createParticipant(
+            prisma,
             targetId,
             interviewId,
             data
