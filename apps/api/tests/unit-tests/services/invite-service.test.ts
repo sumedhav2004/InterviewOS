@@ -1,599 +1,410 @@
-import {beforeEach, describe, expect, it, vi} from "vitest"
-import { InviteService } from "../../../src/services/invite.service"
-import { CreateInviteData } from "../../../src/types/invite"
-import { InviteStatus, prisma } from "@interview-os/database";
 
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { InterviewStatus, InviteStatus } from "@interview-os/database";
 
-vi.mock("@interview-os/database", async () => {
-    const actual = await vi.importActual("@interview-os/database");
+const mocks = vi.hoisted(() => ({
+    interviewFindById: vi.fn(),
+    inviteFindById: vi.fn(),
+    findByInterviewAndReceiver: vi.fn(),
+    createInvite: vi.fn(),
+    getReceivedInvites: vi.fn(),
+    getSentInvites: vi.fn(),
+    updateInviteStatus: vi.fn(),
+    userFindById: vi.fn(),
+    findParticipant: vi.fn(),
+    createParticipant: vi.fn(),
+    transaction: vi.fn(),
+}));
 
+vi.mock("@interview-os/database", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@interview-os/database")>();
     return {
         ...actual,
         prisma: {
-            $transaction: vi.fn(),
+            ...actual.prisma,
+            $transaction: mocks.transaction,
         },
     };
 });
 
+vi.mock("../../../src/repositories/invites.repository", () => ({
+    InvitesRepository: class {
+        findById = mocks.inviteFindById;
+        findByInterviewAndReceiver = mocks.findByInterviewAndReceiver;
+        createInvite = mocks.createInvite;
+        getReceivedInvites = mocks.getReceivedInvites;
+        getSentInvites = mocks.getSentInvites;
+        updateInviteStatus = mocks.updateInviteStatus;
+    },
+}));
+
+vi.mock("../../../src/repositories/interview.repository", () => ({
+    InterviewRepository: class {
+        findById = mocks.interviewFindById;
+    },
+}));
+
+vi.mock("../../../src/repositories/user.repository", () => ({
+    UserRepository: class {
+        findById = mocks.userFindById;
+    },
+}));
+
+vi.mock("../../../src/repositories/participant.repository", () => ({
+    ParticipantRepository: class {
+        findParticipant = mocks.findParticipant;
+        createParticipant = mocks.createParticipant;
+    },
+}));
+
+import { InviteService } from "../../../src/services/invite.service";
+
 describe("InviteService", () => {
-    const mockInviteRepository = {
-        getSentInvites: vi.fn(),
-        getReceivedInvies: vi.fn(),
-        createInvite: vi.fn(),
-        findByInterviewAndReceiver: vi.fn(),
-        updateInvite: vi.fn(),
-        findById: vi.fn(),
-        updateInviteStatus: vi.fn(),
-    }
+    let service: InviteService;
 
-    const mockInterviewRepository = {
-        findById: vi.fn()
-    }
+    const senderId = "sender-1";
+    const receiverId = "receiver-1";
+    const interviewId = "interview-1";
+    const inviteId = "invite-1";
 
-    const mockParticipantRepository = {
-        findById: vi.fn(),
-        findParticipant: vi.fn(),
-        createParticipant: vi.fn()
-    }
+    const interview = {
+        id: interviewId,
+        createdById: senderId,
+        status: InterviewStatus.SCHEDULED,
+    };
 
-    const mockUserRepository = {
-        findById: vi.fn()
-    }
-    let service: InviteService
+    const invite = {
+        id: inviteId,
+        senderId,
+        receiverId,
+        interviewId,
+        role: "CANDIDATE",
+        status: InviteStatus.PENDING,
+    };
 
     beforeEach(() => {
         vi.clearAllMocks();
-        service = new InviteService(
-            mockInviteRepository as any,
-            mockInterviewRepository as any,
-            mockUserRepository as any,
-            mockParticipantRepository as any
-        );
-    })
+        service = new InviteService();
 
+        mocks.transaction.mockImplementation(
+            async (callback: (tx: object) => unknown) =>
+                callback({ transaction: true }),
+        );
+    });
 
     describe("createInvite", () => {
+        const data = { role: "CANDIDATE" };
 
-        it("should create an invite", async () =>{
-            const senderId = "user-1"
-            const receiverId = "user-2"
-            const interviewId = "interview-1"
-            const data:CreateInviteData = {
-                role: "INTERVIEWER"
-            }
+        beforeEach(() => {
+            mocks.interviewFindById.mockResolvedValue(interview);
+            mocks.userFindById.mockResolvedValue({ id: receiverId });
+            mocks.findParticipant.mockResolvedValue(null);
+            mocks.findByInterviewAndReceiver.mockResolvedValue(null);
+            mocks.createInvite.mockResolvedValue(invite);
+        });
 
-            const createdInvite = {
-                id: "invite-1",
-                senderId,
-                receiverId,
-                interviewId,
-                ...data
-            }
+        it("creates an invite when all validations pass", async () => {
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).resolves.toEqual(invite);
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: "SCHEDULED",
-                createdById: senderId
-            })
-            mockUserRepository.findById.mockResolvedValue({
-                id: receiverId
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue(null)
-            mockInviteRepository.findByInterviewAndReceiver.mockResolvedValue(null)
-            mockInviteRepository.createInvite.mockResolvedValue(createdInvite)
+            expect(mocks.interviewFindById).toHaveBeenCalledWith(interviewId);
+            expect(mocks.userFindById).toHaveBeenCalledWith(receiverId);
+            expect(mocks.findParticipant).toHaveBeenCalledWith(receiverId, interviewId);
+            expect(mocks.findByInterviewAndReceiver)
+                .toHaveBeenCalledWith(interviewId, receiverId);
+            expect(mocks.createInvite)
+                .toHaveBeenCalledWith(senderId, receiverId, interviewId, data);
+        });
 
-            const result = await service.createInvite(senderId, receiverId, interviewId, data)
+        it("throws when the interview does not exist", async () => {
+            mocks.interviewFindById.mockResolvedValue(null);
 
-
-            expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(receiverId, interviewId)
-            expect(mockInviteRepository.findByInterviewAndReceiver).toHaveBeenCalledWith(interviewId, receiverId)
-            expect(mockInviteRepository.createInvite).toHaveBeenCalledWith(senderId, receiverId, interviewId, data)
-
-            expect(result).toMatchObject(createdInvite)
-        })
-
-        it("should produce error when interview is not found", async () => {
-            const senderId = "user-1"
-            const receiverId = "user-2"
-            const interviewId = "interview-1"
-            const data:CreateInviteData = {
-                role: "INTERVIEWER"
-            }
-
-            mockInterviewRepository.findById.mockResolvedValue(null)
-
-            await expect(service.createInvite(senderId, receiverId, interviewId, data)).rejects.toMatchObject({
-                message: "Interview Not Found",
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).rejects.toMatchObject({
                 statusCode: 404,
-                code: 'INTERVIEW_NOT_FOUND'
-            })
-        })
+                code: "INTERVIEW_NOT_FOUND",
+            });
 
-        it("should produce error when sender is unauthorized", async () => {
-            const senderId = "user-1"
-            const receiverId = "user-2"
-            const interviewId = "interview-1"
-            const data:CreateInviteData = {
-                role: "INTERVIEWER"
-            }
+            expect(mocks.userFindById).not.toHaveBeenCalled();
+        });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                createdById: "user-3",
-                status: "SCHEDULED"
-            })
+        it("rejects invites for interviews that are not scheduled", async () => {
+            mocks.interviewFindById.mockResolvedValue({
+                ...interview,
+                status: InterviewStatus.DRAFT,
+            });
 
-            await expect(service.createInvite(senderId, receiverId, interviewId, data)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: 'UNAUTHORIZED'
-            })
-        })
-
-        it("should produce error when interview doesnt have a SCHEDULED status", async () => {
-            const senderId = "user-1"
-            const receiverId = "user-2"
-            const interviewId = "interview-1"
-            const data:CreateInviteData = {
-                role: "INTERVIEWER"
-            }
-
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                createdById: "user-3",
-                status: "DRAFT"
-            })
-
-            await expect(service.createInvite(senderId, receiverId, interviewId, data)).rejects.toMatchObject({
-                message: "Invites can only be sent for scheduled interviews",
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).rejects.toMatchObject({
                 statusCode: 400,
-                code: "INVALID_INTERVIEW_STATUS"
-            })
-        })
+                code: "INVALID_INTERVIEW_STATUS",
+            });
 
-        it("should produce error when receiver is not found", async () => {
-            const senderId = "user-1"
-            const receiverId = "user-2"
-            const interviewId = "interview-1"
-            const data:CreateInviteData = {
-                role: "INTERVIEWER"
-            }
+            expect(mocks.createInvite).not.toHaveBeenCalled();
+        });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                createdById: senderId,
-                status: "SCHEDULED"
-            })
+        it("rejects a sender who does not own the interview", async () => {
+            mocks.interviewFindById.mockResolvedValue({
+                ...interview,
+                createdById: "other-user",
+            });
 
-            mockUserRepository.findById.mockResolvedValue(null)
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
 
-            await expect(service.createInvite(senderId, receiverId, interviewId, data)).rejects.toMatchObject({
-                message: "Receiver Not Found",
+            expect(mocks.userFindById).not.toHaveBeenCalled();
+        });
+
+        it("throws when the receiver does not exist", async () => {
+            mocks.userFindById.mockResolvedValue(null);
+
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).rejects.toMatchObject({
                 statusCode: 404,
-                code: "RECEIVER_NOT_FOUND"
-            })
-        })
+                code: "RECEIVER_NOT_FOUND",
+            });
+        });
 
-        it("should produce error when user is already a participant", async () => {
-            const senderId = "user-1"
-            const receiverId = "user-2"
-            const interviewId = "interview-1"
-            const data:CreateInviteData = {
-                role: "INTERVIEWER"
-            }
+        it("rejects a receiver who is already a participant", async () => {
+            mocks.findParticipant.mockResolvedValue({ userId: receiverId });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                createdById: senderId,
-                status: "SCHEDULED"
-            })
-            mockUserRepository.findById.mockResolvedValue({
-                id: receiverId
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                userId: receiverId
-            })
-
-            await expect(service.createInvite(senderId, receiverId, interviewId, data)).rejects.toMatchObject({
-                message: "User is Already a Participant",
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).rejects.toMatchObject({
                 statusCode: 409,
-                code: "USER_ALREADY_PARTICIPANT"
-            })
-        })
+                code: "USER_ALREADY_PARTICIPANT",
+            });
 
-        it("should produce error when invite already exists to the same user for the same interview", async () => {
-            const senderId = "user-1"
-            const receiverId = "user-2"
-            const interviewId = "interview-1"
-            const data:CreateInviteData = {
-                role: "INTERVIEWER"
-            }
+            expect(mocks.createInvite).not.toHaveBeenCalled();
+        });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                createdById: senderId,
-                status: "SCHEDULED"
-            })
-            mockUserRepository.findById.mockResolvedValue({
-                id: receiverId
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue(null)
-            mockInviteRepository.findByInterviewAndReceiver.mockResolvedValue({
-                receiverId,
-                interviewId
-            })
+        it("rejects a duplicate invite", async () => {
+            mocks.findByInterviewAndReceiver.mockResolvedValue(invite);
 
-            await expect(service.createInvite(senderId, receiverId, interviewId, data)).rejects.toMatchObject({
-                message: "Invite Already Exists",
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).rejects.toMatchObject({
                 statusCode: 409,
-                code: "INVITE_ALREADY_EXISTS"
-            })
-        })
-    })
+                code: "INVITE_ALREADY_EXISTS",
+            });
+
+            expect(mocks.createInvite).not.toHaveBeenCalled();
+        });
+
+        it("propagates repository errors", async () => {
+            mocks.interviewFindById.mockRejectedValue(new Error("Database error"));
+
+            await expect(
+                service.createInvite(senderId, receiverId, interviewId, data as any),
+            ).rejects.toThrow("Database error");
+        });
+    });
+
+    describe("getReceivedInvites", () => {
+        it("returns invites received by the user", async () => {
+            const received = [invite];
+            mocks.getReceivedInvites.mockResolvedValue(received);
+
+            await expect(service.getReceivedInvites(receiverId))
+                .resolves.toEqual(received);
+            expect(mocks.getReceivedInvites).toHaveBeenCalledWith(receiverId);
+        });
+
+        it("propagates repository errors", async () => {
+            mocks.getReceivedInvites.mockRejectedValue(new Error("Query failed"));
+
+            await expect(service.getReceivedInvites(receiverId))
+                .rejects.toThrow("Query failed");
+        });
+    });
 
     describe("acceptInvite", () => {
-        it("should update the invite and create a participant", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
-
-            const fakeTx = {};
-
-            const invite = {
-                id: inviteId,
-                receiverId,
-                interviewId,
-                role: "CANDIDATE",
-                status: InviteStatus.PENDING,
-            };
-
-            const updatedInvite = {
+        beforeEach(() => {
+            mocks.inviteFindById.mockResolvedValue(invite);
+            mocks.updateInviteStatus.mockResolvedValue({
                 ...invite,
                 status: InviteStatus.ACCEPTED,
-            };
-
-            const createdParticipant = {
-                id: "participant-1",
+            });
+            mocks.createParticipant.mockResolvedValue({
                 userId: receiverId,
                 interviewId,
                 role: invite.role,
-            };
+            });
+        });
 
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-            mockInviteRepository.updateInviteStatus.mockResolvedValue(
-                updatedInvite
-            );
-
-            mockParticipantRepository.createParticipant.mockResolvedValue(
-                createdParticipant
-            );
-
-            vi.mocked(prisma.$transaction).mockImplementation(
-                async (callback: any) => {
-                    return callback(fakeTx);
-                }
-            );
-
-            const result = await service.acceptInvite(
-                inviteId,
-                receiverId
-            );
-
-            expect(mockInviteRepository.updateInviteStatus)
-                .toHaveBeenCalledWith(
-                    inviteId,
-                    InviteStatus.ACCEPTED,
-                    expect.any(Date),
-                    fakeTx
-                );
-
-            expect(mockParticipantRepository.createParticipant)
-                .toHaveBeenCalledWith(
-                    fakeTx,
-                    receiverId,
-                    interviewId,
-                    { role: invite.role }
-                );
+        it("accepts a pending invite and creates a participant in a transaction", async () => {
+            const result = await service.acceptInvite(inviteId, receiverId);
 
             expect(result).toEqual({
-                invite: updatedInvite,
-                participant: createdParticipant
+                invite: expect.objectContaining({ status: InviteStatus.ACCEPTED }),
+                participant: expect.objectContaining({ userId: receiverId }),
             });
+
+            expect(mocks.transaction).toHaveBeenCalledOnce();
+            expect(mocks.updateInviteStatus).toHaveBeenCalledWith(
+                inviteId,
+                InviteStatus.ACCEPTED,
+                expect.any(Date),
+                { transaction: true },
+            );
+            expect(mocks.createParticipant).toHaveBeenCalledWith(
+                { transaction: true },
+                receiverId,
+                interviewId,
+                { role: invite.role },
+            );
         });
 
-        it("should produce error when invite doesnt exist", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
+        it("throws when the invite does not exist", async () => {
+            mocks.inviteFindById.mockResolvedValue(null);
 
-            const fakeTx = {};
+            await expect(service.acceptInvite(inviteId, receiverId))
+                .rejects.toMatchObject({
+                    statusCode: 404,
+                    code: "INVITE_NOT_FOUND",
+                });
 
-            mockInviteRepository.findById.mockResolvedValue(null);
+            expect(mocks.transaction).not.toHaveBeenCalled();
+        });
 
+        it("rejects a receiver who does not own the invite", async () => {
+            await expect(service.acceptInvite(inviteId, "other-user"))
+                .rejects.toMatchObject({ code: "UNAUTHORIZED" });
 
-            await expect(service.acceptInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Invite Not Found",
-                statusCode: 404,
-                code: "INVITE_NOT_FOUND"
-            })
-        })
+            expect(mocks.transaction).not.toHaveBeenCalled();
+        });
 
-        it("should produce error when the accepter is not matching the intended receiver", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
-
-            const fakeTx = {};
-            const invite = {
-                id: inviteId,
-                receiverId:"user-3",
-                interviewId
-            }
-
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-
-            await expect(service.acceptInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED"
-            })
-        })
-
-        it("should produce error when invite status is not pending", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
-            const invite = {
-                id: inviteId,
-                receiverId,
-                interviewId,
-                status: "DECLINED"
-            }
-
-            const fakeTx = {};
-
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-
-            await expect(service.acceptInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Invite Status Not Pending",
-                statusCode: 400,
-                code: "INVITE_NOT_PENDING"
-            })
-        })
-
-        it("should fail when participant creation fails", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
-
-            const fakeTx = {};
-
-            const invite = {
-                id: inviteId,
-                receiverId,
-                interviewId,
-                role: "CANDIDATE",
-                status: InviteStatus.PENDING
-            };
-
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-            mockInviteRepository.updateInviteStatus.mockResolvedValue({
+        it("rejects an invite that is no longer pending", async () => {
+            mocks.inviteFindById.mockResolvedValue({
                 ...invite,
-                status: InviteStatus.ACCEPTED
+                status: InviteStatus.DECLINED,
             });
 
-            mockParticipantRepository.createParticipant.mockRejectedValue(
-                new Error("Participant creation failed")
-            );
+            await expect(service.acceptInvite(inviteId, receiverId))
+                .rejects.toMatchObject({
+                    statusCode: 400,
+                    code: "INVITE_NOT_PENDING",
+                });
 
-            vi.mocked(prisma.$transaction).mockImplementation(
-                async (callback: any) => {
-                    return callback(fakeTx);
-                }
-            );
-
-            await expect(
-                service.acceptInvite(inviteId, receiverId)
-            ).rejects.toThrow("Participant creation failed");
+            expect(mocks.transaction).not.toHaveBeenCalled();
         });
-    })
+
+        it("propagates errors from the transaction", async () => {
+            mocks.transaction.mockRejectedValue(new Error("Transaction failed"));
+
+            await expect(service.acceptInvite(inviteId, receiverId))
+                .rejects.toThrow("Transaction failed");
+        });
+    });
 
     describe("declineInvite", () => {
-        it("should update the invite status to DECLINED", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
-
-            const invite = {
-                id: inviteId,
-                receiverId,
-                interviewId,
-                status: InviteStatus.PENDING
-            };
-
-            const declinedInvite = {
+        beforeEach(() => {
+            mocks.inviteFindById.mockResolvedValue(invite);
+            mocks.updateInviteStatus.mockResolvedValue({
                 ...invite,
-                status: InviteStatus.DECLINED
-            };
-
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-            mockInviteRepository.updateInviteStatus.mockResolvedValue(
-                declinedInvite
-            );
-
-            const result = await service.declineInvite(
-                inviteId,
-                receiverId
-            );
-
-            expect(mockInviteRepository.findById)
-                .toHaveBeenCalledWith(inviteId);
-
-            expect(mockInviteRepository.updateInviteStatus)
-                .toHaveBeenCalledWith(
-                    inviteId,
-                    InviteStatus.DECLINED,
-                    new Date()
-                );
-
-            expect(result).toEqual(declinedInvite);
+                status: InviteStatus.DECLINED,
+            });
         });
 
-        it("should produce error when invite not found", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
+        it("declines a pending invite", async () => {
+            await expect(service.declineInvite(inviteId, receiverId))
+                .resolves.toMatchObject({ status: InviteStatus.DECLINED });
 
-            mockInviteRepository.findById.mockResolvedValue(null)
+            expect(mocks.updateInviteStatus).toHaveBeenCalledWith(
+                inviteId,
+                InviteStatus.DECLINED,
+                expect.any(Date),
+            );
+        });
 
-            await expect(service.declineInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Invite Not Found",
-                statusCode: 404,
-                code: "INVITE_NOT_FOUND"
-            })
+        it("throws when the invite does not exist", async () => {
+            mocks.inviteFindById.mockResolvedValue(null);
 
-            expect(mockInviteRepository.updateInviteStatus).not.toHaveBeenCalled()
-        })
+            await expect(service.declineInvite(inviteId, receiverId))
+                .rejects.toMatchObject({ code: "INVITE_NOT_FOUND" });
+            expect(mocks.updateInviteStatus).not.toHaveBeenCalled();
+        });
 
-        it("should produce error when the accepter is not matching the intended receiver", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
+        it("rejects a user who is not the receiver", async () => {
+            await expect(service.declineInvite(inviteId, "other-user"))
+                .rejects.toMatchObject({ code: "UNAUTHORIZED" });
+            expect(mocks.updateInviteStatus).not.toHaveBeenCalled();
+        });
 
-            const fakeTx = {};
-            const invite = {
-                id: inviteId,
-                receiverId:"user-3",
-                interviewId
-            }
+        it("rejects an invite that is not pending", async () => {
+            mocks.inviteFindById.mockResolvedValue({
+                ...invite,
+                status: InviteStatus.ACCEPTED,
+            });
 
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-
-            await expect(service.acceptInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED"
-            })
-        })
-
-        it("should produce error when invite status is not pending", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
-            const invite = {
-                id: inviteId,
-                receiverId,
-                interviewId,
-                status: "DECLINED"
-            }
-
-            const fakeTx = {};
-
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-
-            await expect(service.acceptInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Invite Status Not Pending",
-                statusCode: 400,
-                code: "INVITE_NOT_PENDING"
-            })
-        })
+            await expect(service.declineInvite(inviteId, receiverId))
+                .rejects.toMatchObject({ code: "INVITE_NOT_PENDING" });
+        });
     });
 
     describe("cancelInvite", () => {
-        it("should update the status to be CANCELLED", async() => {
-            const inviteId = "invite-1";
-            const senderId = "user-2";
-            
-            mockInviteRepository.findById.mockResolvedValue({
-                id: inviteId,
-                senderId,
-                status: "PENDING"
-            })
+        beforeEach(() => {
+            mocks.inviteFindById.mockResolvedValue(invite);
+            mocks.updateInviteStatus.mockResolvedValue({
+                ...invite,
+                status: InviteStatus.CANCELLED,
+            });
+        });
 
-            mockInviteRepository.updateInviteStatus.mockResolvedValue({
-                id: inviteId,
-                senderId,
-                status: "CANCELLED"
-            })
-            const result = await service.cancelInvite(inviteId, senderId)
+        it("cancels a pending invite sent by the requester", async () => {
+            await expect(service.cancelInvite(inviteId, senderId))
+                .resolves.toMatchObject({ status: InviteStatus.CANCELLED });
 
-            expect(mockInviteRepository.findById).toHaveBeenCalledWith(inviteId)
-            expect(mockInviteRepository.updateInviteStatus).toHaveBeenCalledWith(inviteId, "CANCELLED")
+            expect(mocks.updateInviteStatus).toHaveBeenCalledWith(
+                inviteId,
+                InviteStatus.CANCELLED,
+            );
+        });
 
-            expect(result).toMatchObject({
-                id: inviteId,
-                senderId,
-                status: "CANCELLED"
-            })
-        })
+        it("throws when the invite does not exist", async () => {
+            mocks.inviteFindById.mockResolvedValue(null);
 
-        it("should produce error when invite not found", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
+            await expect(service.cancelInvite(inviteId, senderId))
+                .rejects.toMatchObject({ code: "INVITE_NOT_FOUND" });
+            expect(mocks.updateInviteStatus).not.toHaveBeenCalled();
+        });
 
-            mockInviteRepository.findById.mockResolvedValue(null)
+        it("rejects a user who is not the sender", async () => {
+            await expect(service.cancelInvite(inviteId, "other-user"))
+                .rejects.toMatchObject({ code: "UNAUTHORIZED" });
+            expect(mocks.updateInviteStatus).not.toHaveBeenCalled();
+        });
 
-            await expect(service.declineInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Invite Not Found",
-                statusCode: 404,
-                code: "INVITE_NOT_FOUND"
-            })
+        it("rejects an invite that is not pending", async () => {
+            mocks.inviteFindById.mockResolvedValue({
+                ...invite,
+                status: InviteStatus.ACCEPTED,
+            });
 
-            expect(mockInviteRepository.updateInviteStatus).not.toHaveBeenCalled()
-        })
+            await expect(service.cancelInvite(inviteId, senderId))
+                .rejects.toMatchObject({ code: "INVITE_NOT_PENDING" });
+        });
+    });
 
-        it("should produce error when the accepter is not matching the intended receiver", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
+    describe("getSentInvites", () => {
+        it("returns invites sent by the user", async () => {
+            const sent = [invite];
+            mocks.getSentInvites.mockResolvedValue(sent);
 
-            const fakeTx = {};
-            const invite = {
-                id: inviteId,
-                receiverId:"user-3",
-                interviewId
-            }
+            await expect(service.getSentInvites(senderId)).resolves.toEqual(sent);
+            expect(mocks.getSentInvites).toHaveBeenCalledWith(senderId);
+        });
 
-            mockInviteRepository.findById.mockResolvedValue(invite);
+        it("propagates repository errors", async () => {
+            mocks.getSentInvites.mockRejectedValue(new Error("Query failed"));
 
-
-            await expect(service.acceptInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED"
-            })
-        })
-
-        it("should produce error when invite status is not pending", async () => {
-            const inviteId = "invite-1";
-            const receiverId = "user-2";
-            const interviewId = "interview-1";
-            const invite = {
-                id: inviteId,
-                receiverId,
-                interviewId,
-                status: "DECLINED"
-            }
-
-            const fakeTx = {};
-
-            mockInviteRepository.findById.mockResolvedValue(invite);
-
-
-            await expect(service.acceptInvite(inviteId, receiverId)).rejects.toMatchObject({
-                message: "Invite Status Not Pending",
-                statusCode: 400,
-                code: "INVITE_NOT_PENDING"
-            })
-        })
-    })
-})
+            await expect(service.getSentInvites(senderId))
+                .rejects.toThrow("Query failed");
+        });
+    });
+});

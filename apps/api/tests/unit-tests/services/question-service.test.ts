@@ -1,224 +1,233 @@
-import {beforeEach, describe, expect, it, vi} from "vitest"
-import { QuestionService } from "../../../src/services/question.service"
-import { QuestionDifficulty } from "@interview-os/database"
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QuestionService } from "../../../src/services/question.service";
+
+const mocks = vi.hoisted(() => ({
+    findByIdMock: vi.fn(),
+    findMyQuestionsMock: vi.fn(),
+    createQuestionMock: vi.fn(),
+    deleteQuestionMock: vi.fn(),
+    updateQuestionMock: vi.fn(),
+    findUserByIdMock: vi.fn(),
+}));
+
+vi.mock("../../../src/repositories/questions.repository", () => ({
+    QuestionsRepository: class {
+        findById = mocks.findByIdMock;
+        findMyQuestions = mocks.findMyQuestionsMock;
+        createQuestion = mocks.createQuestionMock;
+        deleteQuestion = mocks.deleteQuestionMock;
+        updateQuestion = mocks.updateQuestionMock;
+    },
+}));
+
+vi.mock("../../../src/repositories/user.repository", () => ({
+    UserRepository: class {
+        findById = mocks.findUserByIdMock;
+    },
+}));
 
 describe("QuestionService", () => {
-    const mockQuestionRepository = {
-        findById: vi.fn(),
-        findMyQuestions: vi.fn(),
-        createQuestion: vi.fn(),
-        deleteQuestion: vi.fn(),
-        updateQuestion: vi.fn()
-    }
-    const mockUserRepository = {
-        findById: vi.fn()
-    }
+    let service: QuestionService;
 
-    let service : QuestionService
+    const questionId = "question-1";
+    const userId = "user-1";
+    const question = {
+        id: questionId,
+        createdById: userId,
+        title: "JavaScript fundamentals",
+    };
+
     beforeEach(() => {
-        vi.clearAllMocks()
-        service = new QuestionService(
-            mockQuestionRepository as any,
-            mockUserRepository as any
-        )
-    })
+        vi.clearAllMocks();
+        service = new QuestionService();
+    });
 
     describe("findById", () => {
-        it("should return the question", async () => {
-            const questionId = "question-1"
+        it("returns the question when found", async () => {
+            mocks.findByIdMock.mockResolvedValue(question);
 
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
+            await expect(service.findById(questionId)).resolves.toEqual(question);
+            expect(mocks.findByIdMock).toHaveBeenCalledWith(questionId);
+        });
 
-            const result = await service.findById(questionId)
+        it("returns null when the question does not exist", async () => {
+            mocks.findByIdMock.mockResolvedValue(null);
 
-            expect(mockQuestionRepository.findById).toHaveBeenCalledWith(questionId)
-            expect(result).toMatchObject({
-                id: questionId
-            })
-        })
-    })
+            await expect(service.findById(questionId)).resolves.toBeNull();
+        });
+
+        it("propagates repository errors", async () => {
+            mocks.findByIdMock.mockRejectedValue(new Error("Database error"));
+
+            await expect(service.findById(questionId))
+                .rejects.toThrow("Database error");
+        });
+    });
 
     describe("findMyQuestions", () => {
-        it("should return all questions added by a user", async () => {
-            const userId = "user-1"
+        it("returns questions when the user exists", async () => {
+            const questions = [question, { id: "question-2", createdById: userId }];
+            mocks.findUserByIdMock.mockResolvedValue({ id: userId });
+            mocks.findMyQuestionsMock.mockResolvedValue(questions);
 
-            mockUserRepository.findById.mockResolvedValue({
-                id: userId
-            })
-
-            mockQuestionRepository.findMyQuestions.mockResolvedValue([
-                {
-                    id: "question-1"
-                },{
-                    id: "question-2"
-                }
-            ])
-
-            const result = await service.findMyQuestions(userId)
-
-            expect(mockUserRepository.findById).toHaveBeenCalledWith(userId)
-            expect(mockQuestionRepository.findMyQuestions).toHaveBeenCalledWith(userId)
-            expect(result).toEqual([
-                {
-                    id: "question-1"
-                },{
-                    id: "question-2"
-                }
-            ])
-        })
-
-        it("should throw when user is not found", async () => {
-            const userId = "user-1";
-
-            mockUserRepository.findById.mockResolvedValue(null);
-
-            await expect(
-                service.findMyQuestions(userId)
-            ).rejects.toMatchObject({
-                message: "User Not Found",
-                statusCode: 404,
-                code: "USER_NOT_FOUND"
-            });
-
-            expect(mockQuestionRepository.findMyQuestions)
-                .not.toHaveBeenCalled();
+            await expect(service.findMyQuestions(userId)).resolves.toEqual(questions);
+            expect(mocks.findUserByIdMock).toHaveBeenCalledWith(userId);
+            expect(mocks.findMyQuestionsMock).toHaveBeenCalledWith(userId);
         });
-    })
+
+        it("throws USER_NOT_FOUND when the user does not exist", async () => {
+            mocks.findUserByIdMock.mockResolvedValue(null);
+
+            await expect(service.findMyQuestions(userId))
+                .rejects.toMatchObject({
+                    message: "User Not Found",
+                    statusCode: 404,
+                    code: "USER_NOT_FOUND",
+                });
+
+            expect(mocks.findMyQuestionsMock).not.toHaveBeenCalled();
+        });
+
+        it("propagates user repository errors", async () => {
+            mocks.findUserByIdMock.mockRejectedValue(new Error("Database error"));
+
+            await expect(service.findMyQuestions(userId))
+                .rejects.toThrow("Database error");
+            expect(mocks.findMyQuestionsMock).not.toHaveBeenCalled();
+        });
+
+        it("propagates question repository errors", async () => {
+            mocks.findUserByIdMock.mockResolvedValue({ id: userId });
+            mocks.findMyQuestionsMock.mockRejectedValue(new Error("Query failed"));
+
+            await expect(service.findMyQuestions(userId))
+                .rejects.toThrow("Query failed");
+        });
+    });
 
     describe("createQuestion", () => {
-        it("should create a question", async () => {
-            const userId = "user-1"
-            const data = {
-                title: "question1",
-                description: "first question",
-                difficulty: QuestionDifficulty.EASY
-            }
+        const data = {
+            title: "JavaScript fundamentals",
+            description: "Explain closures",
+        };
 
-            mockQuestionRepository.createQuestion.mockResolvedValue({
-                id: "question-1",
-                ...data
-            })
+        it("creates a question and returns the result", async () => {
+            mocks.createQuestionMock.mockResolvedValue(question);
 
-            const result = await service.createQuestion(userId, data)
+            await expect(service.createQuestion(userId, data as any))
+                .resolves.toEqual(question);
+            expect(mocks.createQuestionMock).toHaveBeenCalledWith(userId, data);
+        });
 
-            expect(mockQuestionRepository.createQuestion).toHaveBeenCalledWith(userId, data)
-            expect(result).toMatchObject({
-                id: "question-1",
-                ...data
-            })
-        })
-    })
+        it("propagates repository errors", async () => {
+            mocks.createQuestionMock.mockRejectedValue(new Error("Create failed"));
+
+            await expect(service.createQuestion(userId, data as any))
+                .rejects.toThrow("Create failed");
+        });
+    });
 
     describe("deleteQuestion", () => {
-        it("should delete a question", async() => {
-            const questionId = "question-1"
-            const userId = "user-1"
+        it("deletes a question owned by the requester", async () => {
+            mocks.findByIdMock.mockResolvedValue(question);
+            mocks.deleteQuestionMock.mockResolvedValue({ id: questionId });
 
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId,
-                createdById: userId
-            })
-            mockQuestionRepository.deleteQuestion.mockResolvedValue(null)
+            await expect(service.deleteQuestion(questionId, userId))
+                .resolves.toEqual({ id: questionId });
 
-            await service.deleteQuestion(questionId, userId)
+            expect(mocks.findByIdMock).toHaveBeenCalledWith(questionId);
+            expect(mocks.deleteQuestionMock).toHaveBeenCalledWith(questionId);
+        });
 
-            expect(mockQuestionRepository.findById).toHaveBeenCalledWith(questionId)
-            expect(mockQuestionRepository.deleteQuestion).toHaveBeenCalledWith(questionId)
-        })
+        it("throws QUESTION_NOT_FOUND when the question does not exist", async () => {
+            mocks.findByIdMock.mockResolvedValue(null);
 
-        it("should produce error when question doesnt exist", async()=>{
-            const questionId = "question-1"
-            const userId = "user-1"
+            await expect(service.deleteQuestion(questionId, userId))
+                .rejects.toMatchObject({
+                    message: "Question Not Found",
+                    statusCode: 404,
+                    code: "QUESTION_NOT_FOUND",
+                });
 
-            mockQuestionRepository.findById.mockResolvedValue(null)
+            expect(mocks.deleteQuestionMock).not.toHaveBeenCalled();
+        });
 
-            await expect(service.deleteQuestion(questionId, userId)).rejects.toMatchObject({
-                message: "Question Not Found",
-                statusCode: 404,
-                code: "QUESTION_NOT_FOUND"
-            })
-        })
+        it("throws UNAUTHORIZED when the requester is not the owner", async () => {
+            mocks.findByIdMock.mockResolvedValue({
+                ...question,
+                createdById: "other-user",
+            });
 
-        it("should produce error when question isnt created by user", async()=>{
-            const questionId = "question-1"
-            const userId = "user-1"
+            await expect(service.deleteQuestion(questionId, userId))
+                .rejects.toMatchObject({
+                    message: "Unauthorized",
+                    statusCode: 403,
+                    code: "UNAUTHORIZED",
+                });
 
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId,
-                createdById: "user-2"
-            })
+            expect(mocks.deleteQuestionMock).not.toHaveBeenCalled();
+        });
 
-            await expect(service.deleteQuestion(questionId, userId)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED"
-            })
-        })
-    })
+        it("propagates repository errors", async () => {
+            mocks.findByIdMock.mockRejectedValue(new Error("Database error"));
 
-    describe("updateQuestion", () =>{
-        it("should update the question", async() => {
-            const questionId = "question-1"
-            const userId = "user-1"
-            const data = {
-                title: "question1"
-            }
+            await expect(service.deleteQuestion(questionId, userId))
+                .rejects.toThrow("Database error");
+            expect(mocks.deleteQuestionMock).not.toHaveBeenCalled();
+        });
+    });
 
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId,
-                createdById: userId,
-                title: "question2",
-                description: "second question"
-            })
-            mockQuestionRepository.updateQuestion.mockResolvedValue({
-                id: questionId,
-                createdById: userId,
-                description: "second question",
-                ...data
-            })
+    describe("updateQuestion", () => {
+        const data = { title: "Updated question" };
 
-            const result = await service.updateQuestion(questionId,userId, data)
+        it("updates a question owned by the requester", async () => {
+            const updatedQuestion = { ...question, ...data };
+            mocks.findByIdMock.mockResolvedValue(question);
+            mocks.updateQuestionMock.mockResolvedValue(updatedQuestion);
 
-            expect(mockQuestionRepository.findById).toHaveBeenCalledWith(questionId)
-            expect(mockQuestionRepository.updateQuestion).toHaveBeenCalledWith(questionId, data)
+            await expect(service.updateQuestion(questionId, userId, data as any))
+                .resolves.toEqual(updatedQuestion);
 
-            expect(result).toMatchObject({
-                id: questionId,
-                createdById: userId,
-                description:"second question",
-                ...data
-            })
-        })
+            expect(mocks.updateQuestionMock)
+                .toHaveBeenCalledWith(questionId, data);
+        });
 
-        it("should produce error when question doesnt exist", async()=>{
-            const questionId = "question-1"
-            const userId = "user-1"
+        it("throws QUESTION_NOT_FOUND when the question does not exist", async () => {
+            mocks.findByIdMock.mockResolvedValue(null);
 
-            mockQuestionRepository.findById.mockResolvedValue(null)
+            await expect(service.updateQuestion(questionId, userId, data as any))
+                .rejects.toMatchObject({
+                    message: "Question Not Found",
+                    statusCode: 404,
+                    code: "QUESTION_NOT_FOUND",
+                });
 
-            await expect(service.deleteQuestion(questionId, userId)).rejects.toMatchObject({
-                message: "Question Not Found",
-                statusCode: 404,
-                code: "QUESTION_NOT_FOUND"
-            })
-        })
+            expect(mocks.updateQuestionMock).not.toHaveBeenCalled();
+        });
 
-        it("should produce error when question isnt created by user", async()=>{
-            const questionId = "question-1"
-            const userId = "user-1"
+        it("throws UNAUTHORIZED when the requester is not the owner", async () => {
+            mocks.findByIdMock.mockResolvedValue({
+                ...question,
+                createdById: "other-user",
+            });
 
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId,
-                createdById: "user-2"
-            })
+            await expect(service.updateQuestion(questionId, userId, data as any))
+                .rejects.toMatchObject({
+                    message: "Unauthorized",
+                    statusCode: 403,
+                    code: "UNAUTHORIZED",
+                });
 
-            await expect(service.deleteQuestion(questionId, userId)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED"
-            })
-        })
-    })
-})
+            expect(mocks.updateQuestionMock).not.toHaveBeenCalled();
+        });
+
+        it("propagates repository errors", async () => {
+            mocks.findByIdMock.mockRejectedValue(new Error("Database error"));
+
+            await expect(service.updateQuestion(questionId, userId, data as any))
+                .rejects.toThrow("Database error");
+            expect(mocks.updateQuestionMock).not.toHaveBeenCalled();
+        });
+    });
+});

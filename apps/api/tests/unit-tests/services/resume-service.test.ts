@@ -1,235 +1,239 @@
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ResumeService } from "../../../src/services/resume.service";
+import { AppError } from "../../../core/errors/app-error";
 
 describe("ResumeService", () => {
-  const mockRepository = {
-    createResume: vi.fn(),
-    findById: vi.fn(),
-    findByUserId: vi.fn(),
-    updateResume: vi.fn(),
-    deleteResume: vi.fn(),
+  let service: ResumeService;
+  let resumeRepository: {
+    createResume: ReturnType<typeof vi.fn>;
+    findById: ReturnType<typeof vi.fn>;
+    updateResume: ReturnType<typeof vi.fn>;
+    deleteResume: ReturnType<typeof vi.fn>;
+    findByUserId: ReturnType<typeof vi.fn>;
   };
 
-  let service: ResumeService;
+  const resume = {
+    id: "resume-1",
+    userId: "user-1",
+    fileUrl: "https://example.com/resume.pdf",
+  };
+
+  const resumeData = {
+    fileUrl: "https://example.com/resume.pdf",
+  };
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    service = new ResumeService(mockRepository as any);
+    resumeRepository = {
+      createResume: vi.fn(),
+      findById: vi.fn(),
+      updateResume: vi.fn(),
+      deleteResume: vi.fn(),
+      findByUserId: vi.fn(),
+    };
+
+    service = new ResumeService(resumeRepository as any);
   });
 
-  describe("Resume Service", () => {
-    describe("Create Resume", () => {
-        it("should create a resume", async () => {
-        const data = {
-            title: "Backend_Resume",
-            fileUrl: "my_backend_resume.com",
-        };
+  describe("createResume", () => {
+    it("creates and returns a resume", async () => {
+      resumeRepository.createResume.mockResolvedValue(resume);
 
-        const userId = "user-1";
+      await expect(
+        service.createResume("user-1", resumeData as any),
+      ).resolves.toEqual(resume);
 
-        const createdResume = {
-            id: "resume-1",
-            ...data,
-            userId,
-        };
+      expect(resumeRepository.createResume).toHaveBeenCalledWith(
+        "user-1",
+        resumeData,
+      );
+      expect(resumeRepository.createResume).toHaveBeenCalledTimes(1);
+    });
 
-        mockRepository.createResume.mockResolvedValue(createdResume);
+    it("propagates repository errors", async () => {
+      const error = new Error("Database error");
+      resumeRepository.createResume.mockRejectedValue(error);
 
-        const result = await service.createResume(userId, data);
+      await expect(
+        service.createResume("user-1", resumeData as any),
+      ).rejects.toBe(error);
+    });
+  });
 
-        expect(mockRepository.createResume).toHaveBeenCalledWith(userId, data);
-        expect(result).toEqual(createdResume);
-        });
-    })
+  describe("updateResume", () => {
+    const updateData = {
+      fileUrl: "https://example.com/updated-resume.pdf",
+    };
 
-    describe("Update Resume", () => {
-        it("should update a resume", async () => {
-            const data ={
-                title: "updatedTitle",
-                fileUrl: "updatedURL.com",
-            }
+    it("updates a resume owned by the user", async () => {
+      const updatedResume = { ...resume, ...updateData };
+      resumeRepository.findById.mockResolvedValue(resume);
+      resumeRepository.updateResume.mockResolvedValue(updatedResume);
 
-            const userId = "user-1";
-            const id = "resume-1"
-            const resume = {
-                title: "title",
-                fileUrl: "myResume.com",
-                id,
-                userId,
-            }
-            const updatedResume = {
-                title: "updatedTitle",
-                fileUrl: "updatedURL.com",
-                userId,
-                id
-            }
-          
-            mockRepository.findById.mockResolvedValue(resume);
-            mockRepository.updateResume.mockResolvedValue(updatedResume);
+      await expect(
+        service.updateResume("resume-1", "user-1", updateData as any),
+      ).resolves.toEqual(updatedResume);
 
-            const upResume = await service.updateResume( id, userId, data)
+      expect(resumeRepository.findById).toHaveBeenCalledWith("resume-1");
+      expect(resumeRepository.updateResume).toHaveBeenCalledWith(
+        "resume-1",
+        updateData,
+      );
+    });
 
-            expect(mockRepository.findById).toHaveBeenCalledOnce();
-            expect(mockRepository.findById).toHaveBeenCalledWith(id);
-            expect(mockRepository.updateResume).toHaveBeenCalledOnce()
-            expect(mockRepository.updateResume).toHaveBeenCalledWith(id, data)
+    it("throws RESUME_NOT_FOUND when the resume does not exist", async () => {
+      resumeRepository.findById.mockResolvedValue(null);
 
-            expect(upResume).toEqual(updatedResume);
-        })
+      await expect(
+        service.updateResume("missing-resume", "user-1", updateData as any),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "RESUME_NOT_FOUND",
+      });
 
-        it("should produce error when resume doesnt exist", async()=> {
-            const id = "resume-1"
-            const userId = "user-1"
+      expect(resumeRepository.updateResume).not.toHaveBeenCalled();
+    });
 
-            mockRepository.findById.mockResolvedValue(null)
+    it("throws UNAUTHORIZED when the resume belongs to another user", async () => {
+      resumeRepository.findById.mockResolvedValue(resume);
 
-            await expect(service.updateResume(id, userId, {
-                title: "updatedResume",
-                fileUrl: "updatedUrl.com"
-            })).rejects.toMatchObject({
-                message: "Resume not found",
-                statusCode: 404,
-                code: "RESUME_NOT_FOUND",
-            })
+      await expect(
+        service.updateResume("resume-1", "other-user", updateData as any),
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        code: "UNAUTHORIZED",
+      });
 
-            expect(mockRepository.updateResume).not.toHaveBeenCalled();
-        })
+      expect(resumeRepository.updateResume).not.toHaveBeenCalled();
+    });
 
-        it("should produce error when the user is not authorized to update", async() => {
-            const id = "resume-1"
-            const userId = "user-1"
+    it("propagates errors from the repository lookup", async () => {
+      const error = new Error("Database error");
+      resumeRepository.findById.mockRejectedValue(error);
 
-            mockRepository.findById.mockResolvedValue({
-                title: "BackendResume",
-                fileUrl: "backendResume.com",
-                userId: "different-user",
-                id,
-            })
+      await expect(
+        service.updateResume("resume-1", "user-1", updateData as any),
+      ).rejects.toBe(error);
 
-            await expect(service.updateResume(id, userId, {
-                title: "ypdatedtitle",
-                fileUrl: "updatedUrl.com"
-            })).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED",
-            })
+      expect(resumeRepository.updateResume).not.toHaveBeenCalled();
+    });
 
-            expect(mockRepository.updateResume).not.toHaveBeenCalled();
-        })
-    })
+    it("propagates errors from the repository update", async () => {
+      resumeRepository.findById.mockResolvedValue(resume);
+      const error = new Error("Update failed");
+      resumeRepository.updateResume.mockRejectedValue(error);
 
-    describe("deleteResume", () => {
-        it("should delete an existing resume", async () => {
-            const id = "resume-1";
-            const userId = "user-1";
+      await expect(
+        service.updateResume("resume-1", "user-1", updateData as any),
+      ).rejects.toBe(error);
+    });
+  });
 
-            const resume = {
-            id,
-            userId,
-            title: "Backend Resume",
-            fileUrl: "resume.pdf",
-            };
+  describe("deleteResume", () => {
+    it("deletes a resume owned by the user", async () => {
+      resumeRepository.findById.mockResolvedValue(resume);
+      resumeRepository.deleteResume.mockResolvedValue(resume);
 
-            mockRepository.findById.mockResolvedValue(resume);
-            mockRepository.deleteResume.mockResolvedValue(undefined);
+      await expect(
+        service.deleteResume("resume-1", "user-1"),
+      ).resolves.toEqual(resume);
 
-            const result = await service.deleteResume(id, userId);
+      expect(resumeRepository.findById).toHaveBeenCalledWith("resume-1");
+      expect(resumeRepository.deleteResume).toHaveBeenCalledWith("resume-1");
+    });
 
-            expect(mockRepository.findById).toHaveBeenCalledOnce();
-            expect(mockRepository.findById).toHaveBeenCalledWith(id);
+    it("throws RESUME_NOT_FOUND when the resume does not exist", async () => {
+      resumeRepository.findById.mockResolvedValue(null);
 
-            expect(mockRepository.deleteResume).toHaveBeenCalledOnce();
-            expect(mockRepository.deleteResume).toHaveBeenCalledWith(id);
+      await expect(
+        service.deleteResume("missing-resume", "user-1"),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "RESUME_NOT_FOUND",
+      });
 
-            expect(result).toBeUndefined();
-        });
+      expect(resumeRepository.deleteResume).not.toHaveBeenCalled();
+    });
 
-        it("should produce error when the user doesnt own the resume", async () => {
-            const id = "resume-1"
-            const userId = "user-1"
+    it("throws UNAUTHORIZED when the resume belongs to another user", async () => {
+      resumeRepository.findById.mockResolvedValue(resume);
 
-            mockRepository.findById.mockResolvedValue({
-                id,
-                userId: "user-2",
-                title: "BackendResume",
-                fileUrl: "fileURL.com"
-            })
+      await expect(
+        service.deleteResume("resume-1", "other-user"),
+      ).rejects.toMatchObject({
+        statusCode: 403,
+        code: "UNAUTHORIZED",
+      });
 
-            await expect(service.deleteResume(id, userId)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED",
-            })
+      expect(resumeRepository.deleteResume).not.toHaveBeenCalled();
+    });
 
-            expect(mockRepository.deleteResume).not.toHaveBeenCalled();
-        })
+    it("propagates errors from the repository lookup", async () => {
+      const error = new Error("Database error");
+      resumeRepository.findById.mockRejectedValue(error);
 
-        it("should produce error when resume doesnt exist", async () => {
-            const id = "resume-1";
-            const userId = "user-1";
+      await expect(
+        service.deleteResume("resume-1", "user-1"),
+      ).rejects.toBe(error);
 
-            mockRepository.findById.mockResolvedValue(null);
+      expect(resumeRepository.deleteResume).not.toHaveBeenCalled();
+    });
 
-            await expect(
-                service.deleteResume(id, userId)
-            ).rejects.toMatchObject({
-                message: "Resume not found",
-                statusCode: 404,
-                code: "RESUME_NOT_FOUND",
-            });
+    it("propagates errors from the repository deletion", async () => {
+      resumeRepository.findById.mockResolvedValue(resume);
+      const error = new Error("Delete failed");
+      resumeRepository.deleteResume.mockRejectedValue(error);
 
-            expect(mockRepository.deleteResume).not.toHaveBeenCalled();
-        });
+      await expect(
+        service.deleteResume("resume-1", "user-1"),
+      ).rejects.toBe(error);
     });
   });
 
   describe("findById", () => {
-    it("should find a resume by id", async() => {
-        const id = "resume-id"
-        const resume = {
-            id,
-            userId: "user-1",
-            fileUrl: "backendResume.com",
-            title: "Backend Resume"
-        }
-        mockRepository.findById.mockResolvedValue(resume)
+    it("returns the resume when found", async () => {
+      resumeRepository.findById.mockResolvedValue(resume);
 
-        const foundResume = await service.findById(id);
+      await expect(service.findById("resume-1")).resolves.toEqual(resume);
 
-        expect(mockRepository.findById).toHaveBeenCalledOnce();
-        expect(mockRepository.findById).toHaveBeenCalledWith(id);
+      expect(resumeRepository.findById).toHaveBeenCalledWith("resume-1");
+    });
 
-        expect(foundResume).toEqual(resume)
-    })
-  })
+    it("returns null when the resume does not exist", async () => {
+      resumeRepository.findById.mockResolvedValue(null);
+
+      await expect(service.findById("missing-resume")).resolves.toBeNull();
+    });
+
+    it("propagates repository errors", async () => {
+      const error = new Error("Database error");
+      resumeRepository.findById.mockRejectedValue(error);
+
+      await expect(service.findById("resume-1")).rejects.toBe(error);
+    });
+  });
 
   describe("findByUserId", () => {
-    it("should find a resumes by user ids", async() => {
-        const id = "resume-id"
-        const userId = "user-1"
-        const resumes = [
-                            {
-                                id: "resume-1",
-                                userId,
-                                title: "Backend Resume",
-                                fileUrl: "backend.pdf",
-                            },
-                            {
-                                id: "resume-2",
-                                userId,
-                                title: "Frontend Resume",
-                                fileUrl: "frontend.pdf",
-                            },
-                        ];
-        mockRepository.findByUserId.mockResolvedValue(resumes)
+    it("returns resumes belonging to the user", async () => {
+      const resumes = [resume, { ...resume, id: "resume-2" }];
+      resumeRepository.findByUserId.mockResolvedValue(resumes);
 
-        const foundResumes = await service.findByUserId(userId);
+      await expect(service.findByUserId("user-1")).resolves.toEqual(resumes);
 
-        expect(mockRepository.findByUserId).toHaveBeenCalledOnce();
-        expect(mockRepository.findByUserId).toHaveBeenCalledWith(userId);
+      expect(resumeRepository.findByUserId).toHaveBeenCalledWith("user-1");
+    });
 
-        expect(foundResumes).toEqual(resumes)
-    })
-  })
+    it("returns an empty array when the user has no resumes", async () => {
+      resumeRepository.findByUserId.mockResolvedValue([]);
+
+      await expect(service.findByUserId("user-1")).resolves.toEqual([]);
+    });
+
+    it("propagates repository errors", async () => {
+      const error = new Error("Database error");
+      resumeRepository.findByUserId.mockRejectedValue(error);
+
+      await expect(service.findByUserId("user-1")).rejects.toBe(error);
+    });
+  });
 });

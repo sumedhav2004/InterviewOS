@@ -1,605 +1,790 @@
-import {beforeAll, beforeEach, describe, expect, it, vi} from "vitest"
-import { InterviewQuestionService } from "../../../src/services/interview-question.service"
-import { CreateInterviewQuestionData, UpdateInterviewQuestionData } from "../../../src/types/interviewQuestion"
-import { InterviewStatus, ParticipantRole } from "@interview-os/database"
 
-describe("InterviewQuestion", () => {
-    const mockInterviewQuestionRepository = {
-        findById: vi.fn(),
-        findInterviewQuestion: vi.fn(),
-        createInterviewQuestion: vi.fn(),
-        updateInterviewQuestion: vi.fn(),
-        deleteInterviewQuestion: vi.fn(),
-        findByInterview: vi.fn()
-    }
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { InterviewQuestionService } from "../../../src/services/interview-question.service";
+import { AppError } from "../../../core/errors/app-error";
+import { InterviewStatus, ParticipantRole } from "@interview-os/database";
 
-    const mockInterviewRepository = { 
-        findById: vi.fn()
-    }
+describe("InterviewQuestionService", () => {
+  let service: InterviewQuestionService;
+  let interviewQuestionRepository: any;
+  let interviewRepository: any;
+  let questionRepository: any;
+  let participantRepository: any;
 
-    const mockQuestionRepository = {
-        findById: vi.fn()
-    }
+  const interview = {
+    id: "interview-1",
+    createdById: "owner-1",
+    status: InterviewStatus.DRAFT,
+  };
 
-    const mockParticipantRepository = {
-        findParticipant: vi.fn(),
-        findById: vi.fn()
-    }
+  const question = {
+    id: "question-1",
+    createdById: "owner-1",
+  };
 
-    let service : InterviewQuestionService
+  const participant = {
+    userId: "interviewer-1",
+    interviewId: "interview-1",
+    role: ParticipantRole.INTERVIEWER,
+  };
+
+  const interviewQuestion = {
+    id: "interview-question-1",
+    interviewId: "interview-1",
+    questionId: "question-1",
+    questionOrder: 1,
+    points: 5,
+  };
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    interviewQuestionRepository = {
+      findById: vi.fn(),
+      findByInterview: vi.fn(),
+      findInterviewQuestion: vi.fn(),
+      createInterviewQuestion: vi.fn(),
+      updateInterviewQuestion: vi.fn(),
+      setActiveInterviewQuestion: vi.fn(),
+      clearActiveInterviewQuestion: vi.fn(),
+      deleteInterviewQuestion: vi.fn(),
+    };
+
+    interviewRepository = {
+      findById: vi.fn(),
+      findActiveInterviewQuestionId: vi.fn(),
+    };
+
+    questionRepository = {
+      findById: vi.fn(),
+    };
+
+    participantRepository = {
+      findParticipant: vi.fn(),
+    };
+
+    service = new InterviewQuestionService(
+      interviewQuestionRepository,
+      interviewRepository,
+      questionRepository,
+      participantRepository,
+    );
+  });
+
+  function expectAppError(
+    error: unknown,
+    statusCode: number,
+    code: string,
+  ) {
+    expect(error).toBeInstanceOf(AppError);
+    expect(error).toMatchObject({ statusCode, code });
+  }
+
+  describe("findById", () => {
+    it("delegates to the repository", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
+
+      await expect(service.findById("interview-question-1")).resolves.toEqual(
+        interviewQuestion,
+      );
+      expect(interviewQuestionRepository.findById).toHaveBeenCalledWith(
+        "interview-question-1",
+      );
+    });
+  });
+
+  describe("findByInterview", () => {
+    it("returns questions for an existing interview", async () => {
+      interviewRepository.findById.mockResolvedValue(interview);
+      interviewQuestionRepository.findByInterview.mockResolvedValue([
+        interviewQuestion,
+      ]);
+
+      await expect(service.findByInterview("interview-1")).resolves.toEqual([
+        interviewQuestion,
+      ]);
+      expect(interviewQuestionRepository.findByInterview).toHaveBeenCalledWith(
+        "interview-1",
+      );
+    });
+
+    it("throws when the interview does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(null);
+
+      await expect(service.findByInterview("missing")).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_NOT_FOUND",
+      });
+      expect(interviewQuestionRepository.findByInterview).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("findInterviewQuestion", () => {
+    it("returns the matching interview question", async () => {
+      interviewRepository.findById.mockResolvedValue(interview);
+      questionRepository.findById.mockResolvedValue(question);
+      interviewQuestionRepository.findInterviewQuestion.mockResolvedValue(
+        interviewQuestion,
+      );
+
+      await expect(
+        service.findInterviewQuestion("interview-1", "question-1"),
+      ).resolves.toEqual(interviewQuestion);
+    });
+
+    it("throws when the interview does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.findInterviewQuestion("missing", "question-1"),
+      ).rejects.toMatchObject({ statusCode: 404, code: "INTERVIEW_NOT_FOUND" });
+      expect(questionRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it("throws when the question does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(interview);
+      questionRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.findInterviewQuestion("interview-1", "missing"),
+      ).rejects.toMatchObject({ statusCode: 404, code: "QUESTION_NOT_FOUND" });
+      expect(
+        interviewQuestionRepository.findInterviewQuestion,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("createInterviewQuestion", () => {
+    const data = { questionOrder: 1, points: 5 };
+
     beforeEach(() => {
-        vi.clearAllMocks()
-        service = new InterviewQuestionService(
-            mockInterviewQuestionRepository as any,
-            mockInterviewRepository as any,
-            mockQuestionRepository as any,
-            mockParticipantRepository as any
-        )
-    })
+      interviewRepository.findById.mockResolvedValue(interview);
+      participantRepository.findParticipant.mockResolvedValue(participant);
+      questionRepository.findById.mockResolvedValue(question);
+      interviewQuestionRepository.findInterviewQuestion.mockResolvedValue(null);
+      interviewQuestionRepository.findByInterview.mockResolvedValue([]);
+      interviewQuestionRepository.createInterviewQuestion.mockResolvedValue(
+        interviewQuestion,
+      );
+    });
 
-    describe("findById", () => {
-        it("should return the InterviewQuestion based on id", async() => {
-            const interviewQuestionId = "interview-question-1"
+    it("creates an interview question when all validations pass", async () => {
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).resolves.toEqual(interviewQuestion);
 
-            mockInterviewQuestionRepository.findById.mockResolvedValue({
-                id: interviewQuestionId,
-            })
-            const result = await service.findById(interviewQuestionId)
+      expect(
+        interviewQuestionRepository.createInterviewQuestion,
+      ).toHaveBeenCalledWith("interview-1", "question-1", data);
+    });
 
-            expect(mockInterviewQuestionRepository.findById).toHaveBeenCalledWith(interviewQuestionId)
-            expect(result).toMatchObject({
-                id: interviewQuestionId
-            })
-        })
-    })
+    it("throws when the interview does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(null);
 
-    describe("findByInterview", () =>{
-        it("return all InterviewQuestions by the interview", async() => {
-            const interviewId = "interview-1"
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId
-            })
+      await expect(
+        service.createInterviewQuestion(
+          "missing",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({ statusCode: 404, code: "INTERVIEW_NOT_FOUND" });
+      expect(participantRepository.findParticipant).not.toHaveBeenCalled();
+    });
 
-            mockInterviewQuestionRepository.findByInterview.mockResolvedValue([
-                {
-                    interviewId,
-                    id: "interview-question-1"
-                },{
-                    interviewId,
-                    id: "interview-question-2"
-                }
-            ])
+    it("rejects a requester who is not a participant", async () => {
+      participantRepository.findParticipant.mockResolvedValue(null);
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
 
-            const result = await service.findByInterview(interviewId)
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "stranger",
+          data,
+        ),
+      ).rejects.toMatchObject({ statusCode: 403, code: "UNAUTHORIZED" });
 
-            expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockInterviewQuestionRepository.findByInterview).toHaveBeenCalledWith(interviewId)
+      expect(questionRepository.findById).not.toHaveBeenCalled();
+      log.mockRestore();
+    });
 
-            expect(result).toEqual([
-                {
-                    interviewId,
-                    id: "interview-question-1"
-                },{
-                    interviewId,
-                    id: "interview-question-2"
-                }
-            ])
-        })
-        it("should throw error if interview not found", async() => {
-            const interviewId = "interview-1"
-            mockInterviewRepository.findById.mockResolvedValue(null)
+    it("rejects a participant who is not an interviewer", async () => {
+      participantRepository.findParticipant.mockResolvedValue({
+        ...participant,
+        role: ParticipantRole.CANDIDATE,
+      });
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
 
-            await expect(service.findByInterview(interviewId)).rejects.toMatchObject({
-                message: "Interview Not Found",
-                statusCode: 404,
-                code: "INTERVIEW_NOT_FOUND"
-            })
-            
-        })
-    })
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "candidate-1",
+          data,
+        ),
+      ).rejects.toMatchObject({ statusCode: 403, code: "UNAUTHORIZED" });
 
-    describe("findInterviewQuestion", () =>{
-        it("should find the interviewQuestion based on interview and question", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
+      log.mockRestore();
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
-            mockInterviewQuestionRepository.findInterviewQuestion.mockResolvedValue({
-                id: "interview-question-1",
-                interviewId,
-                questionId
-            })
+    it("throws when the question does not exist", async () => {
+      questionRepository.findById.mockResolvedValue(null);
 
-            const result = await service.findInterviewQuestion(interviewId, questionId)
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "missing",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({ statusCode: 404, code: "QUESTION_NOT_FOUND" });
+    });
 
-            expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockQuestionRepository.findById).toHaveBeenCalledWith(questionId)
-            expect(result).toMatchObject({
-                questionId,
-                interviewId,
-                id: "interview-question-1"
-            })
-        })
-        it("should throw error if interview not found", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            mockInterviewRepository.findById.mockResolvedValue(null)
+    it.each([
+      InterviewStatus.COMPLETED,
+      InterviewStatus.CANCELLED,
+    ])("rejects adding questions when interview status is %s", async (status) => {
+      interviewRepository.findById.mockResolvedValue({ ...interview, status });
 
-            await expect(service.findInterviewQuestion(interviewId, questionId)).rejects.toMatchObject({
-                message: "Interview Not Found",
-                statusCode: 404,
-                code: "INTERVIEW_NOT_FOUND"
-            })
-            
-        })
-        it("should throw error if question not found", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId
-            })
-            mockQuestionRepository.findById.mockResolvedValue(null)
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: "QUESTION_CANT_BE_ADDED",
+      });
+    });
 
-            await expect(service.findInterviewQuestion(interviewId, questionId)).rejects.toMatchObject({
-                message: "Question Not Found",
-                statusCode: 404,
-                code: "QUESTION_NOT_FOUND"
-            })
-            
-        })
-    })
+    it("rejects a question that is already attached", async () => {
+      interviewQuestionRepository.findInterviewQuestion.mockResolvedValue(
+        interviewQuestion,
+      );
 
-    describe("createInterviewQuestion", () => {
-        it("should create an interview question", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 1,
-                points: 10
-            }
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 409,
+        code: "QUESTION_ALREADY_ADDED",
+      });
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: "DRAFT"
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                userId: requesterId,
-                interviewId,
-                role: "INTERVIEWER"
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
-            mockInterviewQuestionRepository.findInterviewQuestion.mockResolvedValue(null)
-            mockInterviewQuestionRepository.findByInterview.mockResolvedValue([])
-            mockInterviewQuestionRepository.createInterviewQuestion.mockResolvedValue({
-                id: "interview-question-1",
-                interviewId,
-                questionId,
-                ...data
-            })
+    it("rejects an incorrect question order", async () => {
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          { ...data, questionOrder: 2 },
+        ),
+      ).rejects.toMatchObject({ statusCode: 400, code: "INVALID_ORDER" });
+    });
 
-            const result = await service.createInterviewQuestion(interviewId,questionId,requesterId,data)
+    it("rejects points below one", async () => {
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          { ...data, points: 0 },
+        ),
+      ).rejects.toMatchObject({ statusCode: 400, code: "INVALID_POINTS" });
+    });
 
-            expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(requesterId, interviewId)
-            expect(mockQuestionRepository.findById).toHaveBeenCalledWith(questionId)
-            expect(mockInterviewQuestionRepository.findInterviewQuestion).toHaveBeenCalledWith(interviewId, questionId)
-            expect(mockInterviewQuestionRepository.findByInterview).toHaveBeenCalledWith(interviewId)
-            expect(mockInterviewQuestionRepository.createInterviewQuestion).toHaveBeenCalledWith(interviewId,questionId,data)
-            expect(result).toMatchObject({
-                id: "interview-question-1",
-                interviewId,
-                questionId,
-                ...data
-            })
-        })
-        it("should produce error when interview doesnt exist", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 1,
-                points: 10
-            }
+    it("uses the current question count to calculate the expected order", async () => {
+      interviewQuestionRepository.findByInterview.mockResolvedValue([
+        { id: "iq-1" },
+        { id: "iq-2" },
+      ]);
 
-            mockInterviewRepository.findById.mockResolvedValue(null)
+      await expect(
+        service.createInterviewQuestion(
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          { ...data, questionOrder: 3 },
+        ),
+      ).resolves.toEqual(interviewQuestion);
 
-            await expect(service.createInterviewQuestion(interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Interview Not Found",
-                statusCode: 404,
-                code: "INTERVIEW_NOT_FOUND"
-            })
-        })
-        it("should produce error when question doesnt exist", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 1,
-                points: 10
-            }
+      expect(
+        interviewQuestionRepository.createInterviewQuestion,
+      ).toHaveBeenCalledWith("interview-1", "question-1", {
+        ...data,
+        questionOrder: 3,
+      });
+    });
+  });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockQuestionRepository.findById.mockResolvedValue(null)
+  describe("updateInterviewQuestion", () => {
+    const data = { points: 10 };
 
-            await expect(service.createInterviewQuestion(interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Question Not Found",
-                statusCode: 404,
-                code: "QUESTION_NOT_FOUND"
-            })
-        })
-        it("should produce error when question doesnt exist", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 1,
-                points: 10
-            }
+    beforeEach(() => {
+      interviewRepository.findById.mockResolvedValue(interview);
+      participantRepository.findParticipant.mockResolvedValue(participant);
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
+      interviewQuestionRepository.updateInterviewQuestion.mockResolvedValue({
+        ...interviewQuestion,
+        ...data,
+      });
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.CANDIDATE
-            })
+    it("updates a matching interview question", async () => {
+      await expect(
+        service.updateInterviewQuestion(
+          "interview-question-1",
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).resolves.toEqual({ ...interviewQuestion, ...data });
 
-            await expect(service.createInterviewQuestion(interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED"
-            })
-        })
-        it("should produce error when interview status is not right", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 1,
-                points: 10
-            }
+      expect(
+        interviewQuestionRepository.updateInterviewQuestion,
+      ).toHaveBeenCalledWith("interview-question-1", data);
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: InterviewStatus.COMPLETED
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
+    it("throws when the interview does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(null);
 
-            await expect(service.createInterviewQuestion(interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Question Cannot be Added in the current state",
-                statusCode: 400,
-                code: "QUESTION_CANT_BE_ADDED"
-            })
-        })
-        it("should produce error when interview status is not right", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 1,
-                points: 10
-            }
+      await expect(
+        service.updateInterviewQuestion(
+          "iq",
+          "missing",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({ statusCode: 404, code: "INTERVIEW_NOT_FOUND" });
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: InterviewStatus.INPROGRESS
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
-            mockInterviewQuestionRepository.findInterviewQuestion.mockResolvedValue({
-                id: "interview-question-1",
-                interviewId,
-                questionId
-            })
+    it("rejects a requester who is not an interviewer", async () => {
+      participantRepository.findParticipant.mockResolvedValue(null);
 
-            await expect(service.createInterviewQuestion(interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Question Already Added",
-                statusCode: 409,
-                code: "QUESTION_ALREADY_ADDED"
-            })
-        })
+      await expect(
+        service.updateInterviewQuestion(
+          "iq",
+          "interview-1",
+          "question-1",
+          "stranger",
+          data,
+        ),
+      ).rejects.toMatchObject({ statusCode: 403, code: "UNAUTHORIZED" });
 
-        it("should produce error when question order is not right", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 3,
-                points: 10
-            }
+      expect(interviewQuestionRepository.findById).not.toHaveBeenCalled();
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: InterviewStatus.INPROGRESS
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
-            mockInterviewQuestionRepository.findInterviewQuestion.mockResolvedValue(null)
+    it("throws when the interview question does not exist", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue(null);
 
-            await expect(service.createInterviewQuestion(interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Invalid Order",
-                statusCode: 400,
-                code: "INVALID_ORDER"
-            })
-        })
-        it("should produce error when question points is not right", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: CreateInterviewQuestionData = {
-                questionOrder: 1,
-                points: 0
-            }
+      await expect(
+        service.updateInterviewQuestion(
+          "missing",
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_QUESTION_NOT_FOUND",
+      });
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: InterviewStatus.INPROGRESS
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
-            mockInterviewQuestionRepository.findInterviewQuestion.mockResolvedValue(null)
+    it("throws when the interview question belongs to another interview", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue({
+        ...interviewQuestion,
+        interviewId: "other-interview",
+      });
 
-            await expect(service.createInterviewQuestion(interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Invalid Points",
-                statusCode: 400,
-                code: "INVALID_POINTS"
-            })
-        })
-    })
+      await expect(
+        service.updateInterviewQuestion(
+          "interview-question-1",
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_QUESTION_NOT_FOUND",
+      });
+    });
 
-    describe("updateInterviewQuestion", () => {
-        it("should update an interview question", async() => {
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const interviewQuestionId = "interview-question-1"
-            const data: UpdateInterviewQuestionData = {
-                points: 10
-            }
+    it("throws when the interview question references another question", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue({
+        ...interviewQuestion,
+        questionId: "other-question",
+      });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: "DRAFT"
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                userId: requesterId,
-                interviewId,
-                role: "INTERVIEWER"
-            })
-            mockInterviewQuestionRepository.findById.mockResolvedValue({
-                id:interviewQuestionId,
-                interviewId,
-                questionId,
-                points: 20
-            })
-            mockInterviewQuestionRepository.updateInterviewQuestion.mockResolvedValue({
-                id: interviewQuestionId,
-                interviewId,
-                questionId,
-                ...data
-            })
+      await expect(
+        service.updateInterviewQuestion(
+          "interview-question-1",
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_QUESTION_NOT_FOUND",
+      });
+    });
 
-            const result = await service.updateInterviewQuestion(interviewQuestionId,interviewId,questionId,requesterId,data)
+    it.each([
+      InterviewStatus.COMPLETED,
+      InterviewStatus.CANCELLED,
+    ])("rejects updates when interview status is %s", async (status) => {
+      interviewRepository.findById.mockResolvedValue({ ...interview, status });
 
-            expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(requesterId, interviewId)
-            expect(mockInterviewQuestionRepository.findById).toHaveBeenCalledWith(interviewQuestionId)
-            expect(mockInterviewQuestionRepository.updateInterviewQuestion).toHaveBeenCalledWith(interviewQuestionId,data)
-            expect(result).toMatchObject({
-                id: interviewQuestionId,
-                interviewId,
-                questionId,
-                ...data
-            })
-        })
-        it("should produce error when interview doesnt exist", async() => {
-            const interviewQuestionId = "interview-question-1"
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: UpdateInterviewQuestionData = {
-                points: 10
-            }
+      await expect(
+        service.updateInterviewQuestion(
+          "interview-question-1",
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          data,
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: "QUESTION_CANNOT_BE_MODIFIED",
+      });
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue(null)
+    it("rejects empty update data", async () => {
+      await expect(
+        service.updateInterviewQuestion(
+          "interview-question-1",
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          {},
+        ),
+      ).rejects.toMatchObject({ statusCode: 400, code: "NO_UPDATION_DATA" });
+    });
 
-            await expect(service.updateInterviewQuestion(interviewQuestionId,interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Interview Not Found",
-                statusCode: 404,
-                code: "INTERVIEW_NOT_FOUND"
-            })
-        })
-        // it("should produce error when question doesnt exist", async() => {
-        //     const interviewQuestionId = "interview-question-1"
-        //     const interviewId = "interview-1"
-        //     const questionId = "question-1"
-        //     const requesterId = "user-1"
-        //     const data: UpdateInterviewQuestionData = {
-        //         points: 10
-        //     }
+    it("rejects points below one", async () => {
+      await expect(
+        service.updateInterviewQuestion(
+          "interview-question-1",
+          "interview-1",
+          "question-1",
+          "interviewer-1",
+          { points: 0 },
+        ),
+      ).rejects.toMatchObject({ statusCode: 400, code: "INVALID_POINTS" });
+    });
+  });
 
-        //     mockInterviewRepository.findById.mockResolvedValue({
-        //         id: interviewId
-        //     })
-        //     mockParticipantRepository.findParticipant.mockResolvedValue({
-        //         id: "participant-1",
-        //         interviewId,
-        //         userId: requesterId,
-        //         role: ParticipantRole.INTERVIEWER
-        //     })
+  describe("setActiveInterviewQuestion", () => {
+    beforeEach(() => {
+      interviewRepository.findById.mockResolvedValue({
+        ...interview,
+        status: InterviewStatus.INPROGRESS,
+      });
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
+      interviewQuestionRepository.setActiveInterviewQuestion.mockResolvedValue(
+        interviewQuestion,
+      );
+    });
 
-        //     await expect(service.updateInterviewQuestion(interviewQuestionId,interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-        //         message: "Question Not Found",
-        //         statusCode: 404,
-        //         code: "QUESTION_NOT_FOUND"
-        //     })
-        // })
-        it("should produce error when question doesnt exist", async() => {
-            const id = "interview-question-1"
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: UpdateInterviewQuestionData = {
-                points: 10
-            }
+    it("sets the active question for the interview owner", async () => {
+      await expect(
+        service.setActiveInterviewQuestion(
+          "interview-1",
+          "interview-question-1",
+          "owner-1",
+        ),
+      ).resolves.toEqual(interviewQuestion);
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.CANDIDATE
-            })
+      expect(
+        interviewQuestionRepository.setActiveInterviewQuestion,
+      ).toHaveBeenCalledWith("interview-1", "interview-question-1");
+    });
 
-            await expect(service.updateInterviewQuestion(id,interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Unauthorized",
-                statusCode: 403,
-                code: "UNAUTHORIZED"
-            })
-        })
-        it("should produce error when interview status is not right", async() => {
-            const id = "interview-question-1"
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: UpdateInterviewQuestionData = {
-                points: 10
-            }
+    it("throws when the interview does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(null);
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: InterviewStatus.COMPLETED
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
+      await expect(
+        service.setActiveInterviewQuestion("missing", "iq", "owner-1"),
+      ).rejects.toMatchObject({ statusCode: 404, code: "INTERVIEW_NOT_FOUND" });
+    });
 
-            await expect(service.updateInterviewQuestion(id,interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Questions cannot be modified in the current interview state",
-                statusCode: 400,
-                code: "QUESTION_CANNOT_BE_MODIFIED"
-            })
-        })
+    it("rejects an interview that is not in progress", async () => {
+      interviewRepository.findById.mockResolvedValue(interview);
 
-        it("should produce error when question points is not right", async() => {
-            const id = "interview-question-1"
-            const interviewId = "interview-1"
-            const questionId = "question-1"
-            const requesterId = "user-1"
-            const data: UpdateInterviewQuestionData = {
-                points: 0
-            }
+      await expect(
+        service.setActiveInterviewQuestion("interview-1", "iq", "owner-1"),
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: "INTERVIEW_NOT_IN_PROGRESS",
+      });
+    });
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: InterviewStatus.INPROGRESS
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: "participant-1",
-                interviewId,
-                userId: requesterId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockQuestionRepository.findById.mockResolvedValue({
-                id: questionId
-            })
-            mockInterviewQuestionRepository.findInterviewQuestion.mockResolvedValue(null)
+    it("rejects a requester who is not the interview owner", async () => {
+      await expect(
+        service.setActiveInterviewQuestion(
+          "interview-1",
+          "interview-question-1",
+          "stranger",
+        ),
+      ).rejects.toMatchObject({ statusCode: 403, code: "UNAUTHORIZED" });
 
-            await expect(service.updateInterviewQuestion(id,interviewId,questionId,requesterId,data)).rejects.toMatchObject({
-                message: "Invalid Points",
-                statusCode: 400,
-                code: "INVALID_POINTS"
-            })
-        })
-    })
+      expect(interviewQuestionRepository.findById).not.toHaveBeenCalled();
+    });
 
-    describe("deleteInterviewQuestion", () => {
-        it("should delete the interviewQuestion", async() => {
-            const id = "interview-question-1"
-            const requesterId = "user-1"
-            const interviewId = "interview-1"
-            const questionId = "question-1"
+    it("throws when the interview question does not exist", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue(null);
 
-            mockInterviewRepository.findById.mockResolvedValue({
-                id: interviewId,
-                status: InterviewStatus.SCHEDULED
-            })
-            mockInterviewQuestionRepository.findById.mockResolvedValue({
-                id,
-                interviewId,
-                questionId
-            })
-            mockParticipantRepository.findParticipant.mockResolvedValue({
-                id: requesterId,
-                interviewId,
-                role: ParticipantRole.INTERVIEWER
-            })
-            mockInterviewQuestionRepository.deleteInterviewQuestion.mockResolvedValue(null)
+      await expect(
+        service.setActiveInterviewQuestion(
+          "interview-1",
+          "missing",
+          "owner-1",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_QUESTION_NOT_FOUND",
+      });
+    });
 
-            await service.deleteInterviewQuestion(id,requesterId,interviewId,questionId)
+    it("rejects a question that belongs to another interview", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue({
+        ...interviewQuestion,
+        interviewId: "other-interview",
+      });
 
-            expect(mockInterviewRepository.findById).toHaveBeenCalledWith(interviewId)
-            expect(mockInterviewQuestionRepository.findById).toHaveBeenCalledWith(id)
-            expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(requesterId, interviewId)
-            expect(mockInterviewQuestionRepository.deleteInterviewQuestion).toHaveBeenCalledWith(id)
+      await expect(
+        service.setActiveInterviewQuestion(
+          "interview-1",
+          "interview-question-1",
+          "owner-1",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: "QUESTION_NOT_IN_INTERVIEW",
+      });
+    });
+  });
 
-        })
-    })
-})
+  describe("findActiveInterviewQuestion", () => {
+    it("returns null when no active question ID is set", async () => {
+      interviewRepository.findActiveInterviewQuestionId.mockResolvedValue(null);
+
+      await expect(
+        service.findActiveInterviewQuestion("interview-1"),
+      ).resolves.toBeNull();
+
+      expect(interviewQuestionRepository.findById).not.toHaveBeenCalled();
+    });
+
+    it("looks up the active question when an ID is set", async () => {
+      interviewRepository.findActiveInterviewQuestionId.mockResolvedValue(
+        "interview-question-1",
+      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
+
+      await expect(
+        service.findActiveInterviewQuestion("interview-1"),
+      ).resolves.toEqual(interviewQuestion);
+
+      expect(interviewQuestionRepository.findById).toHaveBeenCalledWith(
+        "interview-question-1",
+      );
+    });
+  });
+
+  describe("clearActiveInterviewQuestion", () => {
+    beforeEach(() => {
+      interviewRepository.findById.mockResolvedValue(interview);
+      interviewQuestionRepository.clearActiveInterviewQuestion.mockResolvedValue(
+        undefined,
+      );
+    });
+
+    it("clears the active question for the interview owner", async () => {
+      await service.clearActiveInterviewQuestion("interview-1", "owner-1");
+
+      expect(
+        interviewQuestionRepository.clearActiveInterviewQuestion,
+      ).toHaveBeenCalledWith("interview-1");
+    });
+
+    it("throws when the interview does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.clearActiveInterviewQuestion("missing", "owner-1"),
+      ).rejects.toMatchObject({ statusCode: 404, code: "INTERVIEW_NOT_FOUND" });
+    });
+
+    it("rejects a requester who is not the owner", async () => {
+      await expect(
+        service.clearActiveInterviewQuestion("interview-1", "stranger"),
+      ).rejects.toMatchObject({ statusCode: 403, code: "UNAUTHORIZED" });
+
+      expect(
+        interviewQuestionRepository.clearActiveInterviewQuestion,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("deleteInterviewQuestion", () => {
+    beforeEach(() => {
+      interviewRepository.findById.mockResolvedValue(interview);
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
+      participantRepository.findParticipant.mockResolvedValue(participant);
+      interviewQuestionRepository.deleteInterviewQuestion.mockResolvedValue(
+        interviewQuestion,
+      );
+    });
+
+    it("deletes a matching question for an interviewer", async () => {
+      await expect(
+        service.deleteInterviewQuestion(
+          "interview-question-1",
+          "interviewer-1",
+          "interview-1",
+          "question-1",
+        ),
+      ).resolves.toEqual(interviewQuestion);
+
+      expect(
+        interviewQuestionRepository.deleteInterviewQuestion,
+      ).toHaveBeenCalledWith("interview-question-1");
+    });
+
+    it("throws when the interview does not exist", async () => {
+      interviewRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.deleteInterviewQuestion(
+          "iq",
+          "interviewer-1",
+          "missing",
+          "question-1",
+        ),
+      ).rejects.toMatchObject({ statusCode: 404, code: "INTERVIEW_NOT_FOUND" });
+    });
+
+    it("throws when the interview question does not exist", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.deleteInterviewQuestion(
+          "missing",
+          "interviewer-1",
+          "interview-1",
+          "question-1",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_QUESTION_NOT_FOUND",
+      });
+    });
+
+    it("throws when the interview question belongs to another interview", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue({
+        ...interviewQuestion,
+        interviewId: "other-interview",
+      });
+
+      await expect(
+        service.deleteInterviewQuestion(
+          "interview-question-1",
+          "interviewer-1",
+          "interview-1",
+          "question-1",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_QUESTION_NOT_FOUND",
+      });
+    });
+
+    it("throws when the interview question references another question", async () => {
+      interviewQuestionRepository.findById.mockResolvedValue({
+        ...interviewQuestion,
+        questionId: "other-question",
+      });
+
+      await expect(
+        service.deleteInterviewQuestion(
+          "interview-question-1",
+          "interviewer-1",
+          "interview-1",
+          "question-1",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        code: "INTERVIEW_QUESTION_NOT_FOUND",
+      });
+    });
+
+    it("rejects a requester who is not an interviewer", async () => {
+      participantRepository.findParticipant.mockResolvedValue(null);
+
+      await expect(
+        service.deleteInterviewQuestion(
+          "interview-question-1",
+          "stranger",
+          "interview-1",
+          "question-1",
+        ),
+      ).rejects.toMatchObject({ statusCode: 403, code: "UNAUTHORIZED" });
+
+      expect(
+        interviewQuestionRepository.deleteInterviewQuestion,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("rejects a participant who is not an interviewer", async () => {
+      participantRepository.findParticipant.mockResolvedValue({
+        ...participant,
+        role: ParticipantRole.CANDIDATE,
+      });
+
+      await expect(
+        service.deleteInterviewQuestion(
+          "interview-question-1",
+          "candidate-1",
+          "interview-1",
+          "question-1",
+        ),
+      ).rejects.toMatchObject({ statusCode: 403, code: "UNAUTHORIZED" });
+    });
+
+    it.each([
+      InterviewStatus.COMPLETED,
+      InterviewStatus.CANCELLED,
+    ])("rejects deletion when interview status is %s", async (status) => {
+      interviewRepository.findById.mockResolvedValue({ ...interview, status });
+
+      await expect(
+        service.deleteInterviewQuestion(
+          "interview-question-1",
+          "interviewer-1",
+          "interview-1",
+          "question-1",
+        ),
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: "QUESTION_CANNOT_BE_DELETED",
+      });
+    });
+  });
+});
