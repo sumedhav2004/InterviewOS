@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { Request, Response } from "express";
 import { logger } from "@interview-os/logger";
-import { AppError } from "../../core/errors/app-error";
-import { errorHandler } from "../../core/errors/error-handler";
+import { AppError } from "../../../core/errors/app-error";
+import { errorHandler } from "../../../core/errors/error-handler";
 
 vi.mock("@interview-os/logger", () => ({
     logger: {
