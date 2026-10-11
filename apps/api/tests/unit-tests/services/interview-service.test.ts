@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { InterviewService } from "../../../src/services/interview.service";
+import { InterviewStatus, ParticipantRole } from "@interview-os/database";
 
 describe("InterviewService", () => {
     const mockRepository = {
         createInterview: vi.fn(),
         deleteInterview: vi.fn(),
         updateInterview: vi.fn(),
+        updateInterviewSchedule: vi.fn(),
         findById: vi.fn(),
         findByUserId: vi.fn(),
     };
@@ -26,23 +28,163 @@ describe("InterviewService", () => {
         );
     });
 
-    describe("findInterviewById", () => {
-        it("should find the interview by its ID", async () => {
-            const id = "interview-1";
 
+        describe("findInterviewById", () => {
+            const id = "interview-1";
+            const userId = "user-1";
+
+            it("returns the interview when the requester is the owner", async () => {
+                const interview = {
+                    id,
+                    createdById: userId,
+                    title: "Backend Interview",
+                };
+
+                mockRepository.findById.mockResolvedValue(interview);
+                mockParticipantRepository.findParticipant.mockResolvedValue(null);
+
+                const result = await service.findInterviewById(id, userId);
+
+                expect(mockRepository.findById).toHaveBeenCalledWith(id);
+                expect(mockParticipantRepository.findParticipant).toHaveBeenCalledWith(
+                    userId,
+                    id,
+                );
+                expect(result).toEqual(interview);
+            });
+
+            it("returns the interview when the requester is a participant", async () => {
+                const interview = {
+                    id,
+                    createdById: "another-user",
+                    title: "Backend Interview",
+                };
+
+                const participant = {
+                    userId,
+                    interviewId: id,
+                    role: ParticipantRole.CANDIDATE,
+                };
+
+                mockRepository.findById.mockResolvedValue(interview);
+                mockParticipantRepository.findParticipant.mockResolvedValue(participant);
+
+                const result = await service.findInterviewById(id, userId);
+
+                expect(result).toEqual(interview);
+            });
+
+            it("throws INTERVIEW_NOT_FOUND when the interview does not exist", async () => {
+                mockRepository.findById.mockResolvedValue(null);
+
+                await expect(
+                    service.findInterviewById(id, userId),
+                ).rejects.toMatchObject({
+                    message: "Interview Not Found",
+                    statusCode: 404,
+                    code: "INTERVIEW_NOT_FOUND",
+                });
+
+                expect(
+                    mockParticipantRepository.findParticipant,
+                ).not.toHaveBeenCalled();
+            });
+
+            it("throws UNAUTHORIZED when the requester is neither owner nor participant", async () => {
+                const interview = {
+                    id,
+                    createdById: "another-user",
+                    title: "Backend Interview",
+                };
+
+                mockRepository.findById.mockResolvedValue(interview);
+                mockParticipantRepository.findParticipant.mockResolvedValue(null);
+
+                await expect(
+                    service.findInterviewById(id, userId),
+                ).rejects.toMatchObject({
+                    message: "Unauthorized",
+                    statusCode: 403,
+                    code: "UNAUTHORIZED",
+                });
+            });
+        });
+
+    
+    describe("scheduleInterview", () => {
+        const id = "interview-1";
+        const userId = "user-1";
+        const scheduledAt = new Date("2099-10-11T09:25:50Z");
+
+        beforeEach(() => {
+            mockRepository.updateInterviewSchedule.mockReset();
+        });
+
+        it("schedules a draft interview for a future date", async () => {
             const interview = {
                 id,
-                title: "Backend Interview",
+                createdById: userId,
+                status: InterviewStatus.DRAFT,
             };
 
             mockRepository.findById.mockResolvedValue(interview);
+            mockParticipantRepository.findParticipant.mockResolvedValue(null);
+            mockRepository.updateInterviewSchedule.mockResolvedValue({
+                ...interview,
+                status: InterviewStatus.SCHEDULED,
+                scheduledAt,
+            });
 
-            const result = await service.findInterviewById(id);
+            await service.scheduleInterview(userId, id, scheduledAt);
 
-            expect(mockRepository.findById).toHaveBeenCalledWith(id);
-            expect(result).toEqual(interview);
+            expect(mockRepository.updateInterviewSchedule).toHaveBeenCalledWith(
+                id,
+                InterviewStatus.SCHEDULED,
+                scheduledAt
+            );
+        });
+
+        it("rejects scheduling when the interview is not a draft", async () => {
+            mockRepository.findById.mockResolvedValue({
+                id,
+                createdById: userId,
+                status: InterviewStatus.SCHEDULED,
+            });
+            mockParticipantRepository.findParticipant.mockResolvedValue(null);
+
+            await expect(
+                service.scheduleInterview(userId, id, scheduledAt)
+            ).rejects.toMatchObject({
+                statusCode: 400,
+                code: "STATUS_NOT_DRAFT",
+            });
+
+            expect(mockRepository.updateInterviewSchedule).not.toHaveBeenCalled();
+        });
+
+        it("rejects a scheduled time in the past", async () => {
+            mockRepository.findById.mockResolvedValue({
+                id,
+                createdById: userId,
+                status: InterviewStatus.DRAFT,
+            });
+            mockParticipantRepository.findParticipant.mockResolvedValue(null);
+
+            await expect(
+                service.scheduleInterview(
+                    userId,
+                    id,
+                    new Date("2000-01-01T00:00:00Z")
+                )
+            ).rejects.toMatchObject({
+                statusCode: 400,
+                code: "INVALID_SCHEDULED_TIME",
+            });
+
+            expect(mockRepository.updateInterviewSchedule).not.toHaveBeenCalled();
         });
     });
+
 
     describe("findAllInterviewsByUserId", () => {
         it("should find all interviews created by the user", async () => {
@@ -131,14 +273,15 @@ describe("InterviewService", () => {
             const data = {
                 title: "Backend Interview",
                 description: "backend role backend interview",
-                scheduledAt: "",
-                durationMinutes: 20
+                scheduledAt: new Date("2026-10-11 09:25:50"),
+                durationMinutes: 20,
+                createdAs: ParticipantRole.INTERVIEWER
             }
 
             const createdInterview = {
                 id: "interview-1",
                 ...data,
-                createdById: userId
+                createdById: userId,
             };
 
             mockRepository.createInterview.mockResolvedValue(createdInterview)
@@ -161,8 +304,9 @@ describe("InterviewService", () => {
             const data = {
                 title: "Backend Interview",
                 description: "backend role backend interview",
-                scheduledAt: "",
-                durationMinutes: 20
+                scheduledAt: new Date("2026-10-11 09:25:50"),
+                durationMinutes: 20,
+                createdAs: ParticipantRole.INTERVIEWER
             }
 
             const updatedInterview = {
@@ -186,8 +330,9 @@ describe("InterviewService", () => {
             const data = {
                 title: "Backend Interview",
                 description: "backend role backend interview",
-                scheduledAt: "",
-                durationMinutes: 20
+                scheduledAt: new Date("2026-10-11 09:25:50"),
+                durationMinutes: 20,
+                createdAs: ParticipantRole.INTERVIEWER
             }
 
             mockRepository.findById.mockResolvedValue(null)
@@ -205,8 +350,9 @@ describe("InterviewService", () => {
             const data = {
                 title: "Backend Interview",
                 description: "backend role backend interview",
-                scheduledAt: "",
-                durationMinutes: 20
+                scheduledAt: new Date("2026-10-11 09:25:50"),
+                durationMinutes: 20,
+                createdAs: ParticipantRole.INTERVIEWER
             }
 
             const interview = {
