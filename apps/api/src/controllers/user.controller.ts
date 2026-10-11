@@ -22,6 +22,12 @@ export class UserController{
     async findUserById(req:Request, res:Response){
         const userId = req.params.userId 
 
+        if (typeof userId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
+
         const user = await this.profileService.findUser(userId)
         return res.status(200).json(user)
         

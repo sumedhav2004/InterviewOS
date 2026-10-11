@@ -1,68 +1,124 @@
-import { request, Request, Response } from "express";
+
+import { Request, Response } from "express";
 import { TestCaseService } from "../services/testCase.service";
+import { getRequiredRouteParam } from "../utils/route-params";
 
-export class TestCaseController{
+export class TestCaseController {
     constructor(
-        private readonly testCaseService = new TestCaseService
-    ){}
+        private readonly testCaseService = new TestCaseService(),
+    ) {}
 
-    async findById(req:Request, res:Response){
-        const testCaseId = req.params.testCaseId
-        const questionId = req.params.questionId
-        const requesterId = req.user.id
+    async findById(req: Request, res: Response) {
+        const testCaseId = getRequiredRouteParam(
+            req.params.testCaseId,
+            "testCaseId",
+        );
 
-        const testCase = await this.testCaseService.findById(testCaseId, requesterId, questionId)
-        return res.status(200).json(testCase)
+        const questionId = getRequiredRouteParam(
+            req.params.questionId,
+            "questionId",
+        );
+
+        const requesterId = req.user.id;
+
+        const testCase = await this.testCaseService.findById(
+            testCaseId,
+            requesterId,
+            questionId,
+        );
+
+        return res.status(200).json(testCase);
     }
 
-    async findAllTestCasesForAQuestion(req:Request, res:Response){
-        
-        const questionId = req.params.questionId
-        const requesterId =req.user.id 
+    async findAllTestCasesForAQuestion(req: Request, res: Response) {
+        const questionId = getRequiredRouteParam(
+            req.params.questionId,
+            "questionId",
+        );
 
-        const testCases = await this.testCaseService.findAllTestCasesForAQuestion(questionId)
-        return res.status(200).json(testCases)
+        const requesterId = req.user.id;
+
+        const testCases =
+            await this.testCaseService.findAllTestCasesForAQuestion(
+                questionId,
+            );
+
+        return res.status(200).json(testCases);
     }
 
-    async findAllVisibleTestCasesForAQuestion(req:Request, res:Response){
-        const {questionId} = req.params 
-        const requesterId = req.user.id 
+    async findAllVisibleTestCasesForAQuestion(req: Request, res: Response) {
+        const questionId = getRequiredRouteParam(
+            req.params.questionId,
+            "questionId",
+        );
 
-        const visibleTestCases = await this.testCaseService.findVisibleTestCasesForAQuestion(questionId)
-        return res.status(200).json(visibleTestCases)
+        const visibleTestCases =
+            await this.testCaseService.findVisibleTestCasesForAQuestion(
+                questionId,
+            );
+
+        return res.status(200).json(visibleTestCases);
     }
 
-    async findAllHiddenTestCasesForAQuestion(req:Request, res:Response){
-        const {questionId} = req.params 
-        const requesterId = req.user.id 
+    async createTestCase(req: Request, res: Response) {
+        const questionId = getRequiredRouteParam(
+            req.params.questionId,
+            "questionId",
+        );
 
-        const hiddenTestCases = await this.testCaseService.findHiddenTestCasesForAQuestion(questionId)
-        return res.status(200).json(hiddenTestCases)
+        const requesterId = req.user.id;
+
+        const createdTestCase = await this.testCaseService.createTestCase(
+            questionId,
+            requesterId,
+            req.body,
+        );
+
+        return res.status(201).json(createdTestCase);
     }
 
-    async createTestCase(req:Request, res:Response){
-        const {questionId} = req.params 
-        const requesterId = req.user.id 
-        const data = req.body 
+    async updateTestCase(req: Request, res: Response) {
+        const questionId = getRequiredRouteParam(
+            req.params.questionId,
+            "questionId",
+        );
 
-        const createdTestCase = await this.testCaseService.createTestCase(questionId, requesterId, data)
-        return res.status(201).json(createdTestCase)
+        const testCaseId = getRequiredRouteParam(
+            req.params.testCaseId,
+            "testCaseId",
+        );
+
+        const requesterId = req.user.id;
+
+        const updatedTestCase = await this.testCaseService.updateTestCase(
+            testCaseId,
+            questionId,
+            requesterId,
+            req.body,
+        );
+
+        return res.status(200).json(updatedTestCase);
     }
 
-    async updateTestCase(req:Request, res:Response){
-        const {questionId, testCaseId} = req.params 
-        const requesterId = req.user.id 
-        const data = req.body 
+    async deleteTestCase(req: Request, res: Response) {
+        const questionId = getRequiredRouteParam(
+            req.params.questionId,
+            "questionId",
+        );
 
-        const updatedTestCase = await this.testCaseService.updateTestCase(testCaseId, questionId, requesterId, data)
-        return res.status(200).json(updatedTestCase)
-    }
+        const testCaseId = getRequiredRouteParam(
+            req.params.testCaseId,
+            "testCaseId",
+        );
 
-    async deleteTestCase(req:Request, res:Response){
-        const {questionId, testCaseId} = req.params
-        const requesterId = req.user.id 
-        
-        await this.testCaseService.deleteTestCase(testCaseId,questionId, requesterId)
-        return res.sendStatus(204)
+        const requesterId = req.user.id;
+
+        await this.testCaseService.deleteTestCase(
+            testCaseId,
+            questionId,
+            requesterId,
+        );
+
+        return res.sendStatus(204);
     }
 }

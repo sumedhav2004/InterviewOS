@@ -1,5 +1,5 @@
 import pinoHttp from "pino-http";
-import { logger } from "../../../../packages/logger/src"
+import { logger } from "@interview-os/logger";
 
 export const loggerMiddleware = pinoHttp({
   logger,

@@ -1,12 +1,14 @@
-import { User } from "@interview-os/database"
 
+import "express";
 
-declare global{
-    namespace Express{
-        interface Request{
-            user: User
+declare global {
+    namespace Express {
+        interface Request {
+            user: {
+                id: string;
+            };
         }
     }
 }
 
-export {}
+export {};

@@ -7,7 +7,13 @@ export class QuestionController{
     ){}
 
     async findById(req:Request, res:Response){
-        const id = req.params.questionId
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
 
         const question = await this.questionService.findById(id)
         return res.status(200).json(question)
@@ -29,7 +35,13 @@ export class QuestionController{
     }
 
     async deleteQuestion(req:Request, res:Response){
-        const id = req.params.questionId
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id 
 
         await this.questionService.deleteQuestion(id, userId)
@@ -37,7 +49,13 @@ export class QuestionController{
     }
 
     async updateQuestion(req:Request, res:Response){
-        const id = req.params.questionId
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id 
         const data = req.body
 

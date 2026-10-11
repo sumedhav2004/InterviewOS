@@ -7,7 +7,13 @@ export class InterviewController{
     ){}
 
     async findInterviewById(req: Request, res: Response){
-        const id = req.params.id
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id
 
         const interview = await this.interviewService.findInterviewById(id, userId)
@@ -30,7 +36,13 @@ export class InterviewController{
     }
 
     async deleteInterview(req: Request, res: Response){
-        const id = req.params.id
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id
         
         await this.interviewService.deleteInterview(id, userId)
@@ -38,7 +50,13 @@ export class InterviewController{
     }
 
     async updateInterview(req: Request, res: Response){
-        const id = req.params.id
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id
         const data = req.body
 
@@ -47,7 +65,13 @@ export class InterviewController{
     }
     
     async scheduleInterview(req:Request, res:Response){
-        const id = req.params.id
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id
         const data = req.body
 
@@ -56,7 +80,13 @@ export class InterviewController{
     }   
 
     async startInterview(req:Request, res: Response){
-        const id = req.params.id
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id
 
         const startedInterview = await this.interviewService.startInterview(userId, id)
@@ -64,7 +94,13 @@ export class InterviewController{
     }
 
     async completeInterview(req:Request, res: Response){
-        const id = req.params.id
+        const id = req.params.id;
+
+if (typeof id !== "string") {
+  return res.status(400).json({
+    message: "Invalid route parameter",
+  });
+}
         const userId = req.user.id
 
         const completedInterview = await this.interviewService.completeInterview(userId, id)
@@ -72,7 +108,13 @@ export class InterviewController{
     }
 
     async cancelInterview(req:Request, res: Response){
-        const id = req.params.id
+        const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id
 
         const cancelledInterview = await this.interviewService.cancelInterview(userId, id)

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "./app-error";
-import { logger } from "../../../../packages/logger/src";
+import { logger } from "@interview-os/logger";
 
 export function errorHandler(
     err: Error,

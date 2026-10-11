@@ -5,6 +5,7 @@ import { InterviewParticipantService } from "../../services/interviewParticipant
 import { logger } from "@interview-os/logger";
 import { InterviewQuestionService } from "../../services/interview-question.service";
 import { InterviewRepository } from "../../repositories/interview.repository";
+import { ProgrammingLanguage } from "@interview-os/database";
 
 type AuthenticatedSocket = WebSocket & {
     userId?: string;
@@ -160,6 +161,10 @@ export class InterviewGateway {
             this.sendError(socket, "Not joined to an interview");
             return;
         }
+        if(!interviewQuestionId){
+            this.sendError(socket,"InterviewQuestionId null");
+            return
+        }
 
         try {
             await this.interviewQuestionService.setActiveInterviewQuestion(
@@ -243,7 +248,7 @@ export class InterviewGateway {
             await this.interviewRepository.updateInterview(
                 socket.interviewId,
                 {
-                    language: message.language,
+                    language: message.language as ProgrammingLanguage,
                 },
             );
 

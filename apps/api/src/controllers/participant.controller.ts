@@ -8,7 +8,13 @@ export class ParticipantController{
 
     async createParticipant(req:Request, res:Response){
         const requesterId = req.user.id
-        const interviewId = req.params.interviewId 
+        const interviewId = req.params.interviewId;
+
+        if (typeof interviewId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const {targetId, ...data} = req.body
 
         const participant = await this.participantService.createParticipant(requesterId, targetId, interviewId, data)
@@ -17,7 +23,13 @@ export class ParticipantController{
 
     async updateParticipant(req:Request, res:Response){
         const requesterId = req.user.id
-        const interviewId  = req.params.interviewId
+        const interviewId = req.params.interviewId;
+
+        if (typeof interviewId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const {targetId, ...data} = req.body
 
         const participant = await this.participantService.updateParticipant(requesterId, targetId, interviewId, data)
@@ -26,7 +38,13 @@ export class ParticipantController{
 
     async getParticipantsForInterview(req:Request, res:Response){
         const userId = req.user.id
-        const interviewId = req.params.interviewId
+        const interviewId = req.params.interviewId;
+
+        if (typeof interviewId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
 
         const participants = await this.participantService.getParticipantsForInterview(interviewId, userId)
         return res.status(200).json(participants)

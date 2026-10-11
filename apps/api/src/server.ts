@@ -3,7 +3,7 @@ import { config } from "@interview-os/config";
 import { logger } from "@interview-os/logger";
 import { connectRedis } from "@interview-os/redis";
 
-import app from "./app";
+import app, { mountCodeRunRoutes } from "./app";
 import { ExecutionResultsService } from "./services/execution-result.service";
 import { RealtimeWebSocketServer } from "./realtime/websocket/websocket-server";
 import { InterviewRoom } from "./realtime/websocket/interview-room";
@@ -16,7 +16,8 @@ async function main() {
     await connectRedis();
 
     const interviewRoom = new InterviewRoom();
-
+    mountCodeRunRoutes(interviewRoom);
+   
     const executionResultsService =
         new ExecutionResultsService(interviewRoom);
 

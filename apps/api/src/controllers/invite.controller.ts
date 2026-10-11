@@ -8,7 +8,13 @@ export class InviteController{
 
     async createInvite(req:Request, res:Response){
         const senderId = req.user.id 
-        const interviewId = req.params.interviewId
+        const interviewId = req.params.interviewId;
+
+        if (typeof interviewId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const {receiverId, ...data} = req.body
 
         const invite = await this.inviteService.createInvite(senderId, receiverId, interviewId, data)
@@ -25,14 +31,26 @@ export class InviteController{
 
     async acceptInvite(req:Request, res:Response){
         const receiverId = req.user.id
-        const inviteId = req.params.inviteId
+        const inviteId = req.params.inviteId;
+
+        if (typeof inviteId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
 
         const invite = await this.inviteService.acceptInvite(inviteId, receiverId)
         return res.status(200).json(invite)
     }
 
     async declineInvite(req:Request, res:Response){
-        const inviteId = req.params.inviteId
+        const inviteId = req.params.inviteId;
+
+        if (typeof inviteId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const receiverId = req.user.id
 
         const invite = await this.inviteService.declineInvite(inviteId, receiverId)
@@ -40,7 +58,13 @@ export class InviteController{
     }
 
     async cancelInvite(req:Request, res:Response){
-        const inviteId = req.params.inviteId
+        const inviteId = req.params.inviteId;
+
+        if (typeof inviteId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const senderId = req.user.id
 
         const invite = await this.inviteService.cancelInvite(inviteId, senderId)

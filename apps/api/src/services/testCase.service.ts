@@ -11,25 +11,40 @@ export class TestCaseService{
         private readonly testCaseRepository = new TestCaseRepository
     ){}
 
-    async findById(id:string, requesterId:string, questionId:string){
-        const question = await this.questionRepository.findById(questionId)
-        if(!question){
+    async findById(id: string, requesterId: string, questionId: string) {
+        const question = await this.questionRepository.findById(questionId);
+
+        if (!question) {
             throw new AppError(
                 "Question Not Found",
                 404,
                 "QUESTION_NOT_FOUND"
-            )
+            );
         }
 
-        if(question.createdById !== requesterId){
+        if (question.createdById !== requesterId) {
+            throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
+        }
+
+        const testCase = await this.testCaseRepository.findById(id);
+
+        if (!testCase) {
             throw new AppError(
-                "Unauthorized",
-                403,
-                "UNAUTHORIZED"
-            )
+                "Test Case Not Found",
+                404,
+                "TEST_CASE_NOT_FOUND"
+            );
         }
 
-        return this.testCaseRepository.findById(id)
+        if (testCase.questionId !== questionId) {
+            throw new AppError(
+                "Invalid Question",
+                400,
+                "INVALID_QUESTION"
+            );
+        }
+
+        return testCase;
     }
 
     async findAllTestCasesForAQuestion(questionId:string){

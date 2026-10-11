@@ -15,6 +15,12 @@ export class ResumeController{
 
     async getResume(req:Request, res:Response){
         const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const resume = await this.resumeService.findById(id);
 
         return res.status(200).json(resume);
@@ -22,6 +28,12 @@ export class ResumeController{
 
     async deleteResume(req:Request, res:Response){
         const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id;
         await this.resumeService.deleteResume(id, userId);
 
@@ -30,6 +42,12 @@ export class ResumeController{
 
     async updateResume(req:Request, res:Response){
         const id = req.params.id;
+
+        if (typeof id !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const userId = req.user.id;
         const data = req.body;
 

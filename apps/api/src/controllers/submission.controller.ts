@@ -28,6 +28,12 @@ export class SubmissionController {
 
     async findById(req: Request, res: Response) {
         const submissionId = req.params.submissionId;
+
+        if (typeof submissionId !== "string") {
+        return res.status(400).json({
+            message: "Invalid route parameter",
+        });
+        }
         const requesterId = req.user.id;
 
         const submission = await this.submissionService.getSubmissionById(

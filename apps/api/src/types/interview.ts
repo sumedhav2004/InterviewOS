@@ -1,4 +1,4 @@
-import { ParticipantRole } from "@interview-os/database"
+import { ParticipantRole, ProgrammingLanguage } from "@interview-os/database"
 
 export type createInterviewData = {
     title: string,
@@ -13,4 +13,5 @@ export type updateInterviewData = {
     description?: string,
     scheduledAt?: Date,
     durationMinutes?: number,
+    language?: ProgrammingLanguage
 }

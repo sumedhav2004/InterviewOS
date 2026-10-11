@@ -1,9 +1,8 @@
 import express from "express";
 import { loggerMiddleware } from "./middleware/logger.middleware";
 import { requestIdMiddleware } from "./middleware/request-id.middleware";
-import { errorHandler } from "../core/errors/error-handler";
-import { AppError } from "../core/errors/app-error";
-import { validate, z } from "../../../packages/validation/src";
+import {errorHandler} from "../core/errors/error-handler"
+import { validate, z } from "@interview-os/validation";
 import {clerkMiddleware} from "@clerk/express"
 import { authMiddleware } from "./middleware/auth.middleware";
 import userRoutes from "./routes/user.routes";
@@ -14,11 +13,20 @@ import cors from "cors";
 import participantRoutes from "./routes/participant.routes";
 import questionRoutes from "./routes/question.routes"
 import interviewQuestionRoutes from "./routes/interviewQuestion.routes"
-import codeRunRoutes from "./routes/code-run.routes"
+import { InterviewRoom } from "./realtime/websocket/interview-room";
+import { createCodeRunRouter } from "./routes/code-run.routes";
 import testCaseRoutes from "./routes/test-case.routes"
 import submissionRoutes from "./routes/submission.routes";
 
 const app = express();
+
+export function mountCodeRunRoutes(interviewRoom: InterviewRoom) {
+  app.use(
+    "/coderuns",
+    authMiddleware,
+    createCodeRunRouter(interviewRoom),
+  );
+}
 
 app.use(cors({
   origin: "http://localhost:3000",
@@ -36,7 +44,6 @@ app.use("/interviews", authMiddleware, participantRoutes)
 app.use("/", authMiddleware, inviteRoutes )
 app.use("/questions", authMiddleware, questionRoutes)
 app.use("/interviews", authMiddleware, interviewQuestionRoutes)
-app.use("/coderuns", authMiddleware, codeRunRoutes )
 app.use("/questions", authMiddleware, testCaseRoutes)
 app.use("/submissions", authMiddleware, submissionRoutes);
 
