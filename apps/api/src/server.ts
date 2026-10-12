@@ -9,35 +9,29 @@ import { RealtimeWebSocketServer } from "./realtime/websocket/websocket-server";
 import { InterviewRoom } from "./realtime/websocket/interview-room";
 
 async function main() {
-    logger.info("Starting the server...");
+  logger.info("Starting the server...");
 
-    const port = config.server.port;
+  const port = config.server.port;
 
-    await connectRedis();
+  await connectRedis();
 
-    const interviewRoom = new InterviewRoom();
-    mountCodeRunRoutes(interviewRoom);
-   
-    const executionResultsService =
-        new ExecutionResultsService(interviewRoom);
+  const interviewRoom = new InterviewRoom();
+  mountCodeRunRoutes(interviewRoom);
 
-    await executionResultsService.start();
+  const executionResultsService = new ExecutionResultsService(interviewRoom);
 
-    const httpServer = createServer(app);
+  await executionResultsService.start();
 
-    new RealtimeWebSocketServer(
-        httpServer,
-        interviewRoom,
-    );
+  const httpServer = createServer(app);
 
-    httpServer.listen(port, () => {
-        logger.info(
-            `Server is running on port ${port}`,
-        );
-    });
+  new RealtimeWebSocketServer(httpServer, interviewRoom);
+
+  httpServer.listen(port, () => {
+    logger.info(`Server is running on port ${port}`);
+  });
 }
 
 main().catch((error) => {
-    logger.error(error);
-    process.exit(1);
+  logger.error(error);
+  process.exit(1);
 });

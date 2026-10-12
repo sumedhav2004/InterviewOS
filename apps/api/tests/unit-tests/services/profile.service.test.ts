@@ -36,41 +36,25 @@ describe("ProfileService", () => {
 
       updateUserMock.mockResolvedValue(updatedUser);
 
-      const result = await service.updateUser(
-        "user_123",
-        updateData,
-      );
+      const result = await service.updateUser("user_123", updateData);
 
-      expect(updateUserMock).toHaveBeenCalledWith(
-        "user_123",
-        updateData,
-      );
+      expect(updateUserMock).toHaveBeenCalledWith("user_123", updateData);
       expect(result).toEqual(updatedUser);
     });
 
     it("returns null when the repository reports no updated user", async () => {
       updateUserMock.mockResolvedValue(null);
 
-      const result = await service.updateUser(
-        "missing_user",
-        {},
-      );
+      const result = await service.updateUser("missing_user", {});
 
-      expect(updateUserMock).toHaveBeenCalledWith(
-        "missing_user",
-        {},
-      );
+      expect(updateUserMock).toHaveBeenCalledWith("missing_user", {});
       expect(result).toBeNull();
     });
 
     it("propagates repository errors", async () => {
-      updateUserMock.mockRejectedValue(
-        new Error("Profile update failed"),
-      );
+      updateUserMock.mockRejectedValue(new Error("Profile update failed"));
 
-      await expect(
-        service.updateUser("user_123", {}),
-      ).rejects.toThrow("Profile update failed");
+      await expect(service.updateUser("user_123", {})).rejects.toThrow("Profile update failed");
     });
 
     it("supports an empty update object", async () => {
@@ -78,15 +62,9 @@ describe("ProfileService", () => {
 
       updateUserMock.mockResolvedValue(updatedUser);
 
-      const result = await service.updateUser(
-        "user_123",
-        {},
-      );
+      const result = await service.updateUser("user_123", {});
 
-      expect(updateUserMock).toHaveBeenCalledWith(
-        "user_123",
-        {},
-      );
+      expect(updateUserMock).toHaveBeenCalledWith("user_123", {});
       expect(result).toEqual(updatedUser);
     });
   });
@@ -117,13 +95,9 @@ describe("ProfileService", () => {
     });
 
     it("propagates repository errors", async () => {
-      findByIdMock.mockRejectedValue(
-        new Error("User lookup failed"),
-      );
+      findByIdMock.mockRejectedValue(new Error("User lookup failed"));
 
-      await expect(
-        service.findUser("user_123"),
-      ).rejects.toThrow("User lookup failed");
+      await expect(service.findUser("user_123")).rejects.toThrow("User lookup failed");
     });
   });
 });

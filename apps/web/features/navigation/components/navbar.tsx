@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { Mark } from "@/features/branding";
 import Link from "next/link";
 
-
 const navigationItems = [
   { label: "Product", href: "#product" },
   { label: "Solutions", href: "#solutions" },
@@ -46,21 +45,14 @@ export function Navigation() {
             : "border-transparent bg-transparent",
         )}
       >
-        <a
-          href="#top"
-          className="flex min-w-0 items-center gap-2 font-semibold"
-        >
+        <a href="#top" className="flex min-w-0 items-center gap-2 font-semibold">
           <Mark />
           <span>InterviewOS</span>
         </a>
 
         <div className="hidden items-center justify-center gap-8 text-sm text-muted-foreground md:flex">
           {navigationItems.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="transition-colors hover:text-foreground"
-            >
+            <a key={item.href} href={item.href} className="transition-colors hover:text-foreground">
               {item.label}
             </a>
           ))}
@@ -69,9 +61,9 @@ export function Navigation() {
         <div className="hidden items-center gap-2 sm:flex">
           <Link href="/sign-in">
             <Button variant="ghost" size="sm">
-                Sign in
+              Sign in
             </Button>
-            </Link>
+          </Link>
 
           <Button size="sm">
             Get started
@@ -79,12 +71,7 @@ export function Navigation() {
           </Button>
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="sm:hidden"
-          aria-label="Open menu"
-        >
+        <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Open menu">
           <Menu />
         </Button>
       </nav>

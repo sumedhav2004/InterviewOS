@@ -1,9 +1,4 @@
-import {
-  ArrowRight,
-  CircleDot,
-  Monitor,
-  MousePointer2,
-} from "lucide-react";
+import { ArrowRight, CircleDot, Monitor, MousePointer2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -20,8 +15,7 @@ export function FinalCta() {
         </h2>
 
         <p className="mx-auto mt-6 max-w-2xl text-balance text-muted-foreground">
-          Everything you need to conduct a great technical interview, in one
-          focused workspace.
+          Everything you need to conduct a great technical interview, in one focused workspace.
         </p>
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">

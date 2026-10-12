@@ -13,19 +13,6 @@ const gapClasses = {
   xl: "gap-8",
 };
 
-export function Stack({
-  gap = "md",
-  className,
-  ...props
-}: StackProps) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col",
-        gapClasses[gap],
-        className
-      )}
-      {...props}
-    />
-  );
+export function Stack({ gap = "md", className, ...props }: StackProps) {
+  return <div className={cn("flex flex-col", gapClasses[gap], className)} {...props} />;
 }

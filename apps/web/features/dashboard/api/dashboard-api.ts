@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/api-client";
 import type { User } from "@/features/auth/types";
 import { useAccessToken } from "@/lib/auth";
-import { Interview, Invite, InviteWithDetails} from "../types";
+import { Interview, Invite, InviteWithDetails } from "../types";
 
 export const dashboardApi = {
   getCurrentUser() {
@@ -9,30 +9,30 @@ export const dashboardApi = {
   },
 
   getReceivedInvites() {
-  return apiClient.get<InviteWithDetails[]>("/invites");
-},
+    return apiClient.get<InviteWithDetails[]>("/invites");
+  },
 
-    getSender(userId:string){
-        return apiClient.get<User>(`/user/${userId}`)
-    },
+  getSender(userId: string) {
+    return apiClient.get<User>(`/user/${userId}`);
+  },
 
-    getInterview(interviewId:string){
-        return apiClient.get<Interview>(`/interviews/${interviewId}`)
-    },
+  getInterview(interviewId: string) {
+    return apiClient.get<Interview>(`/interviews/${interviewId}`);
+  },
 
-    acceptInvitation(inviteId: string) {
+  acceptInvitation(inviteId: string) {
     return apiClient.patch<Invite>(`/invites/${inviteId}/accept`);
-    },
+  },
 
-    declineInvitation(inviteId: string) {
+  declineInvitation(inviteId: string) {
     return apiClient.patch<Invite>(`/invites/${inviteId}/decline`);
-    },
+  },
 
-    getInterviews() {
+  getInterviews() {
     return apiClient.get<Interview[]>("/interviews");
-    },
+  },
 
-    getSentInvites() {
+  getSentInvites() {
     return apiClient.get<Invite[]>("/invites/sent");
-    },
+  },
 };

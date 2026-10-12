@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  CircleDot,
-  Clock3,
-  ShieldCheck,
-} from "lucide-react";
+import { CircleDot, Clock3, ShieldCheck } from "lucide-react";
 
 import type { Interview } from "../types/interview";
 
@@ -12,13 +8,8 @@ type InterviewHeaderProps = {
   interview: Interview;
 };
 
-export function InterviewHeader({
-  interview,
-}: InterviewHeaderProps) {
-  const statusLabel =
-    interview.status === "INPROGRESS"
-      ? "LIVE"
-      : interview.status;
+export function InterviewHeader({ interview }: InterviewHeaderProps) {
+  const statusLabel = interview.status === "INPROGRESS" ? "LIVE" : interview.status;
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:px-6">
@@ -28,9 +19,7 @@ export function InterviewHeader({
         </div>
 
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">
-            {interview.title}
-          </p>
+          <p className="truncate text-sm font-medium">{interview.title}</p>
 
           <div className="mt-0.5 flex items-center gap-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
             <span>InterviewOS</span>
@@ -55,9 +44,7 @@ export function InterviewHeader({
 
         <div className="hidden items-center gap-1.5 text-muted-foreground lg:flex">
           <ShieldCheck className="h-3.5 w-3.5" />
-          <span className="font-mono text-[9px] uppercase tracking-widest">
-            Private room
-          </span>
+          <span className="font-mono text-[9px] uppercase tracking-widest">Private room</span>
         </div>
       </div>
     </header>

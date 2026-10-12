@@ -22,8 +22,6 @@ type InterviewControlsProps = {
   onToggleMicrophone: () => void;
 };
 
-
-
 export function InterviewControls({
   cameraEnabled,
   microphoneEnabled,
@@ -36,11 +34,7 @@ export function InterviewControls({
         <Button
           size="icon"
           variant={microphoneEnabled ? "ghost" : "destructive"}
-          title={
-            microphoneEnabled
-              ? "Turn microphone off"
-              : "Turn microphone on"
-          }
+          title={microphoneEnabled ? "Turn microphone off" : "Turn microphone on"}
           onClick={onToggleMicrophone}
         >
           {microphoneEnabled ? <Mic /> : <MicOff />}
@@ -49,21 +43,13 @@ export function InterviewControls({
         <Button
           size="icon"
           variant={cameraEnabled ? "ghost" : "destructive"}
-          title={
-            cameraEnabled
-              ? "Turn camera off"
-              : "Turn camera on"
-          }
+          title={cameraEnabled ? "Turn camera off" : "Turn camera on"}
           onClick={onToggleCamera}
         >
           {cameraEnabled ? <Camera /> : <CameraOff />}
         </Button>
 
-        <Button
-          size="icon"
-          variant="ghost"
-          title="Share screen"
-        >
+        <Button size="icon" variant="ghost" title="Share screen">
           <MonitorUp />
         </Button>
       </div>
@@ -86,11 +72,7 @@ export function InterviewControls({
         </Button>
       </div>
 
-      <Button
-        size="icon"
-        variant="destructive"
-        title="Leave interview"
-      >
+      <Button size="icon" variant="destructive" title="Leave interview">
         <PhoneOff />
       </Button>
     </footer>

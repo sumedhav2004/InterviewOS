@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-  type PointerEvent,
-} from "react";
+import { useRef, useState, type PointerEvent } from "react";
 
 import { Code2, FileText } from "lucide-react";
 
@@ -21,29 +17,19 @@ import { ActiveInterviewQuestion } from "../types/active-question";
 import { SubmissionEvaluation, SubmissionTestCaseResult } from "../types/submission";
 import { CodeRunTestCaseResult } from "../types/coderun";
 
-
-
-
 type InterviewLayoutProps = {
   localStream: MediaStream | null;
   participantIds: string[];
   participants: Participant[];
   remoteStreams: Map<string, MediaStream>;
   localMediaState: ParticipantMediaState;
-  remoteMediaStates: Map<
-    string,
-    ParticipantMediaState
-  >;
+  remoteMediaStates: Map<string, ParticipantMediaState>;
   code: string;
   onCodeChange: (code: string) => void;
-  activeInterviewQuestion:
-    | ActiveInterviewQuestion
-    | null;
+  activeInterviewQuestion: ActiveInterviewQuestion | null;
   participant: Participant;
   language: ProgrammingLanguage;
-  onLanguageChange: (
-    language: ProgrammingLanguage,
-  ) => void;
+  onLanguageChange: (language: ProgrammingLanguage) => void;
   codeRun: {
     id: string;
     status: string;
@@ -91,11 +77,9 @@ export function InterviewLayout({
   submissionError,
   onSubmit,
 }: InterviewLayoutProps) {
-  const [terminalHeight, setTerminalHeight] =
-    useState(180);
+  const [terminalHeight, setTerminalHeight] = useState(180);
 
-  const [terminalOpen, setTerminalOpen] =
-    useState(true);
+  const [terminalOpen, setTerminalOpen] = useState(true);
 
   /*
    * This controls ONLY which current event the terminal
@@ -106,13 +90,11 @@ export function InterviewLayout({
    * RUN    -> show code-run state/results
    * SUBMIT -> show submission state/results
    */
-  const [terminalMode, setTerminalMode] =
-    useState<TerminalMode>(null);
+  const [terminalMode, setTerminalMode] = useState<TerminalMode>(null);
 
   const isDragging = useRef(false);
 
-  const isCandidate =
-    participant?.role === "CANDIDATE";
+  const isCandidate = participant?.role === "CANDIDATE";
 
   const handleRun = async () => {
     /*
@@ -136,9 +118,7 @@ export function InterviewLayout({
     await onSubmit();
   };
 
-  const handleTerminalResizeStart = (
-    event: PointerEvent<HTMLDivElement>,
-  ) => {
+  const handleTerminalResizeStart = (event: PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
 
     isDragging.current = true;
@@ -146,23 +126,14 @@ export function InterviewLayout({
     const startY = event.clientY;
     const startHeight = terminalHeight;
 
-    const handlePointerMove = (
-      pointerEvent: PointerEvent,
-    ) => {
+    const handlePointerMove = (pointerEvent: PointerEvent) => {
       if (!isDragging.current) {
         return;
       }
 
-      const delta =
-        startY - pointerEvent.clientY;
+      const delta = startY - pointerEvent.clientY;
 
-      const newHeight = Math.min(
-        Math.max(
-          startHeight + delta,
-          80,
-        ),
-        500,
-      );
+      const newHeight = Math.min(Math.max(startHeight + delta, 80), 500);
 
       setTerminalHeight(newHeight);
     };
@@ -170,26 +141,14 @@ export function InterviewLayout({
     const handlePointerUp = () => {
       isDragging.current = false;
 
-      window.removeEventListener(
-        "pointermove",
-        handlePointerMove,
-      );
+      window.removeEventListener("pointermove", handlePointerMove);
 
-      window.removeEventListener(
-        "pointerup",
-        handlePointerUp,
-      );
+      window.removeEventListener("pointerup", handlePointerUp);
     };
 
-    window.addEventListener(
-      "pointermove",
-      handlePointerMove,
-    );
+    window.addEventListener("pointermove", handlePointerMove);
 
-    window.addEventListener(
-      "pointerup",
-      handlePointerUp,
-    );
+    window.addEventListener("pointerup", handlePointerUp);
   };
 
   /*
@@ -222,10 +181,7 @@ export function InterviewLayout({
             </div>
 
             {isCandidate ? (
-              <LanguageSelector
-                value={language}
-                onChange={onLanguageChange}
-              />
+              <LanguageSelector value={language} onChange={onLanguageChange} />
             ) : (
               <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
                 {language}
@@ -236,18 +192,12 @@ export function InterviewLayout({
           {/* Editor area */}
           <div className="relative min-h-0 flex-1 overflow-hidden">
             <div className="flex h-full min-h-0">
-              <ActiveQuestion
-                question={activeInterviewQuestion}
-              />
+              <ActiveQuestion question={activeInterviewQuestion} />
 
               <div className="relative flex min-w-0 flex-1">
                 {/* Code editor */}
                 <div className="h-full w-full">
-                  <CodeWorkspace
-                    code={code}
-                    onCodeChange={onCodeChange}
-                    language={language}
-                  />
+                  <CodeWorkspace code={code} onCodeChange={onCodeChange} language={language} />
                 </div>
 
                 {/* Candidate actions */}
@@ -256,26 +206,13 @@ export function InterviewLayout({
                     <Button
                       variant="outline"
                       onClick={handleRun}
-                      disabled={
-                        isRunning ||
-                        isSubmitting
-                      }
+                      disabled={isRunning || isSubmitting}
                     >
-                      {isRunning
-                        ? "Running..."
-                        : "Run"}
+                      {isRunning ? "Running..." : "Run"}
                     </Button>
 
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={
-                        isRunning ||
-                        isSubmitting
-                      }
-                    >
-                      {isSubmitting
-                        ? "Submitting..."
-                        : "Submit"}
+                    <Button onClick={handleSubmit} disabled={isRunning || isSubmitting}>
+                      {isSubmitting ? "Submitting..." : "Submit"}
                     </Button>
                   </div>
                 )}
@@ -290,9 +227,7 @@ export function InterviewLayout({
                   >
                     {/* Resize handle */}
                     <div
-                      onPointerDown={
-                        handleTerminalResizeStart
-                      }
+                      onPointerDown={handleTerminalResizeStart}
                       className="group absolute -top-1 left-0 right-0 z-30 flex h-2 cursor-row-resize items-center justify-center"
                     >
                       <div className="h-1 w-10 rounded-full bg-muted-foreground/30 transition-colors group-hover:bg-muted-foreground/70" />
@@ -306,9 +241,7 @@ export function InterviewLayout({
 
                       <button
                         type="button"
-                        onClick={() =>
-                          setTerminalOpen(false)
-                        }
+                        onClick={() => setTerminalOpen(false)}
                         className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-white/30 transition-colors hover:bg-white/5 hover:text-white/70"
                       >
                         Close
@@ -317,7 +250,6 @@ export function InterviewLayout({
 
                     {/* Terminal content */}
                     <div className="min-h-0 flex-1 overflow-auto p-3">
-
                       {/* ================================================== */}
                       {/* RUN MODE                                            */}
                       {/* ================================================== */}
@@ -348,20 +280,15 @@ export function InterviewLayout({
                                 >
                                   <div className="flex items-center justify-between gap-3">
                                     <span className="font-mono text-[10px] text-white/60">
-                                      Test Case{" "}
-                                      {result.testCaseId}
+                                      Test Case {result.testCaseId}
                                     </span>
 
                                     <span
                                       className={`font-mono text-[10px] uppercase ${
-                                        result.passed
-                                          ? "text-green-400"
-                                          : "text-red-400"
+                                        result.passed ? "text-green-400" : "text-red-400"
                                       }`}
                                     >
-                                      {result.passed
-                                        ? "PASSED"
-                                        : "FAILED"}
+                                      {result.passed ? "PASSED" : "FAILED"}
                                     </span>
                                   </div>
 
@@ -389,12 +316,9 @@ export function InterviewLayout({
                                     </div>
                                   )}
 
-                                  {result.executionTimeMS !==
-                                    null && (
+                                  {result.executionTimeMS !== null && (
                                     <div className="mt-2 font-mono text-[9px] text-white/30">
-                                      {
-                                        result.executionTimeMS
-                                      }
+                                      {result.executionTimeMS}
                                       ms
                                     </div>
                                   )}
@@ -455,8 +379,7 @@ export function InterviewLayout({
 
                                   <span
                                     className={`font-mono text-[10px] uppercase ${
-                                      evaluation.status ===
-                                      "PASSED"
+                                      evaluation.status === "PASSED"
                                         ? "text-green-400"
                                         : "text-red-400"
                                     }`}
@@ -483,19 +406,14 @@ export function InterviewLayout({
                                   </div>
 
                                   <div className="mt-1 font-mono text-[14px] text-white/80">
-                                    {evaluation.passedTests}/
-                                    {evaluation.totalTests}
+                                    {evaluation.passedTests}/{evaluation.totalTests}
                                   </div>
                                 </div>
                               </div>
 
-                              {evaluation.executionTimeMS !==
-                                null && (
+                              {evaluation.executionTimeMS !== null && (
                                 <div className="font-mono text-[9px] text-white/30">
-                                  Total execution time:{" "}
-                                  {
-                                    evaluation.executionTimeMS
-                                  }
+                                  Total execution time: {evaluation.executionTimeMS}
                                   ms
                                 </div>
                               )}
@@ -539,13 +457,10 @@ export function InterviewLayout({
                 ) : (
                   <button
                     type="button"
-                    onClick={() =>
-                      setTerminalOpen(true)
-                    }
+                    onClick={() => setTerminalOpen(true)}
                     className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 border border-border/50 bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/50 backdrop-blur-sm transition-colors hover:border-border hover:bg-background hover:text-muted-foreground"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-
                     Terminal
                   </button>
                 )}
@@ -584,40 +499,22 @@ export function InterviewLayout({
               <div className="space-y-3">
                 <div>
                   <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
-                    Question{" "}
-                    {
-                      activeInterviewQuestion.questionOrder
-                    }
+                    Question {activeInterviewQuestion.questionOrder}
                   </p>
 
                   <h2 className="mt-1 text-sm font-medium">
-                    {
-                      activeInterviewQuestion
-                        .question.title
-                    }
+                    {activeInterviewQuestion.question.title}
                   </h2>
                 </div>
 
                 <p className="font-mono text-[10px] leading-5 text-muted-foreground">
-                  {
-                    activeInterviewQuestion
-                      .question.description
-                  }
+                  {activeInterviewQuestion.question.description}
                 </p>
 
                 <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
-                  <span>
-                    Difficulty:{" "}
-                    {
-                      activeInterviewQuestion
-                        .question.difficulty
-                    }
-                  </span>
+                  <span>Difficulty: {activeInterviewQuestion.question.difficulty}</span>
 
-                  <span>
-                    Points:{" "}
-                    {activeInterviewQuestion.points}
-                  </span>
+                  <span>Points: {activeInterviewQuestion.points}</span>
                 </div>
               </div>
             )}

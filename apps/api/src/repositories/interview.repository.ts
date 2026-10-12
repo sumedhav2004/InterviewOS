@@ -1,105 +1,100 @@
 import { InterviewStatus, Prisma, prisma } from "@interview-os/database";
 import { createInterviewData, updateInterviewData } from "../types/interview";
 
-export class InterviewRepository{
-    async createInterview(
-        db: Prisma.TransactionClient | typeof prisma,
-        userId: string,
-        data: createInterviewData
-    ){
-        return db.interview.create({
-            data: {
-                title: data.title,
-                description: data.description,
-                scheduledAt: data.scheduledAt,
-                durationMinutes: data.durationMinutes,
-                createdById: userId
-            }
-        })
-    }
-    async deleteInterview(id: string){
-        return prisma.interview.delete({
-            where: {
-                id
-            }
-        })
-    }
+export class InterviewRepository {
+  async createInterview(
+    db: Prisma.TransactionClient | typeof prisma,
+    userId: string,
+    data: createInterviewData,
+  ) {
+    return db.interview.create({
+      data: {
+        title: data.title,
+        description: data.description,
+        scheduledAt: data.scheduledAt,
+        durationMinutes: data.durationMinutes,
+        createdById: userId,
+      },
+    });
+  }
+  async deleteInterview(id: string) {
+    return prisma.interview.delete({
+      where: {
+        id,
+      },
+    });
+  }
 
-    async updateInterview(id: string, data: updateInterviewData){
-        return prisma.interview.update({
-            where: {
-                id,
-            },
-            data,
-        })
-    }
+  async updateInterview(id: string, data: updateInterviewData) {
+    return prisma.interview.update({
+      where: {
+        id,
+      },
+      data,
+    });
+  }
 
-    async findById(id: string){
-        return prisma.interview.findUnique({
-            where: {
-                id,
-            }
-        })
-    }
+  async findById(id: string) {
+    return prisma.interview.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
 
-    async findActiveInterviewQuestionId(interviewId: string) {
-        const interview = await prisma.interview.findUnique({
-            where: {
-                id: interviewId,
-            },
-            select: {
-                activeInterviewQuestionId: true,
-            },
-        });
+  async findActiveInterviewQuestionId(interviewId: string) {
+    const interview = await prisma.interview.findUnique({
+      where: {
+        id: interviewId,
+      },
+      select: {
+        activeInterviewQuestionId: true,
+      },
+    });
 
-        return interview?.activeInterviewQuestionId ?? null;
-    }
+    return interview?.activeInterviewQuestionId ?? null;
+  }
 
-    async findByUserId(userId: string) {
-        return prisma.interview.findMany({
-            where: {
-            OR: [
-                { createdById: userId },
-                {
-                participants: {
-                    some: {
-                    userId,
-                    },
-                },
-                },
-            ],
+  async findByUserId(userId: string) {
+    return prisma.interview.findMany({
+      where: {
+        OR: [
+          { createdById: userId },
+          {
+            participants: {
+              some: {
+                userId,
+              },
             },
-            orderBy: {
-            createdAt: "desc",
-            },
-        });
-        }
+          },
+        ],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
 
-    async updateInterviewSchedule(
-        id: string,
-        status: InterviewStatus,
-        scheduledAt: Date
-    ) {
-        return prisma.interview.update({
-            where: {
-                id,
-            },
-            data: {
-                status,
-                scheduledAt
-            },
-        });
-    }
+  async updateInterviewSchedule(id: string, status: InterviewStatus, scheduledAt: Date) {
+    return prisma.interview.update({
+      where: {
+        id,
+      },
+      data: {
+        status,
+        scheduledAt,
+      },
+    });
+  }
 
-    async updateInterviewStatus(id: string, status: InterviewStatus){
-        return prisma.interview.update({
-            where: {
-                id,
-            },
-            data: {
-                status
-            }
-        })
-    }
-
+  async updateInterviewStatus(id: string, status: InterviewStatus) {
+    return prisma.interview.update({
+      where: {
+        id,
+      },
+      data: {
+        status,
+      },
+    });
+  }
 }

@@ -3,63 +3,63 @@ import { processJob } from "./worker";
 import { executeJob } from "./executor";
 
 vi.mock("./executor", () => ({
-    executeJob: vi.fn(),
+  executeJob: vi.fn(),
 }));
 
 describe("processJob", () => {
-    it("should mark a successful job as COMPLETED", async () => {
-        const job = {
-            id: "job-1",
-            participantId: "participant-1",
-            interviewQuestionId: "question-1",
-            testCaseId: "test-case-1",
-            language: "PYTHON" as const,
-            sourceCode: 'print("hello")',
-            status: "QUEUED" as const,
-        };
+  it("should mark a successful job as COMPLETED", async () => {
+    const job = {
+      id: "job-1",
+      participantId: "participant-1",
+      interviewQuestionId: "question-1",
+      testCaseId: "test-case-1",
+      language: "PYTHON" as const,
+      sourceCode: 'print("hello")',
+      status: "QUEUED" as const,
+    };
 
-        vi.mocked(executeJob).mockResolvedValue({
-            stdout: "hello\n",
-            stderr: "",
-            exitCode: 0,
-            timedOut: false,
-            outputLimitExceeded: false,
-            executionTimeMS: 100,
-        });
-
-        const result = await processJob(job);
-
-        expect(executeJob).toHaveBeenCalledWith(job);
-
-        expect(result.job.status).toBe("COMPLETED");
-
-        expect(result.result.exitCode).toBe(0);
-        expect(result.result.stdout).toBe("hello\n");
+    vi.mocked(executeJob).mockResolvedValue({
+      stdout: "hello\n",
+      stderr: "",
+      exitCode: 0,
+      timedOut: false,
+      outputLimitExceeded: false,
+      executionTimeMS: 100,
     });
 
-    it("should mark a failed execution as FAILED", async () => {
-        const job = {
-            id: "job-2",
-            participantId: "participant-1",
-            interviewQuestionId: "question-1",
-            testCaseId: "test-case-1",
-            language: "PYTHON" as const,
-            sourceCode: "raise Exception()",
-            status: "QUEUED" as const,
-        };
+    const result = await processJob(job);
 
-        vi.mocked(executeJob).mockResolvedValue({
-            stdout: "",
-            stderr: "Exception\n",
-            exitCode: 1,
-            timedOut: false,
-            outputLimitExceeded: false,
-            executionTimeMS: 100,
-        });
+    expect(executeJob).toHaveBeenCalledWith(job);
 
-        const result = await processJob(job);
+    expect(result.job.status).toBe("COMPLETED");
 
-        expect(result.job.status).toBe("FAILED");
-        expect(result.result.exitCode).toBe(1);
+    expect(result.result.exitCode).toBe(0);
+    expect(result.result.stdout).toBe("hello\n");
+  });
+
+  it("should mark a failed execution as FAILED", async () => {
+    const job = {
+      id: "job-2",
+      participantId: "participant-1",
+      interviewQuestionId: "question-1",
+      testCaseId: "test-case-1",
+      language: "PYTHON" as const,
+      sourceCode: "raise Exception()",
+      status: "QUEUED" as const,
+    };
+
+    vi.mocked(executeJob).mockResolvedValue({
+      stdout: "",
+      stderr: "Exception\n",
+      exitCode: 1,
+      timedOut: false,
+      outputLimitExceeded: false,
+      executionTimeMS: 100,
     });
+
+    const result = await processJob(job);
+
+    expect(result.job.status).toBe("FAILED");
+    expect(result.result.exitCode).toBe(1);
+  });
 });

@@ -2,45 +2,35 @@ import { Request, Response } from "express";
 import { SubmissionService } from "../services/submission.service";
 
 export class SubmissionController {
-    constructor(
-        private readonly submissionService = new SubmissionService
-    ) {}
+  constructor(private readonly submissionService = new SubmissionService()) {}
 
-    async createSubmission(req: Request, res: Response) {
-        const {
-            interviewQuestionId,
-            participantId,
-            ...data
-        } = req.body;
+  async createSubmission(req: Request, res: Response) {
+    const { interviewQuestionId, participantId, ...data } = req.body;
 
-        const requesterId = req.user.id;
+    const requesterId = req.user.id;
 
-        const submission =
-            await this.submissionService.createSubmission(
-                interviewQuestionId,
-                participantId,
-                requesterId,
-                data
-            );
+    const submission = await this.submissionService.createSubmission(
+      interviewQuestionId,
+      participantId,
+      requesterId,
+      data,
+    );
 
-        return res.status(201).json(submission);
+    return res.status(201).json(submission);
+  }
+
+  async findById(req: Request, res: Response) {
+    const submissionId = req.params.submissionId;
+
+    if (typeof submissionId !== "string") {
+      return res.status(400).json({
+        message: "Invalid route parameter",
+      });
     }
+    const requesterId = req.user.id;
 
-    async findById(req: Request, res: Response) {
-        const submissionId = req.params.submissionId;
+    const submission = await this.submissionService.getSubmissionById(submissionId, requesterId);
 
-        if (typeof submissionId !== "string") {
-        return res.status(400).json({
-            message: "Invalid route parameter",
-        });
-        }
-        const requesterId = req.user.id;
-
-        const submission = await this.submissionService.getSubmissionById(
-            submissionId,
-            requesterId
-        );
-
-        return res.status(200).json(submission);
-    }
+    return res.status(200).json(submission);
+  }
 }

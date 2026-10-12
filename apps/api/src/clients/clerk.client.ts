@@ -1,5 +1,5 @@
-import { clerkClient} from "@clerk/express";
+import { clerkClient } from "@clerk/express";
 
-const ClerkClient = clerkClient
+const ClerkClient = clerkClient;
 
-export {ClerkClient as clerkClient}
+export { ClerkClient as clerkClient };

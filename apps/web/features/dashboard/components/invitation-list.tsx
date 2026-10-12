@@ -13,18 +13,10 @@ type InvitationListProps = {
   onDecline: (inviteId: string) => Promise<void>;
 };
 
-export function InvitationList({
-  invitations,
-  onAccept,
-  onDecline,
-}: InvitationListProps) {
-  const pendingInvitations = invitations.filter(
-    (invite) => invite.status === "PENDING",
-  );
+export function InvitationList({ invitations, onAccept, onDecline }: InvitationListProps) {
+  const pendingInvitations = invitations.filter((invite) => invite.status === "PENDING");
 
-  const invitationHistory = invitations.filter(
-    (invite) => invite.status !== "PENDING",
-  );
+  const invitationHistory = invitations.filter((invite) => invite.status !== "PENDING");
 
   if (invitations.length === 0) {
     return null;
@@ -41,9 +33,7 @@ export function InvitationList({
                 Invitations
               </p>
 
-              <h2 className="text-xl font-semibold tracking-tight">
-                Waiting for your response
-              </h2>
+              <h2 className="text-xl font-semibold tracking-tight">Waiting for your response</h2>
             </div>
 
             <span className="font-mono text-xs text-muted-foreground">
@@ -73,9 +63,7 @@ export function InvitationList({
                 History
               </p>
 
-              <h2 className="text-xl font-semibold tracking-tight">
-                Invitation history
-              </h2>
+              <h2 className="text-xl font-semibold tracking-tight">Invitation history</h2>
             </div>
 
             <span className="font-mono text-xs text-muted-foreground">

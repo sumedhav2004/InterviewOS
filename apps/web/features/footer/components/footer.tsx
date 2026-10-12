@@ -1,7 +1,5 @@
-import { Mark } from '@/features/branding';
-import React from 'react'
+import { Mark } from "@/features/branding";
 
-type Props = {}
 const productLinks = [
   { label: "Product", href: "#product" },
   { label: "Solutions", href: "#solutions" },
@@ -20,10 +18,7 @@ const companyLinks = [
 
 export function Footer() {
   return (
-    <footer
-      id="resources"
-      className="border-t border-border px-4 py-14 sm:px-6"
-    >
+    <footer id="resources" className="border-t border-border px-4 py-14 sm:px-6">
       <div className="mx-auto grid max-w-7xl gap-12 md:grid-cols-[1fr_auto_auto]">
         <div>
           <div className="flex items-center gap-2 font-semibold">
@@ -37,9 +32,7 @@ export function Footer() {
         </div>
 
         <div>
-          <p className="mb-4 font-mono text-[9px] text-muted-foreground">
-            PRODUCT
-          </p>
+          <p className="mb-4 font-mono text-[9px] text-muted-foreground">PRODUCT</p>
 
           <div className="grid grid-cols-2 gap-x-10 gap-y-3 text-sm">
             {productLinks.map((link) => (
@@ -55,9 +48,7 @@ export function Footer() {
         </div>
 
         <div>
-          <p className="mb-4 font-mono text-[9px] text-muted-foreground">
-            COMPANY
-          </p>
+          <p className="mb-4 font-mono text-[9px] text-muted-foreground">COMPANY</p>
 
           <div className="grid gap-3 text-sm">
             {companyLinks.map((link) => (

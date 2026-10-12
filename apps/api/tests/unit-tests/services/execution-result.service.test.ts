@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  subscribeMock,
-  codeRunHandlerMock,
-  submissionHandlerMock,
-} = vi.hoisted(() => ({
+const { subscribeMock, codeRunHandlerMock, submissionHandlerMock } = vi.hoisted(() => ({
   subscribeMock: vi.fn(),
   codeRunHandlerMock: vi.fn(),
   submissionHandlerMock: vi.fn(),
@@ -44,24 +40,16 @@ describe("ExecutionResultsService", () => {
   async function startAndGetHandler() {
     await service.start();
 
-    expect(subscribeMock).toHaveBeenCalledWith(
-      "execution:results",
-      expect.any(Function),
-    );
+    expect(subscribeMock).toHaveBeenCalledWith("execution:results", expect.any(Function));
 
-    return subscribeMock.mock.calls[0][1] as (
-      message: string,
-    ) => Promise<void>;
+    return subscribeMock.mock.calls[0][1] as (message: string) => Promise<void>;
   }
 
   it("subscribes to the execution results channel", async () => {
     await service.start();
 
     expect(subscribeMock).toHaveBeenCalledTimes(1);
-    expect(subscribeMock).toHaveBeenCalledWith(
-      "execution:results",
-      expect.any(Function),
-    );
+    expect(subscribeMock).toHaveBeenCalledWith("execution:results", expect.any(Function));
   });
 
   it("routes CODE_RUN events to CodeRunService", async () => {
@@ -136,9 +124,7 @@ describe("ExecutionResultsService", () => {
   it("propagates errors from CodeRunService", async () => {
     const handler = await startAndGetHandler();
 
-    codeRunHandlerMock.mockRejectedValue(
-      new Error("Code run processing failed"),
-    );
+    codeRunHandlerMock.mockRejectedValue(new Error("Code run processing failed"));
 
     const event = {
       target: {
@@ -147,9 +133,7 @@ describe("ExecutionResultsService", () => {
       },
     };
 
-    await expect(handler(JSON.stringify(event))).rejects.toThrow(
-      "Code run processing failed",
-    );
+    await expect(handler(JSON.stringify(event))).rejects.toThrow("Code run processing failed");
 
     expect(submissionHandlerMock).not.toHaveBeenCalled();
   });
@@ -157,9 +141,7 @@ describe("ExecutionResultsService", () => {
   it("propagates errors from SubmissionService", async () => {
     const handler = await startAndGetHandler();
 
-    submissionHandlerMock.mockRejectedValue(
-      new Error("Submission processing failed"),
-    );
+    submissionHandlerMock.mockRejectedValue(new Error("Submission processing failed"));
 
     const event = {
       target: {
@@ -168,9 +150,7 @@ describe("ExecutionResultsService", () => {
       },
     };
 
-    await expect(handler(JSON.stringify(event))).rejects.toThrow(
-      "Submission processing failed",
-    );
+    await expect(handler(JSON.stringify(event))).rejects.toThrow("Submission processing failed");
 
     expect(codeRunHandlerMock).not.toHaveBeenCalled();
   });

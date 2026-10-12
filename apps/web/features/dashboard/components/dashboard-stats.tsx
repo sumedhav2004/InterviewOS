@@ -29,11 +29,7 @@ const stats = [
   },
 ] as const;
 
-export function DashboardStats({
-  upcoming,
-  completed,
-  invites,
-}: DashboardStatsProps) {
+export function DashboardStats({ upcoming, completed, invites }: DashboardStatsProps) {
   const values = {
     upcoming,
     completed,
@@ -46,10 +42,7 @@ export function DashboardStats({
         const Icon = stat.icon;
 
         return (
-          <Card
-            key={stat.key}
-            className="group transition-colors hover:border-primary/40"
-          >
+          <Card key={stat.key} className="group transition-colors hover:border-primary/40">
             <CardContent className="flex items-start justify-between p-6">
               <div className="space-y-3">
                 <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -60,9 +53,7 @@ export function DashboardStats({
                   {String(values[stat.key]).padStart(2, "0")}
                 </p>
 
-                <p className="text-sm text-muted-foreground">
-                  {stat.description}
-                </p>
+                <p className="text-sm text-muted-foreground">{stat.description}</p>
               </div>
 
               <div className="rounded-md border border-border/60 bg-muted/40 p-2.5 text-primary transition-colors group-hover:border-primary/30">

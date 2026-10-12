@@ -1,8 +1,8 @@
 export type CreateInterviewQuestionData = {
-    questionOrder: number
-    points: number
-}
+  questionOrder: number;
+  points: number;
+};
 
 export type UpdateInterviewQuestionData = {
-    points?: number | undefined
-}
+  points?: number | undefined;
+};

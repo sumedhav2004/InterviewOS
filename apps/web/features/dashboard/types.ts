@@ -1,17 +1,8 @@
 import { User } from "@interview-os/database";
 
+export type InviteStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "CANCELLED";
 
-export type InviteStatus =
-  | "PENDING"
-  | "ACCEPTED"
-  | "DECLINED"
-  | "EXPIRED"
-  | "CANCELLED";
-
-export type ParticipantRole =
-  | "INTERVIEWER"
-  | "CANDIDATE"
-  | "OBSERVER";
+export type ParticipantRole = "INTERVIEWER" | "CANDIDATE" | "OBSERVER";
 
 export type Invite = {
   id: string;
@@ -31,12 +22,7 @@ export type InviteWithDetails = Invite & {
   interview: Interview;
 };
 
-export type InterviewStatus =
-  | "DRAFT"
-  | "SCHEDULED"
-  | "INPROGRESS"
-  | "COMPLETED"
-  | "CANCELLED";
+export type InterviewStatus = "DRAFT" | "SCHEDULED" | "INPROGRESS" | "COMPLETED" | "CANCELLED";
 
 export type Interview = {
   id: string;

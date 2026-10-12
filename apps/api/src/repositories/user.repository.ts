@@ -1,4 +1,4 @@
-import {Prisma, prisma, User} from "@interview-os/database"
+import { Prisma, prisma } from "@interview-os/database";
 
 export class UserRepository {
   async findByClerkId(clerkId: string) {
@@ -9,26 +9,26 @@ export class UserRepository {
     });
   }
 
-  async findById(id: string){
+  async findById(id: string) {
     return prisma.user.findUnique({
       where: {
-        id
-      }
-    })
+        id,
+      },
+    });
   }
 
-  async createUser(data: Prisma.UserCreateInput){
+  async createUser(data: Prisma.UserCreateInput) {
     return prisma.user.create({
-      data
-    })
+      data,
+    });
   }
 
-  async updateUser(id:string, data:Object){
+  async updateUser(id: string, data: Prisma.UserUpdateInput) {
     return prisma.user.update({
       where: {
-        id
+        id,
       },
-      data: data
-    })
+      data: data,
+    });
   }
 }

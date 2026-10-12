@@ -1,5 +1,5 @@
 import { env } from "./env";
 
 export const redisConfig = {
-    redisURL: env.REDIS_URL
+  redisURL: env.REDIS_URL,
 };

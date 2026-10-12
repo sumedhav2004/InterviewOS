@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Camera,
-  CameraOff,
-  Mic,
-  MicOff,
-} from "lucide-react";
+import { Camera, CameraOff, Mic, MicOff } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 type ParticipantTileProps = {
@@ -25,8 +20,7 @@ export function ParticipantTile({
   cameraEnabled = true,
   isLocal = false,
 }: ParticipantTileProps) {
-  const videoRef =
-    useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   /*
    * Keep the video element mounted.
@@ -35,15 +29,13 @@ export function ParticipantTile({
    * changes.
    */
   useEffect(() => {
-    const video =
-      videoRef.current;
+    const video = videoRef.current;
 
     if (!video) {
       return;
     }
 
-    video.srcObject =
-      stream ?? null;
+    video.srcObject = stream ?? null;
 
     if (!stream) {
       return;
@@ -56,23 +48,15 @@ export function ParticipantTile({
        *
        * AbortError is harmless here.
        */
-      if (
-        error instanceof DOMException &&
-        error.name === "AbortError"
-      ) {
+      if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
 
-      console.error(
-        "[Video] Failed to play participant video:",
-        error,
-      );
+      console.error("[Video] Failed to play participant video:", error);
     });
 
     return () => {
-      if (
-        video.srcObject === stream
-      ) {
+      if (video.srcObject === stream) {
         video.srcObject = null;
       }
     };
@@ -86,28 +70,26 @@ export function ParticipantTile({
     .slice(0, 2)
     .toUpperCase();
 
-  const showVideo =
-    Boolean(stream) &&
-    cameraEnabled;
+  const showVideo = Boolean(stream) && cameraEnabled;
 
   return (
     <div className="relative min-h-[180px] overflow-hidden bg-background">
-      {/*
-       * Video stays mounted even when hidden.
-       */
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted={muted}
-        className={
-          showVideo
-            ? "absolute inset-0 h-full w-full object-cover"
-            : "absolute inset-0 h-full w-full object-cover opacity-0"
-        }
-      />
-
-    }
+      {
+        /*
+         * Video stays mounted even when hidden.
+         */
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={muted}
+          className={
+            showVideo
+              ? "absolute inset-0 h-full w-full object-cover"
+              : "absolute inset-0 h-full w-full object-cover opacity-0"
+          }
+        />
+      }
       {!showVideo && (
         <div className="absolute inset-0 grid place-items-center">
           <div
@@ -131,9 +113,7 @@ export function ParticipantTile({
       )}
 
       <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-md border border-border bg-background/80 px-2 py-1 backdrop-blur">
-        <span className="text-xs">
-          {isLocal ? "You" : name}
-        </span>
+        <span className="text-xs">{isLocal ? "You" : name}</span>
 
         {microphoneEnabled ? (
           <Mic className="h-3 w-3 text-muted-foreground" />

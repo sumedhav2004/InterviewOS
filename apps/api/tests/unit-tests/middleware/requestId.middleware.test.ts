@@ -29,10 +29,7 @@ describe("requestIdMiddleware", () => {
     expect(typeof requestId).toBe("string");
     expect(isValidUUID(requestId as string)).toBe(true);
 
-    expect(res.setHeader).toHaveBeenCalledWith(
-      "x-request-id",
-      requestId,
-    );
+    expect(res.setHeader).toHaveBeenCalledWith("x-request-id", requestId);
 
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -44,10 +41,7 @@ describe("requestIdMiddleware", () => {
 
     const requestId = req.headers["x-request-id"];
 
-    expect(res.setHeader).toHaveBeenCalledWith(
-      "x-request-id",
-      requestId,
-    );
+    expect(res.setHeader).toHaveBeenCalledWith("x-request-id", requestId);
   });
 
   it("generates a different ID for each request", () => {
@@ -57,9 +51,7 @@ describe("requestIdMiddleware", () => {
     requestIdMiddleware(first.req, first.res, first.next);
     requestIdMiddleware(second.req, second.res, second.next);
 
-    expect(first.req.headers["x-request-id"]).not.toBe(
-      second.req.headers["x-request-id"],
-    );
+    expect(first.req.headers["x-request-id"]).not.toBe(second.req.headers["x-request-id"]);
   });
 
   it("sets the response header before calling next", () => {

@@ -1,7 +1,7 @@
 type TokenProvider = () => Promise<string | null>;
 
 export class ApiClient {
-  private tokenProvider?: TokenProvider
+  private tokenProvider?: TokenProvider;
   constructor(private readonly baseUrl: string) {}
 
   setTokenProvider(provider: TokenProvider) {
@@ -14,20 +14,14 @@ export class ApiClient {
     });
   }
 
-  async post<T>(
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
+  async post<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: "POST",
       body: body ? JSON.stringify(body) : undefined,
     });
   }
 
-  async put<T>(
-    path: string,
-    body?: unknown,
-  ): Promise<T> {
+  async put<T>(path: string, body?: unknown): Promise<T> {
     return this.request<T>(path, {
       method: "PUT",
       body: body ? JSON.stringify(body) : undefined,
@@ -35,11 +29,11 @@ export class ApiClient {
   }
 
   async patch<T>(path: string, body?: unknown): Promise<T> {
-  return this.request<T>(path, {
-    method: "PATCH",
-    body: body ? JSON.stringify(body) : undefined,
-  });
-}
+    return this.request<T>(path, {
+      method: "PATCH",
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  }
 
   async delete<T>(path: string): Promise<T> {
     return this.request<T>(path, {
@@ -47,30 +41,22 @@ export class ApiClient {
     });
   }
 
-  private async buildHeaders(
-    initHeaders?: HeadersInit
-  ): Promise<Headers> {
+  private async buildHeaders(initHeaders?: HeadersInit): Promise<Headers> {
     const headers = new Headers(initHeaders);
     headers.set("Content-Type", "application/json");
 
-    if(this.tokenProvider){
-      const token = await this.tokenProvider()
-      if(token){
-        headers.set(
-          'Authorization', `Bearer ${token}`
-        )
+    if (this.tokenProvider) {
+      const token = await this.tokenProvider();
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
       }
     }
 
-    return headers
+    return headers;
   }
 
-  private async request<T>(
-    path: string,
-    init: RequestInit,
-  ): Promise<T> {
-
-    const headers = await this.buildHeaders(init?.headers)
+  private async request<T>(path: string, init: RequestInit): Promise<T> {
+    const headers = await this.buildHeaders(init?.headers);
 
     const response = await fetch(`${this.baseUrl}${path}`, {
       ...init,
@@ -85,5 +71,4 @@ export class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient("http://localhost:3001")
-
+export const apiClient = new ApiClient("http://localhost:3001");

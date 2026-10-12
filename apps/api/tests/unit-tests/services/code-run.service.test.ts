@@ -122,30 +122,15 @@ describe("CodeRunService", () => {
 
       const createdRun = { ...codeRun };
 
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       participantRepository.findById.mockResolvedValue(participant);
       codeRunRepository.createCodeRun.mockResolvedValue(createdRun);
 
-      const result = await service.createCodeRun(
-        "iq_1",
-        "participant_1",
-        "user_1",
-        data as never,
-      );
+      const result = await service.createCodeRun("iq_1", "participant_1", "user_1", data as never);
 
-      expect(interviewQuestionRepository.findById).toHaveBeenCalledWith(
-        "iq_1",
-      );
-      expect(participantRepository.findById).toHaveBeenCalledWith(
-        "participant_1",
-      );
-      expect(codeRunRepository.createCodeRun).toHaveBeenCalledWith(
-        "iq_1",
-        "participant_1",
-        data,
-      );
+      expect(interviewQuestionRepository.findById).toHaveBeenCalledWith("iq_1");
+      expect(participantRepository.findById).toHaveBeenCalledWith("participant_1");
+      expect(codeRunRepository.createCodeRun).toHaveBeenCalledWith("iq_1", "participant_1", data);
       expect(result).toEqual(createdRun);
     });
 
@@ -164,9 +149,7 @@ describe("CodeRunService", () => {
     });
 
     it("throws 404 when the participant does not exist", async () => {
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       participantRepository.findById.mockResolvedValue(null);
 
       await expect(
@@ -180,9 +163,7 @@ describe("CodeRunService", () => {
     });
 
     it("rejects participants who are not candidates", async () => {
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       participantRepository.findById.mockResolvedValue({
         ...participant,
         role: "INTERVIEWER",
@@ -199,9 +180,7 @@ describe("CodeRunService", () => {
     });
 
     it("rejects a candidate who does not own the participant record", async () => {
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       participantRepository.findById.mockResolvedValue(participant);
 
       await expect(
@@ -224,17 +203,9 @@ describe("CodeRunService", () => {
       participantRepository.findById.mockResolvedValue(participant);
       codeRunRepository.updateCodeRun.mockResolvedValue(updatedRun);
 
-      const result = await service.updateCodeRun(
-        "run_1",
-        "participant_1",
-        "user_1",
-        data as never,
-      );
+      const result = await service.updateCodeRun("run_1", "participant_1", "user_1", data as never);
 
-      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith(
-        "run_1",
-        data,
-      );
+      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith("run_1", data);
       expect(result).toEqual(updatedRun);
     });
 
@@ -272,12 +243,7 @@ describe("CodeRunService", () => {
       participantRepository.findById.mockResolvedValue(participant);
 
       await expect(
-        service.updateCodeRun(
-          "run_1",
-          "participant_1",
-          "another_user",
-          {} as never,
-        ),
+        service.updateCodeRun("run_1", "participant_1", "another_user", {} as never),
       ).rejects.toMatchObject({
         statusCode: 403,
         code: "UNAUTHORIZED",
@@ -297,9 +263,7 @@ describe("CodeRunService", () => {
 
       codeRunRepository.findById.mockResolvedValue(codeRun);
       participantRepository.findById.mockResolvedValue(participant);
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([
         testCase,
         secondTestCase,
@@ -338,10 +302,9 @@ describe("CodeRunService", () => {
         }),
       );
 
-      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith(
-        "run_1",
-        { status: ExecutionStatus.RUNNING },
-      );
+      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith("run_1", {
+        status: ExecutionStatus.RUNNING,
+      });
 
       expect(result).toMatchObject({
         status: ExecutionStatus.RUNNING,
@@ -351,9 +314,7 @@ describe("CodeRunService", () => {
     it("throws 404 when the code run does not exist", async () => {
       codeRunRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        service.executeCodeRun("missing", "user_1"),
-      ).rejects.toMatchObject({
+      await expect(service.executeCodeRun("missing", "user_1")).rejects.toMatchObject({
         statusCode: 404,
         code: "CORRESPONDING_CODERUN_NOT_EXIST",
       });
@@ -365,9 +326,7 @@ describe("CodeRunService", () => {
       codeRunRepository.findById.mockResolvedValue(codeRun);
       participantRepository.findById.mockResolvedValue(participant);
 
-      await expect(
-        service.executeCodeRun("run_1", "another_user"),
-      ).rejects.toMatchObject({
+      await expect(service.executeCodeRun("run_1", "another_user")).rejects.toMatchObject({
         statusCode: 403,
         code: "UNAUTHORIZED",
       });
@@ -381,13 +340,9 @@ describe("CodeRunService", () => {
         language: "RUBY",
       });
       participantRepository.findById.mockResolvedValue(participant);
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
 
-      await expect(
-        service.executeCodeRun("run_1", "user_1"),
-      ).rejects.toMatchObject({
+      await expect(service.executeCodeRun("run_1", "user_1")).rejects.toMatchObject({
         statusCode: 422,
         code: "LANGUAGE_NOT_SUPPORTED",
       });
@@ -398,14 +353,10 @@ describe("CodeRunService", () => {
     it("rejects execution when there are no visible test cases", async () => {
       codeRunRepository.findById.mockResolvedValue(codeRun);
       participantRepository.findById.mockResolvedValue(participant);
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([]);
 
-      await expect(
-        service.executeCodeRun("run_1", "user_1"),
-      ).rejects.toMatchObject({
+      await expect(service.executeCodeRun("run_1", "user_1")).rejects.toMatchObject({
         statusCode: 404,
         code: "NO_TEST_CASES_FOUND",
       });
@@ -422,25 +373,19 @@ describe("CodeRunService", () => {
         results: [],
       };
 
-      codeRunRepository.getCodeRunWithResults.mockResolvedValue(
-        runWithResults,
-      );
+      codeRunRepository.getCodeRunWithResults.mockResolvedValue(runWithResults);
       participantRepository.findById.mockResolvedValue(participant);
 
       const result = await service.getCodeRunResults("run_1", "user_1");
 
-      expect(codeRunRepository.getCodeRunWithResults).toHaveBeenCalledWith(
-        "run_1",
-      );
+      expect(codeRunRepository.getCodeRunWithResults).toHaveBeenCalledWith("run_1");
       expect(result).toEqual(runWithResults);
     });
 
     it("throws 404 when the code run does not exist", async () => {
       codeRunRepository.getCodeRunWithResults.mockResolvedValue(null);
 
-      await expect(
-        service.getCodeRunResults("missing", "user_1"),
-      ).rejects.toMatchObject({
+      await expect(service.getCodeRunResults("missing", "user_1")).rejects.toMatchObject({
         statusCode: 404,
         code: "CODERUN_NOT_FOUND",
       });
@@ -452,9 +397,7 @@ describe("CodeRunService", () => {
       codeRunRepository.getCodeRunWithResults.mockResolvedValue(codeRun);
       participantRepository.findById.mockResolvedValue(participant);
 
-      await expect(
-        service.getCodeRunResults("run_1", "another_user"),
-      ).rejects.toMatchObject({
+      await expect(service.getCodeRunResults("run_1", "another_user")).rejects.toMatchObject({
         statusCode: 403,
         code: "UNAUTHORIZED",
       });
@@ -489,20 +432,14 @@ describe("CodeRunService", () => {
       vi.spyOn(console, "log").mockImplementation(() => {});
 
       codeRunRepository.findById.mockResolvedValue(codeRun);
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       testCaseRepository.findById.mockResolvedValue(testCase);
-      codeRunTestCaseResultRepository.createResult.mockResolvedValue(
-        persistedResult,
-      );
+      codeRunTestCaseResultRepository.createResult.mockResolvedValue(persistedResult);
       testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([
         testCase,
         { id: "test_case_2", expectedOutput: "another output" },
       ]);
-      codeRunTestCaseResultRepository.getResultsForCodeRun.mockResolvedValue([
-        persistedResult,
-      ]);
+      codeRunTestCaseResultRepository.getResultsForCodeRun.mockResolvedValue([persistedResult]);
 
       await service.handleExecutionCompleted(event as never);
 
@@ -516,14 +453,11 @@ describe("CodeRunService", () => {
         executionTimeMS: 25,
       });
 
-      expect(interviewRoom.broadcast).toHaveBeenCalledWith(
-        "interview_1",
-        {
-          type: "CODE_RUN_TEST_CASE_RESULT",
-          codeRunId: "run_1",
-          result: persistedResult,
-        },
-      );
+      expect(interviewRoom.broadcast).toHaveBeenCalledWith("interview_1", {
+        type: "CODE_RUN_TEST_CASE_RESULT",
+        codeRunId: "run_1",
+        result: persistedResult,
+      });
 
       expect(codeRunRepository.updateCodeRun).not.toHaveBeenCalled();
 
@@ -540,53 +474,37 @@ describe("CodeRunService", () => {
       };
 
       codeRunRepository.findById.mockResolvedValue(codeRun);
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       testCaseRepository.findById.mockResolvedValue(testCase);
-      codeRunTestCaseResultRepository.createResult.mockResolvedValue(
-        persistedResult,
-      );
-      testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([
-        testCase,
-      ]);
-      codeRunTestCaseResultRepository.getResultsForCodeRun.mockResolvedValue([
-        persistedResult,
-      ]);
+      codeRunTestCaseResultRepository.createResult.mockResolvedValue(persistedResult);
+      testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([testCase]);
+      codeRunTestCaseResultRepository.getResultsForCodeRun.mockResolvedValue([persistedResult]);
 
       await service.handleExecutionCompleted(event as never);
 
-      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith(
-        "run_1",
-        { status: ExecutionStatus.SUCCESS },
-      );
+      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith("run_1", {
+        status: ExecutionStatus.SUCCESS,
+      });
 
-      expect(interviewRoom.broadcast).toHaveBeenLastCalledWith(
-        "interview_1",
-        {
-          type: "CODE_RUN_COMPLETED",
-          codeRunId: "run_1",
-          status: ExecutionStatus.SUCCESS,
-        },
-      );
+      expect(interviewRoom.broadcast).toHaveBeenLastCalledWith("interview_1", {
+        type: "CODE_RUN_COMPLETED",
+        codeRunId: "run_1",
+        status: ExecutionStatus.SUCCESS,
+      });
     });
 
     it("marks the run failed when any completed test case failed", async () => {
       vi.spyOn(console, "log").mockImplementation(() => {});
 
       codeRunRepository.findById.mockResolvedValue(codeRun);
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       testCaseRepository.findById.mockResolvedValue(testCase);
       codeRunTestCaseResultRepository.createResult.mockResolvedValue({
         id: "result_1",
         status: ExecutionStatus.FAILED,
         passed: false,
       });
-      testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([
-        testCase,
-      ]);
+      testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([testCase]);
       codeRunTestCaseResultRepository.getResultsForCodeRun.mockResolvedValue([
         { status: ExecutionStatus.FAILED },
       ]);
@@ -598,19 +516,15 @@ describe("CodeRunService", () => {
         stderr: "Runtime error",
       } as never);
 
-      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith(
-        "run_1",
-        { status: ExecutionStatus.FAILED },
-      );
+      expect(codeRunRepository.updateCodeRun).toHaveBeenCalledWith("run_1", {
+        status: ExecutionStatus.FAILED,
+      });
 
-      expect(interviewRoom.broadcast).toHaveBeenLastCalledWith(
-        "interview_1",
-        {
-          type: "CODE_RUN_COMPLETED",
-          codeRunId: "run_1",
-          status: ExecutionStatus.FAILED,
-        },
-      );
+      expect(interviewRoom.broadcast).toHaveBeenLastCalledWith("interview_1", {
+        type: "CODE_RUN_COMPLETED",
+        codeRunId: "run_1",
+        status: ExecutionStatus.FAILED,
+      });
     });
 
     it("throws when the execution target is unsupported", async () => {
@@ -636,9 +550,7 @@ describe("CodeRunService", () => {
       vi.spyOn(console, "log").mockImplementation(() => {});
       codeRunRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        service.handleExecutionCompleted(event as never),
-      ).rejects.toMatchObject({
+      await expect(service.handleExecutionCompleted(event as never)).rejects.toMatchObject({
         statusCode: 404,
         code: "CORRESPONDING_CODERUN_NOT_EXIST",
       });
@@ -648,17 +560,13 @@ describe("CodeRunService", () => {
       vi.spyOn(console, "log").mockImplementation(() => {});
 
       codeRunRepository.findById.mockResolvedValue(codeRun);
-      interviewQuestionRepository.findById.mockResolvedValue(
-        interviewQuestion,
-      );
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       testCaseRepository.findById.mockResolvedValue({
         ...testCase,
         expectedOutput: null,
       });
 
-      await expect(
-        service.handleExecutionCompleted(event as never),
-      ).rejects.toMatchObject({
+      await expect(service.handleExecutionCompleted(event as never)).rejects.toMatchObject({
         statusCode: 500,
         code: "INVALID_TEST_CASE_EXPECTED_OUTPUT",
       });

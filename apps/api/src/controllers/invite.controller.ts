@@ -1,80 +1,78 @@
 import { Request, Response } from "express";
 import { InviteService } from "../services/invite.service";
 
-export class InviteController{
-    constructor(
-        private readonly inviteService = new InviteService
-    ){}
+export class InviteController {
+  constructor(private readonly inviteService = new InviteService()) {}
 
-    async createInvite(req:Request, res:Response){
-        const senderId = req.user.id 
-        const interviewId = req.params.interviewId;
+  async createInvite(req: Request, res: Response) {
+    const senderId = req.user.id;
+    const interviewId = req.params.interviewId;
 
-        if (typeof interviewId !== "string") {
-        return res.status(400).json({
-            message: "Invalid route parameter",
-        });
-        }
-        const {receiverId, ...data} = req.body
-
-        const invite = await this.inviteService.createInvite(senderId, receiverId, interviewId, data)
-        return res.status(201).json(invite)
+    if (typeof interviewId !== "string") {
+      return res.status(400).json({
+        message: "Invalid route parameter",
+      });
     }
-    
-    async getReceivedInvites(req: Request, res: Response) {
-        const receiverId = req.user.id;
+    const { receiverId, ...data } = req.body;
 
-        const invites = await this.inviteService.getReceivedInvites(receiverId);
+    const invite = await this.inviteService.createInvite(senderId, receiverId, interviewId, data);
+    return res.status(201).json(invite);
+  }
 
-        return res.status(200).json(invites);
-    }
+  async getReceivedInvites(req: Request, res: Response) {
+    const receiverId = req.user.id;
 
-    async acceptInvite(req:Request, res:Response){
-        const receiverId = req.user.id
-        const inviteId = req.params.inviteId;
+    const invites = await this.inviteService.getReceivedInvites(receiverId);
 
-        if (typeof inviteId !== "string") {
-        return res.status(400).json({
-            message: "Invalid route parameter",
-        });
-        }
+    return res.status(200).json(invites);
+  }
 
-        const invite = await this.inviteService.acceptInvite(inviteId, receiverId)
-        return res.status(200).json(invite)
+  async acceptInvite(req: Request, res: Response) {
+    const receiverId = req.user.id;
+    const inviteId = req.params.inviteId;
+
+    if (typeof inviteId !== "string") {
+      return res.status(400).json({
+        message: "Invalid route parameter",
+      });
     }
 
-    async declineInvite(req:Request, res:Response){
-        const inviteId = req.params.inviteId;
+    const invite = await this.inviteService.acceptInvite(inviteId, receiverId);
+    return res.status(200).json(invite);
+  }
 
-        if (typeof inviteId !== "string") {
-        return res.status(400).json({
-            message: "Invalid route parameter",
-        });
-        }
-        const receiverId = req.user.id
+  async declineInvite(req: Request, res: Response) {
+    const inviteId = req.params.inviteId;
 
-        const invite = await this.inviteService.declineInvite(inviteId, receiverId)
-        return res.status(200).json(invite)
+    if (typeof inviteId !== "string") {
+      return res.status(400).json({
+        message: "Invalid route parameter",
+      });
     }
+    const receiverId = req.user.id;
 
-    async cancelInvite(req:Request, res:Response){
-        const inviteId = req.params.inviteId;
+    const invite = await this.inviteService.declineInvite(inviteId, receiverId);
+    return res.status(200).json(invite);
+  }
 
-        if (typeof inviteId !== "string") {
-        return res.status(400).json({
-            message: "Invalid route parameter",
-        });
-        }
-        const senderId = req.user.id
+  async cancelInvite(req: Request, res: Response) {
+    const inviteId = req.params.inviteId;
 
-        const invite = await this.inviteService.cancelInvite(inviteId, senderId)
-        return res.status(200).json(invite)
+    if (typeof inviteId !== "string") {
+      return res.status(400).json({
+        message: "Invalid route parameter",
+      });
     }
+    const senderId = req.user.id;
 
-    async getSentInvites(req:Request, res:Response){
-        const senderId = req.user.id 
+    const invite = await this.inviteService.cancelInvite(inviteId, senderId);
+    return res.status(200).json(invite);
+  }
 
-        const invites = await this.inviteService.getSentInvites(senderId)
-        return res.status(200).json(invites)
-    }
+  async getSentInvites(req: Request, res: Response) {
+    const senderId = req.user.id;
+
+    const invites = await this.inviteService.getSentInvites(senderId);
+    return res.status(200).json(invites);
+  }
 }

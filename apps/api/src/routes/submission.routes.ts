@@ -5,14 +5,8 @@ const router = Router();
 
 const submissionController = new SubmissionController();
 
-router.post(
-    "/",
-    submissionController.createSubmission.bind(submissionController)
-);
+router.post("/", submissionController.createSubmission.bind(submissionController));
 
-router.get(
-    "/:submissionId",
-    submissionController.findById.bind(submissionController)
-);
+router.get("/:submissionId", submissionController.findById.bind(submissionController));
 
 export default router;

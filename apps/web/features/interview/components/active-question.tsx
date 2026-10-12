@@ -3,14 +3,11 @@
 import { FileText } from "lucide-react";
 import { ActiveInterviewQuestion } from "../types/active-question";
 
-
 type ActiveQuestionProps = {
   question: ActiveInterviewQuestion | null;
 };
 
-export function ActiveQuestion({
-  question,
-}: ActiveQuestionProps) {
+export function ActiveQuestion({ question }: ActiveQuestionProps) {
   if (!question) {
     return (
       <section className="shrink-0 border-b border-border bg-card/20 ">
@@ -23,9 +20,7 @@ export function ActiveQuestion({
         </div>
 
         <div className="px-4 py-5">
-          <p className="font-mono text-[10px] text-muted-foreground">
-            No question selected.
-          </p>
+          <p className="font-mono text-[10px] text-muted-foreground">No question selected.</p>
         </div>
       </section>
     );
@@ -42,16 +37,12 @@ export function ActiveQuestion({
           </span>
         </div>
 
-        <span className="font-mono text-[9px] text-muted-foreground">
-          {question.questionOrder}
-        </span>
+        <span className="font-mono text-[9px] text-muted-foreground">{question.questionOrder}</span>
       </div>
 
       <div className="space-y-3 px-4 py-4">
         <div>
-          <h2 className="text-sm font-semibold">
-            {question.question.title}
-          </h2>
+          <h2 className="text-sm font-semibold">{question.question.title}</h2>
 
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             {question.question.description}
@@ -76,9 +67,7 @@ export function ActiveQuestion({
           </span>
 
           {question.question.testCases.length === 0 ? (
-            <p className="font-mono text-[10px] text-muted-foreground">
-              No visible test cases.
-            </p>
+            <p className="font-mono text-[10px] text-muted-foreground">No visible test cases.</p>
           ) : (
             <div className="space-y-2">
               {question.question.testCases.map((testCase, index) => (
@@ -92,9 +81,7 @@ export function ActiveQuestion({
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div>
-                      <p className="mb-1 font-mono text-[9px] text-muted-foreground">
-                        Input
-                      </p>
+                      <p className="mb-1 font-mono text-[9px] text-muted-foreground">Input</p>
 
                       <pre className="overflow-x-auto rounded border border-border bg-background p-2 font-mono text-[10px]">
                         {JSON.stringify(testCase.input, null, 2)}
@@ -102,9 +89,7 @@ export function ActiveQuestion({
                     </div>
 
                     <div>
-                      <p className="mb-1 font-mono text-[9px] text-muted-foreground">
-                        Expected
-                      </p>
+                      <p className="mb-1 font-mono text-[9px] text-muted-foreground">Expected</p>
 
                       <pre className="overflow-x-auto rounded border border-border bg-background p-2 font-mono text-[10px]">
                         {JSON.stringify(testCase.expectedOutput, null, 2)}

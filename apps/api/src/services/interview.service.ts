@@ -3,241 +3,160 @@ import { AppError } from "../../core/errors/app-error";
 import { InterviewRepository } from "../repositories/interview.repository";
 import { createInterviewData, updateInterviewData } from "../types/interview";
 import { ParticipantRepository } from "../repositories/participant.repository";
-import { CreateParticipantData } from "../types/participant";
 
-export class InterviewService{
-    constructor(
-        private readonly interviewRepository = new InterviewRepository,
-        private readonly participantRepository = new ParticipantRepository
-    ){}
+export class InterviewService {
+  constructor(
+    private readonly interviewRepository = new InterviewRepository(),
+    private readonly participantRepository = new ParticipantRepository(),
+  ) {}
 
-    async findInterviewById(id: string, userId: string) {
-    const interview =
-        await this.interviewRepository.findById(id);
+  async findInterviewById(id: string, userId: string) {
+    const interview = await this.interviewRepository.findById(id);
 
     if (!interview) {
-        throw new AppError(
-            "Interview Not Found",
-            404,
-            "INTERVIEW_NOT_FOUND"
-        );
+      throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
     }
 
-    const participant =
-        await this.participantRepository.findParticipant(
-            userId,
-            id
-        );
+    const participant = await this.participantRepository.findParticipant(userId, id);
 
-    if (
-        interview.createdById !== userId &&
-        !participant
-    ) {
-        throw new AppError(
-            "Unauthorized",
-            403,
-            "UNAUTHORIZED"
-        );
+    if (interview.createdById !== userId && !participant) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
 
     return interview;
-}
+  }
 
-    async createInterview(userId: string, interviewData: createInterviewData) {
-        return prisma.$transaction(async (tx) => {
+  async createInterview(userId: string, interviewData: createInterviewData) {
+    return prisma.$transaction(async (tx) => {
+      const interview = await this.interviewRepository.createInterview(tx, userId, interviewData);
+      await this.participantRepository.createParticipant(tx, userId, interview.id, {
+        role: interviewData.createdAs,
+      });
+      return interview;
+    });
+  }
 
-            const interview =
-                await this.interviewRepository.createInterview(
-                    tx,
-                    userId,
-                    interviewData
-                )
-            await this.participantRepository.createParticipant(
-                tx,
-                userId,
-                interview.id, 
-                {
-                    role: interviewData.createdAs
-                }
-            )
-            return interview
-        })
+  async updateInterview(id: string, userId: string, data: updateInterviewData) {
+    const interview = await this.findInterviewById(id, userId);
+    if (!interview) {
+      throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
+    }
+    if (interview.createdById !== userId) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
 
-    async updateInterview(id: string, userId: string, data: updateInterviewData){
-        const interview = await this.findInterviewById(id,userId)
-        if(!interview){
-            throw new AppError(
-                "Interview Not Found",
-                404,
-                "INTERVIEW_NOT_FOUND"
-            )
-        }
-        if(interview.createdById !== userId){
-            throw new AppError(
-                "Unauthorized",
-                403,
-                "UNAUTHORIZED"
-            )
-        }
+    const updatedInterview = await this.interviewRepository.updateInterview(id, data);
+    return updatedInterview;
+  }
 
-        const updatedInterview = await this.interviewRepository.updateInterview(id,data);
-        return updatedInterview
+  async findAllInterviewsByUserId(userId: string) {
+    const interviews = await this.interviewRepository.findByUserId(userId);
+    return interviews;
+  }
+
+  async deleteInterview(id: string, userId: string) {
+    const interview = await this.findInterviewById(id, userId);
+
+    if (!interview) {
+      throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
+    }
+    if (interview.createdById !== userId) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
 
-    async findAllInterviewsByUserId(userId: string){
-        const interviews = await this.interviewRepository.findByUserId(userId);
-        return interviews
+    await this.interviewRepository.deleteInterview(id);
+  }
+
+  async scheduleInterview(userId: string, id: string, scheduledAt: Date) {
+    const interview = await this.findInterviewById(id, userId);
+
+    if (!interview) {
+      throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
+    }
+    if (interview.createdById !== userId) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
 
-    async deleteInterview(id: string, userId: string){
-        const interview = await this.findInterviewById(id,userId)
-
-        if(!interview){
-            throw new AppError(
-                "Interview Not Found",
-                404,
-                "INTERVIEW_NOT_FOUND"
-            )
-        }
-        if(interview.createdById !== userId){
-            throw new AppError(
-                "Unauthorized",
-                403,
-                "UNAUTHORIZED"
-            )
-        }
-
-        await this.interviewRepository.deleteInterview(id)
+    if (interview.status !== InterviewStatus.DRAFT) {
+      throw new AppError("Status Not Draft", 400, "STATUS_NOT_DRAFT");
     }
 
-    async scheduleInterview(userId:string, id:string, scheduledAt: Date){
-        const interview = await this.findInterviewById(id,userId)
-
-        if(!interview){
-            throw new AppError(
-                "Interview Not Found",
-                404,
-                "INTERVIEW_NOT_FOUND"
-            )
-        }
-        if(interview.createdById !== userId){
-            throw new AppError(
-                "Unauthorized",
-                403,
-                "UNAUTHORIZED"
-            )
-        }
-
-        if(interview.status !== InterviewStatus.DRAFT){
-            throw new AppError(
-                "Status Not Draft",
-                400,
-                "STATUS_NOT_DRAFT"
-            )
-        }
-
-        if (scheduledAt <= new Date()) {
-            throw new AppError(
-            "Interview must be scheduled for a future date",
-            400,
-            "INVALID_SCHEDULED_TIME"
-            );
-        }
-
-        const updatedScheduleInterview = await this.interviewRepository.updateInterviewSchedule(id, InterviewStatus.SCHEDULED, scheduledAt)
-        return updatedScheduleInterview
+    if (scheduledAt <= new Date()) {
+      throw new AppError(
+        "Interview must be scheduled for a future date",
+        400,
+        "INVALID_SCHEDULED_TIME",
+      );
     }
 
-    async startInterview(userId:string, id:string){
-        const interview = await this.findInterviewById(id,userId)
+    const updatedScheduleInterview = await this.interviewRepository.updateInterviewSchedule(
+      id,
+      InterviewStatus.SCHEDULED,
+      scheduledAt,
+    );
+    return updatedScheduleInterview;
+  }
 
-        if(!interview){
-            throw new AppError(
-                "Interview Not Found",
-                404,
-                "INTERVIEW_NOT_FOUND"
-            )
-        }
-        if(interview.createdById !== userId){
-            throw new AppError(
-                "Unauthorized",
-                403,
-                "UNAUTHORIZED"
-            )
-        }
+  async startInterview(userId: string, id: string) {
+    const interview = await this.findInterviewById(id, userId);
 
-        if(interview.status !== InterviewStatus.SCHEDULED){
-            throw new AppError(
-                "Status Not Scheduled",
-                400,
-                "STATUS_NOT_SCHEDULED"
-            )
-        }
-
-        const updatedInterview = await this.interviewRepository.updateInterviewStatus(id, InterviewStatus.INPROGRESS)
-        return updatedInterview
-        
+    if (!interview) {
+      throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
+    }
+    if (interview.createdById !== userId) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
 
-    async completeInterview(userId:string, id:string){
-        const interview = await this.findInterviewById(id,userId)
-
-        if(!interview){
-            throw new AppError(
-                "Interview Not Found",
-                404,
-                "INTERVIEW_NOT_FOUND"
-            )
-        }
-        if(interview.createdById !== userId){
-            throw new AppError(
-                "Unauthorized",
-                403,
-                "UNAUTHORIZED"
-            )
-        }
-
-        if(interview.status !== InterviewStatus.INPROGRESS){
-            throw new AppError(
-                "Status Not InProgress",
-                400,
-                "STATUS_NOT_INPROGRESS"
-            )
-        }
-
-        const updatedInterview = await this.interviewRepository.updateInterviewStatus(id, InterviewStatus.COMPLETED)
-        return updatedInterview
-        
+    if (interview.status !== InterviewStatus.SCHEDULED) {
+      throw new AppError("Status Not Scheduled", 400, "STATUS_NOT_SCHEDULED");
     }
 
-    async cancelInterview(userId:string, id:string){
-        const interview = await this.findInterviewById(id, userId)
+    const updatedInterview = await this.interviewRepository.updateInterviewStatus(
+      id,
+      InterviewStatus.INPROGRESS,
+    );
+    return updatedInterview;
+  }
 
-        if(!interview){
-            throw new AppError(
-                "Interview Not Found",
-                404,
-                "INTERVIEW_NOT_FOUND"
-            )
-        }
-        if(interview.createdById !== userId){
-            throw new AppError(
-                "Unauthorized",
-                403,
-                "UNAUTHORIZED"
-            )
-        }
+  async completeInterview(userId: string, id: string) {
+    const interview = await this.findInterviewById(id, userId);
 
-        if(interview.status !== (InterviewStatus.DRAFT || InterviewStatus.SCHEDULED)){
-            throw new AppError(
-                "Status Not InProgress",
-                400,
-                "STATUS_NOT_INPROGRESS"
-            )
-        }
-
-        const cancelledInterview = await this.interviewRepository.updateInterviewStatus(id, InterviewStatus.CANCELLED)
-        return cancelledInterview
+    if (!interview) {
+      throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
     }
+    if (interview.createdById !== userId) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
+    }
+
+    if (interview.status !== InterviewStatus.INPROGRESS) {
+      throw new AppError("Status Not InProgress", 400, "STATUS_NOT_INPROGRESS");
+    }
+
+    const updatedInterview = await this.interviewRepository.updateInterviewStatus(
+      id,
+      InterviewStatus.COMPLETED,
+    );
+    return updatedInterview;
+  }
+
+  async cancelInterview(userId: string, id: string) {
+    const interview = await this.findInterviewById(id, userId);
+
+    if (!interview) {
+      throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
+    }
+    if (interview.createdById !== userId) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
+    }
+
+    if (interview.status !== (InterviewStatus.DRAFT || InterviewStatus.SCHEDULED)) {
+      throw new AppError("Status Not InProgress", 400, "STATUS_NOT_INPROGRESS");
+    }
+
+    const cancelledInterview = await this.interviewRepository.updateInterviewStatus(
+      id,
+      InterviewStatus.CANCELLED,
+    );
+    return cancelledInterview;
+  }
 }

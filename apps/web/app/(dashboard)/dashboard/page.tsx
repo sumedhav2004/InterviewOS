@@ -7,5 +7,5 @@ import { Container, Page, Stack } from "@/components/layout";
 import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 
 export default function Dashboard() {
-  return <DashboardPage />
+  return <DashboardPage />;
 }

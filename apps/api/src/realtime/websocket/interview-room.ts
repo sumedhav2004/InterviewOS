@@ -1,14 +1,14 @@
 import WebSocket from "ws";
 
 export type InterviewRoomParticipant = {
-    id: string;
-    userId: string;
-    role: "INTERVIEWER" | "CANDIDATE" | "OBSERVER";
+  id: string;
+  userId: string;
+  role: "INTERVIEWER" | "CANDIDATE" | "OBSERVER";
 };
 
 type RoomParticipant = {
-    participant: InterviewRoomParticipant;
-    socket: WebSocket;
+  participant: InterviewRoomParticipant;
+  socket: WebSocket;
 };
 
 const DEFAULT_CODE = `function solution() {
@@ -16,209 +16,133 @@ const DEFAULT_CODE = `function solution() {
 }`;
 
 export class InterviewRoom {
-    private readonly rooms = new Map<
-        string,
-        Map<string, RoomParticipant>
-    >();
+  private readonly rooms = new Map<string, Map<string, RoomParticipant>>();
 
-    private readonly codeSnapshots = new Map<
-        string,
-        string
-    >();
+  private readonly codeSnapshots = new Map<string, string>();
 
-    private readonly languageSnapshots = new Map<
-        string,
-        string
-    >();
+  private readonly languageSnapshots = new Map<string, string>();
 
-    join(
-        interviewId: string,
-        userId: string,
-        socket: WebSocket,
-        participant: InterviewRoomParticipant,
-    ) {
-        let room = this.rooms.get(interviewId);
+  join(
+    interviewId: string,
+    userId: string,
+    socket: WebSocket,
+    participant: InterviewRoomParticipant,
+  ) {
+    let room = this.rooms.get(interviewId);
 
-        if (!room) {
-            room = new Map();
+    if (!room) {
+      room = new Map();
 
-            this.rooms.set(
-                interviewId,
-                room,
-            );
+      this.rooms.set(interviewId, room);
 
-            this.codeSnapshots.set(
-                interviewId,
-                DEFAULT_CODE,
-            );
-        }
-
-        const alreadyJoined = room.has(userId);
-
-        room.set(userId, {
-            participant,
-            socket,
-        });
-
-        return !alreadyJoined;
+      this.codeSnapshots.set(interviewId, DEFAULT_CODE);
     }
 
-    leave(
-        interviewId: string,
-        userId: string,
-    ) {
-        const room = this.rooms.get(interviewId);
+    const alreadyJoined = room.has(userId);
 
-        if (!room) {
-            return;
-        }
+    room.set(userId, {
+      participant,
+      socket,
+    });
 
-        room.delete(userId);
+    return !alreadyJoined;
+  }
 
-        if (room.size === 0) {
-            this.rooms.delete(interviewId);
-            this.codeSnapshots.delete(interviewId);
-            this.languageSnapshots.delete(interviewId);
-        }
+  leave(interviewId: string, userId: string) {
+    const room = this.rooms.get(interviewId);
+
+    if (!room) {
+      return;
     }
 
-    getParticipants(
-        interviewId: string,
-    ): InterviewRoomParticipant[] {
-        const room = this.rooms.get(interviewId);
+    room.delete(userId);
 
-        if (!room) {
-            return [];
-        }
+    if (room.size === 0) {
+      this.rooms.delete(interviewId);
+      this.codeSnapshots.delete(interviewId);
+      this.languageSnapshots.delete(interviewId);
+    }
+  }
 
-        return Array.from(room.values()).map(
-            ({ participant }) => participant,
-        );
+  getParticipants(interviewId: string): InterviewRoomParticipant[] {
+    const room = this.rooms.get(interviewId);
+
+    if (!room) {
+      return [];
     }
 
-    getCodeSnapshot(
-        interviewId: string,
-    ) {
-        return this.codeSnapshots.get(
-            interviewId,
-        );
+    return Array.from(room.values()).map(({ participant }) => participant);
+  }
+
+  getCodeSnapshot(interviewId: string) {
+    return this.codeSnapshots.get(interviewId);
+  }
+
+  setCodeSnapshot(interviewId: string, code: string) {
+    this.codeSnapshots.set(interviewId, code);
+  }
+
+  setLanguageSnapshot(interviewId: string, language: string) {
+    this.languageSnapshots.set(interviewId, language);
+  }
+
+  getLanguageSnapshot(interviewId: string) {
+    return this.languageSnapshots.get(interviewId);
+  }
+
+  sendToParticipant(interviewId: string, userId: string, message: unknown) {
+    const room = this.rooms.get(interviewId);
+
+    if (!room) {
+      return false;
     }
 
-    setCodeSnapshot(
-        interviewId: string,
-        code: string,
-    ) {
-        this.codeSnapshots.set(
-            interviewId,
-            code,
-        );
+    const entry = room.get(userId);
+
+    if (!entry) {
+      return false;
     }
 
-    setLanguageSnapshot(
-        interviewId: string,
-        language: string,
-    ) {
-        this.languageSnapshots.set(
-            interviewId,
-            language,
-        );
+    const { socket } = entry;
+
+    if (socket.readyState !== WebSocket.OPEN) {
+      return false;
     }
 
-    getLanguageSnapshot(
-        interviewId: string,
-    ) {
-        return this.languageSnapshots.get(
-            interviewId,
-        );
+    socket.send(JSON.stringify(message));
+
+    return true;
+  }
+
+  broadcast(interviewId: string, message: unknown, excludeUserId?: string) {
+    const room = this.rooms.get(interviewId);
+
+    console.log("[WS ROOM] BROADCAST", {
+      interviewId,
+      message,
+      connectedUsers: room ? Array.from(room.keys()) : [],
+    });
+
+    if (!room) {
+      console.log("[WS ROOM] NO ROOM FOUND", interviewId);
+
+      return;
     }
 
-    sendToParticipant(
-        interviewId: string,
-        userId: string,
-        message: unknown,
-    ) {
-        const room = this.rooms.get(interviewId);
+    const payload = JSON.stringify(message);
 
-        if (!room) {
-            return false;
-        }
+    for (const [userId, entry] of room) {
+      if (userId === excludeUserId) {
+        continue;
+      }
 
-        const entry = room.get(userId);
+      const { socket } = entry;
 
-        if (!entry) {
-            return false;
-        }
+      if (socket.readyState === WebSocket.OPEN) {
+        console.log("[WS ROOM] SENDING TO", userId, message);
 
-        const { socket } = entry;
-
-        if (
-            socket.readyState !== WebSocket.OPEN
-        ) {
-            return false;
-        }
-
-        socket.send(
-            JSON.stringify(message),
-        );
-
-        return true;
+        socket.send(payload);
+      }
     }
-
-    broadcast(
-        interviewId: string,
-        message: unknown,
-        excludeUserId?: string,
-    ) {
-        const room = this.rooms.get(interviewId);
-
-        console.log(
-            "[WS ROOM] BROADCAST",
-            {
-                interviewId,
-                message,
-                connectedUsers: room
-                    ? Array.from(room.keys())
-                    : [],
-            },
-        );
-
-        if (!room) {
-            console.log(
-                "[WS ROOM] NO ROOM FOUND",
-                interviewId,
-            );
-
-            return;
-        }
-
-        const payload =
-            JSON.stringify(message);
-
-        for (
-            const [userId, entry]
-            of room
-        ) {
-            if (
-                userId ===
-                excludeUserId
-            ) {
-                continue;
-            }
-
-            const { socket } = entry;
-
-            if (
-                socket.readyState ===
-                WebSocket.OPEN
-            ) {
-                console.log(
-                    "[WS ROOM] SENDING TO",
-                    userId,
-                    message,
-                );
-
-                socket.send(payload);
-            }
-        }
-    }
+  }
 }

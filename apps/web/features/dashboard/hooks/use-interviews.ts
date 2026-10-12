@@ -10,10 +10,7 @@ type UseInterviewsOptions = {
   isSignedIn: boolean;
 };
 
-export const useInterviews = ({
-  isLoaded,
-  isSignedIn,
-}: UseInterviewsOptions) => {
+export const useInterviews = ({ isLoaded, isSignedIn }: UseInterviewsOptions) => {
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,11 +25,7 @@ export const useInterviews = ({
         const data = await dashboardApi.getInterviews();
         setInterviews(data);
       } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load interviews",
-        );
+        setError(error instanceof Error ? error.message : "Failed to load interviews");
       } finally {
         setLoading(false);
       }

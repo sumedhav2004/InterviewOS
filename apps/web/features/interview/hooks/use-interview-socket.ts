@@ -1,56 +1,35 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@clerk/nextjs";
 
-import type {
-  ServerMessage,
-} from "../types/realtime";
+import type { ServerMessage } from "../types/realtime";
 import { ProgrammingLanguage } from "../types/programming-language";
 import { Participant } from "../types/participant";
 
-type MessageHandler = (
-  message: ServerMessage,
-) => void;
+type MessageHandler = (message: ServerMessage) => void;
 
-export function useInterviewSocket(
-  interviewId: string,
-  onMessage?: MessageHandler,
-) {
-  const {
-    getToken,
-    isLoaded,
-    isSignedIn,
-  } = useAuth();
+export function useInterviewSocket(interviewId: string, onMessage?: MessageHandler) {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
-  const socketRef =
-    useRef<WebSocket | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
 
-  const [userId, setUserId] =
-    useState<string>();
+  const [userId, setUserId] = useState<string>();
 
-  const [joined, setJoined] =
-    useState(false);
+  const [joined, setJoined] = useState(false);
 
   /**
    * The current user's complete interview
    * participant.
    */
-  const [participant, setParticipant] =
-    useState<Participant | null>(null);
+  const [participant, setParticipant] = useState<Participant | null>(null);
 
   /**
    * All participants currently known to the
    * interview room.
    */
-  const [participants, setParticipants] =
-    useState<Participant[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
@@ -68,16 +47,12 @@ export function useInterviewSocket(
       }
 
       if (!token) {
-        console.error(
-          "[WS] No Clerk token available",
-        );
+        console.error("[WS] No Clerk token available");
 
         return;
       }
 
-      socket = new WebSocket(
-        "ws://localhost:3001/ws",
-      );
+      socket = new WebSocket("ws://localhost:3001/ws");
 
       socket.onopen = () => {
         console.log("[WS] connected");
@@ -91,13 +66,9 @@ export function useInterviewSocket(
       };
 
       socket.onmessage = (event) => {
-        const message: ServerMessage =
-          JSON.parse(event.data);
+        const message: ServerMessage = JSON.parse(event.data);
 
-        console.log(
-          "[WS] message:",
-          message,
-        );
+        console.log("[WS] message:", message);
 
         onMessage?.(message);
 
@@ -118,49 +89,34 @@ export function useInterviewSocket(
           case "INTERVIEW_JOINED": {
             setJoined(true);
 
-            setParticipant(
-              message.participant,
-            );
+            setParticipant(message.participant);
 
-            setParticipants(
-              message.participants,
-            );
+            setParticipants(message.participants);
 
             return;
           }
 
           case "PARTICIPANT_JOINED": {
-            setParticipants(
-              (currentParticipants) => {
-                const alreadyExists =
-                  currentParticipants.some(
-                    (currentParticipant) =>
-                      currentParticipant.id ===
-                      message.participant.id,
-                  );
+            setParticipants((currentParticipants) => {
+              const alreadyExists = currentParticipants.some(
+                (currentParticipant) => currentParticipant.id === message.participant.id,
+              );
 
-                if (alreadyExists) {
-                  return currentParticipants;
-                }
+              if (alreadyExists) {
+                return currentParticipants;
+              }
 
-                return [
-                  ...currentParticipants,
-                  message.participant,
-                ];
-              },
-            );
+              return [...currentParticipants, message.participant];
+            });
 
             return;
           }
 
           case "PARTICIPANT_LEFT": {
-            setParticipants(
-              (currentParticipants) =>
-                currentParticipants.filter(
-                  (currentParticipant) =>
-                    currentParticipant.userId !==
-                    message.userId,
-                ),
+            setParticipants((currentParticipants) =>
+              currentParticipants.filter(
+                (currentParticipant) => currentParticipant.userId !== message.userId,
+              ),
             );
 
             return;
@@ -173,16 +129,11 @@ export function useInterviewSocket(
       };
 
       socket.onerror = (error) => {
-        console.error(
-          "[WS] error:",
-          error,
-        );
+        console.error("[WS] error:", error);
       };
 
       socket.onclose = () => {
-        console.log(
-          "[WS] disconnected",
-        );
+        console.log("[WS] disconnected");
 
         setJoined(false);
         setParticipant(null);
@@ -207,49 +158,27 @@ export function useInterviewSocket(
 
       socketRef.current = null;
     };
-  }, [
-    getToken,
-    isLoaded,
-    isSignedIn,
-    interviewId,
-    onMessage,
-  ]);
+  }, [getToken, isLoaded, isSignedIn, interviewId, onMessage]);
 
-  const sendMessage = useCallback(
-    (message: unknown) => {
-      const socket =
-        socketRef.current;
+  const sendMessage = useCallback((message: unknown) => {
+    const socket = socketRef.current;
 
-      if (!socket) {
-        console.error(
-          "[WS] Socket is not connected",
-        );
+    if (!socket) {
+      console.error("[WS] Socket is not connected");
 
-        return;
-      }
+      return;
+    }
 
-      if (
-        socket.readyState !==
-        WebSocket.OPEN
-      ) {
-        console.error(
-          "[WS] Socket is not open",
-        );
+    if (socket.readyState !== WebSocket.OPEN) {
+      console.error("[WS] Socket is not open");
 
-        return;
-      }
+      return;
+    }
 
-      console.log(
-        "[WS] sending:",
-        message,
-      );
+    console.log("[WS] sending:", message);
 
-      socket.send(
-        JSON.stringify(message),
-      );
-    },
-    [],
-  );
+    socket.send(JSON.stringify(message));
+  }, []);
 
   const sendLanguageChange = useCallback(
     (language: ProgrammingLanguage) => {

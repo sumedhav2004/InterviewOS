@@ -1,18 +1,14 @@
 "use client";
 
-import {
-  MoreHorizontal,
-  Video,
-} from "lucide-react";
+import { MoreHorizontal, Video } from "lucide-react";
 
 import { ParticipantTile } from "./participant-tile";
 import { Participant, ParticipantMediaState } from "../types/participant";
 
-
 type VideoPanelProps = {
   localStream: MediaStream | null;
   participantIds: string[];
-  participants: Participant[]
+  participants: Participant[];
   remoteStreams: Map<string, MediaStream>;
   localMediaState: ParticipantMediaState;
   remoteMediaStates: Map<string, ParticipantMediaState>;
@@ -63,46 +59,26 @@ export function VideoPanel({
             name="You"
             stream={localStream}
             muted
-            microphoneEnabled={
-              localMediaState.microphoneEnabled
-            }
-            cameraEnabled={
-              localMediaState.cameraEnabled
-            }
+            microphoneEnabled={localMediaState.microphoneEnabled}
+            cameraEnabled={localMediaState.cameraEnabled}
             isLocal
           />
 
-          {participants.map(
-            (participant, index) => {
-              const remoteStream =
-                remoteStreams.get(
-                  participant.userId,
-                );
+          {participants.map((participant, index) => {
+            const remoteStream = remoteStreams.get(participant.userId);
 
-              const remoteMediaState =
-                remoteMediaStates.get(
-                  participant.userId,
-                );
+            const remoteMediaState = remoteMediaStates.get(participant.userId);
 
-              return (
-                <ParticipantTile
-                  key={participant.id}
-                  name={`${participant.role}`}
-                  stream={remoteStream}
-                  microphoneEnabled={
-                    remoteMediaState
-                      ?.microphoneEnabled ??
-                    true
-                  }
-                  cameraEnabled={
-                    remoteMediaState
-                      ?.cameraEnabled ??
-                    true
-                  }
-                />
-              );
-            },
-          )}
+            return (
+              <ParticipantTile
+                key={participant.id}
+                name={`${participant.role}`}
+                stream={remoteStream}
+                microphoneEnabled={remoteMediaState?.microphoneEnabled ?? true}
+                cameraEnabled={remoteMediaState?.cameraEnabled ?? true}
+              />
+            );
+          })}
         </div>
       </div>
     </section>

@@ -1,18 +1,12 @@
 "use client";
 
-import Editor, {
-  BeforeMount,
-  OnMount,
-} from "@monaco-editor/react";
+import Editor, { BeforeMount, OnMount } from "@monaco-editor/react";
 
 import { spaceCadetTheme } from "@/lib/monaco/themes/space-cadet";
 import { PROGRAMMING_LANGUAGES, ProgrammingLanguage } from "../types/programming-language";
 
 const handleBeforeMount: BeforeMount = (monaco) => {
-  monaco.editor.defineTheme(
-    "space-cadet",
-    spaceCadetTheme,
-  );
+  monaco.editor.defineTheme("space-cadet", spaceCadetTheme);
 };
 
 type CodeWorkspaceProps = {
@@ -21,11 +15,7 @@ type CodeWorkspaceProps = {
   language: ProgrammingLanguage;
 };
 
-export function CodeWorkspace({
-  code,
-  onCodeChange,
-  language
-}: CodeWorkspaceProps) {
+export function CodeWorkspace({ code, onCodeChange, language }: CodeWorkspaceProps) {
   const handleMount: OnMount = (editor) => {
     requestAnimationFrame(() => {
       editor.layout();
@@ -33,9 +23,7 @@ export function CodeWorkspace({
   };
 
   const monacoLanguage =
-    PROGRAMMING_LANGUAGES.find(
-      (item) => item.value === language,
-    )?.monacoLanguage ?? "plaintext";
+    PROGRAMMING_LANGUAGES.find((item) => item.value === language)?.monacoLanguage ?? "plaintext";
 
   return (
     <div className="relative flex h-full min-h-0 w-full min-w-0">
@@ -45,9 +33,7 @@ export function CodeWorkspace({
         defaultLanguage="python"
         language={monacoLanguage}
         value={code}
-        onChange={(value) =>
-          onCodeChange(value ?? "")
-        }
+        onChange={(value) => onCodeChange(value ?? "")}
         beforeMount={handleBeforeMount}
         onMount={handleMount}
         theme="space-cadet"

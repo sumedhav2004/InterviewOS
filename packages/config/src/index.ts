@@ -3,7 +3,7 @@ import { redisConfig } from "./redis";
 import { serverConfig } from "./server";
 
 export const config = {
-    server: serverConfig,
-    database: databaseConfig,
-    redis: redisConfig
-}
+  server: serverConfig,
+  database: databaseConfig,
+  redis: redisConfig,
+};

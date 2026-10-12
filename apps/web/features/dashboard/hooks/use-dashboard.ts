@@ -8,10 +8,7 @@ type UseDashboardOptions = {
   isSignedIn: boolean;
 };
 
-export const useDashboard = ({
-  isLoaded,
-  isSignedIn,
-}: UseDashboardOptions) => {
+export const useDashboard = ({ isLoaded, isSignedIn }: UseDashboardOptions) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,22 +20,20 @@ export const useDashboard = ({
     // 4. setUser(...)
     // 5. catch error
     // 6. setLoading(false)
-    if(!isLoaded || !isSignedIn){
-        return 
+    if (!isLoaded || !isSignedIn) {
+      return;
     }
-    async function getUser(){
-        try{
-            const user = await dashboardApi.getCurrentUser()
-            setUser(user)
-        }catch(error){
-            setError(
-                error instanceof Error ? error.message : "Failed to load user",
-            )
-        }finally{
-            setLoading(false)
-        }
+    async function getUser() {
+      try {
+        const user = await dashboardApi.getCurrentUser();
+        setUser(user);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Failed to load user");
+      } finally {
+        setLoading(false);
+      }
     }
-    getUser()
+    getUser();
   }, [isLoaded, isSignedIn]);
 
   return {

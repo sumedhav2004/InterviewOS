@@ -1,13 +1,6 @@
 // types/programming-language.ts
 
-export type ProgrammingLanguage =
-  | "JAVASCRIPT"
-  | "PYTHON"
-  | "JAVA"
-  | "CPP"
-  | "C"
-  | "RUST"
-  | "GO";
+export type ProgrammingLanguage = "JAVASCRIPT" | "PYTHON" | "JAVA" | "CPP" | "C" | "RUST" | "GO";
 
 export const PROGRAMMING_LANGUAGES: {
   value: ProgrammingLanguage;

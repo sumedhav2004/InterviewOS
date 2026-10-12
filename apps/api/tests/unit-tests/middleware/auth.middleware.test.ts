@@ -85,22 +85,16 @@ describe("authMiddleware", () => {
     await authMiddleware(req, res, next);
 
     expect(findOrCreateUserMock).toHaveBeenCalledWith("clerk_123");
-    expect(
-      (req as Request & { user?: unknown }).user,
-    ).toEqual(authenticatedUser);
+    expect((req as Request & { user?: unknown }).user).toEqual(authenticatedUser);
     expect(nextMock).toHaveBeenCalledTimes(1);
     expect(statusMock).not.toHaveBeenCalled();
   });
 
   it("propagates errors when finding or creating the user fails", async () => {
     getAuthMock.mockReturnValue({ userId: "clerk_123" });
-    findOrCreateUserMock.mockRejectedValue(
-      new Error("Database connection failed"),
-    );
+    findOrCreateUserMock.mockRejectedValue(new Error("Database connection failed"));
 
-    await expect(authMiddleware(req, res, next)).rejects.toThrow(
-      "Database connection failed",
-    );
+    await expect(authMiddleware(req, res, next)).rejects.toThrow("Database connection failed");
 
     expect(nextMock).not.toHaveBeenCalled();
     expect(statusMock).not.toHaveBeenCalled();
@@ -112,9 +106,7 @@ describe("authMiddleware", () => {
 
     await authMiddleware(req, res, next);
 
-    expect(
-      (req as Request & { user?: unknown }).user,
-    ).toBeNull();
+    expect((req as Request & { user?: unknown }).user).toBeNull();
     expect(nextMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -15,21 +15,17 @@ export function DashboardPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   useEffect(() => {
     async function logToken() {
-        const token = await getToken();
+      const token = await getToken();
 
-        console.log("Clerk token:", token);
+      console.log("Clerk token:", token);
     }
 
     if (isLoaded && isSignedIn) {
-        logToken();
+      logToken();
     }
-    }, [isLoaded, isSignedIn, getToken]);
+  }, [isLoaded, isSignedIn, getToken]);
 
-  const {
-    user,
-    loading,
-    error,
-  } = useDashboard({
+  const { user, loading, error } = useDashboard({
     isLoaded,
     isSignedIn,
   });
@@ -38,32 +34,28 @@ export function DashboardPage() {
     interviews,
     loading: interviewsLoading,
     error: interviewsError,
-    } = useInterviews({
+  } = useInterviews({
     isLoaded,
     isSignedIn,
-    });
+  });
 
-    const upcomingInterviews = interviews.filter(
-    (interview) =>
-        interview.status === "SCHEDULED" ||
-        interview.status === "INPROGRESS",
-    );
+  const upcomingInterviews = interviews.filter(
+    (interview) => interview.status === "SCHEDULED" || interview.status === "INPROGRESS",
+  );
 
-    const interviewHistory = interviews.filter(
-    (interview) =>
-        interview.status === "COMPLETED" ||
-        interview.status === "CANCELLED",
-    );
+  const interviewHistory = interviews.filter(
+    (interview) => interview.status === "COMPLETED" || interview.status === "CANCELLED",
+  );
 
   const {
     invitations,
     loading: invitationsLoading,
     error: invitationsError,
     acceptInvitation,
-    declineInvitation
+    declineInvitation,
   } = useInvitations({
     isLoaded,
-    isSignedIn
+    isSignedIn,
   });
 
   if (!isLoaded) {
@@ -86,37 +78,33 @@ export function DashboardPage() {
     return <main>Unable to load user.</main>;
   }
 
+  return (
+    <Page>
+      <Container>
+        <Stack gap="xl">
+          <DashboardHeader name={user.name} />
+          <DashboardStats
+            upcoming={upcomingInterviews.length}
+            completed={interviewHistory.length}
+            invites={invitations.filter((invite) => invite.status === "PENDING").length}
+          />
+          <InterviewList
+            upcoming={upcomingInterviews}
+            history={interviewHistory}
+            currentUserId={user.id}
+          />
 
-    return (
-        <Page>
-            <Container>
-                <Stack gap="xl">
-                    <DashboardHeader name={user.name} />
-                    <DashboardStats
-                        upcoming={upcomingInterviews.length}
-                        completed={interviewHistory.length}
-                        invites={invitations.filter(
-                            (invite) => invite.status === "PENDING",
-                        ).length}
-                        />
-                    <InterviewList
-                        upcoming={upcomingInterviews}
-                        history={interviewHistory}
-                        currentUserId={user.id}
-                        />
-                    
-                    <InvitationList
-                        invitations={invitations}
-                        onAccept={acceptInvitation}
-                        onDecline={declineInvitation}
-                    />
+          <InvitationList
+            invitations={invitations}
+            onAccept={acceptInvitation}
+            onDecline={declineInvitation}
+          />
 
-                    {/* stats */}
+          {/* stats */}
 
-                    {/* interviews */}
-                </Stack>
-            </Container>
-        </Page>
-    );
-  
+          {/* interviews */}
+        </Stack>
+      </Container>
+    </Page>
+  );
 }

@@ -1,8 +1,4 @@
-export type SubmissionState =
-  | "IDLE"
-  | "SUBMITTING"
-  | "COMPLETED"
-  | "FAILED";
+export type SubmissionState = "IDLE" | "SUBMITTING" | "COMPLETED" | "FAILED";
 
 export type CreateSubmissionRequest = {
   interviewQuestionId: string;

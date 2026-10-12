@@ -177,11 +177,7 @@ describe("SubmissionService", () => {
         data as never,
       );
 
-      expect(createSubmissionMock).toHaveBeenCalledWith(
-        "iq_1",
-        "participant_1",
-        data,
-      );
+      expect(createSubmissionMock).toHaveBeenCalledWith("iq_1", "participant_1", data);
       expect(enqueueMock).toHaveBeenCalledTimes(2);
       expect(enqueueMock).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -345,9 +341,7 @@ describe("SubmissionService", () => {
     it("throws 404 when the submission does not exist", async () => {
       findSubmissionByIdMock.mockResolvedValue(null);
 
-      await expect(
-        service.handleExecutionCompleted(event as never),
-      ).rejects.toMatchObject({
+      await expect(service.handleExecutionCompleted(event as never)).rejects.toMatchObject({
         statusCode: 404,
         code: "SUBMISSION_NOT_FOUND",
       });
@@ -359,9 +353,7 @@ describe("SubmissionService", () => {
         questionId: "different_question",
       });
 
-      await expect(
-        service.handleExecutionCompleted(event as never),
-      ).rejects.toMatchObject({
+      await expect(service.handleExecutionCompleted(event as never)).rejects.toMatchObject({
         statusCode: 400,
         code: "INVALID_TEST_CASE",
       });
@@ -370,14 +362,9 @@ describe("SubmissionService", () => {
     });
 
     it("does not create an evaluation until all test cases finish", async () => {
-      getAllTestCasesMock.mockResolvedValue([
-        testCase,
-        { ...testCase, id: "test_case_2" },
-      ]);
+      getAllTestCasesMock.mockResolvedValue([testCase, { ...testCase, id: "test_case_2" }]);
 
-      getResultsForSubmissionMock.mockResolvedValue([
-        { passed: true, executionTimeMS: 25 },
-      ]);
+      getResultsForSubmissionMock.mockResolvedValue([{ passed: true, executionTimeMS: 25 }]);
 
       await service.handleExecutionCompleted(event as never);
 
@@ -401,10 +388,7 @@ describe("SubmissionService", () => {
         { passed: true, executionTimeMS: 10 },
         { passed: false, executionTimeMS: 20 },
       ]);
-      getAllTestCasesMock.mockResolvedValue([
-        testCase,
-        { ...testCase, id: "test_case_2" },
-      ]);
+      getAllTestCasesMock.mockResolvedValue([testCase, { ...testCase, id: "test_case_2" }]);
 
       await service.handleExecutionCompleted(event as never);
 
@@ -438,9 +422,7 @@ describe("SubmissionService", () => {
     it("throws 404 when the submission does not exist", async () => {
       findSubmissionByIdMock.mockResolvedValue(null);
 
-      await expect(
-        service.getSubmissionById("missing", "user_1"),
-      ).rejects.toMatchObject({
+      await expect(service.getSubmissionById("missing", "user_1")).rejects.toMatchObject({
         statusCode: 404,
         code: "SUBMISSION_NOT_FOUND",
       });
@@ -450,9 +432,7 @@ describe("SubmissionService", () => {
       findSubmissionByIdMock.mockResolvedValue(submission);
       findParticipantByIdMock.mockResolvedValue(participant);
 
-      await expect(
-        service.getSubmissionById("submission_1", "other_user"),
-      ).rejects.toMatchObject({
+      await expect(service.getSubmissionById("submission_1", "other_user")).rejects.toMatchObject({
         statusCode: 403,
         code: "UNAUTHORIZED",
       });
@@ -471,10 +451,7 @@ describe("SubmissionService", () => {
       ]);
       findSubmissionsForQuestionMock.mockResolvedValue([submission]);
 
-      const result = await service.getSubmissionsForInterviewQuestion(
-        "iq_1",
-        "interviewer_1",
-      );
+      const result = await service.getSubmissionsForInterviewQuestion("iq_1", "interviewer_1");
 
       expect(findSubmissionsForQuestionMock).toHaveBeenCalledWith("iq_1");
       expect(result).toEqual([submission]);

@@ -1,22 +1,21 @@
 import { UserRepository } from "../repositories/user.repository";
+import type { Prisma } from "@interview-os/database";
 
-interface UpdateUserProfileDto {
-    
-}
+type UpdateUserProfileDto = Prisma.UserUpdateInput;
 
-export class ProfileService{
-    private readonly userRepository: UserRepository;
+export class ProfileService {
+  private readonly userRepository: UserRepository;
 
-    constructor(){
-        this.userRepository = new UserRepository();
-    }
+  constructor() {
+    this.userRepository = new UserRepository();
+  }
 
-    async updateUser(id: string, data: UpdateUserProfileDto){
-            const updatedUser = await this.userRepository.updateUser(id,data)
-            return updatedUser;   
-    }
+  async updateUser(id: string, data: UpdateUserProfileDto) {
+    const updatedUser = await this.userRepository.updateUser(id, data);
+    return updatedUser;
+  }
 
-    async findUser(id:string){
-        return this.userRepository.findById(id)
-    }
+  async findUser(id: string) {
+    return this.userRepository.findById(id);
+  }
 }

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { ProgrammingLanguage } from "../types/programming-language";
-import { codeRunApi } from "../api/codeRun-api";
+import { CodeRun, codeRunApi } from "../api/codeRun-api";
 
 import type { ServerMessage } from "../types/realtime";
 import { CodeRunTestCaseResult } from "../types/coderun";
@@ -13,14 +13,9 @@ type RunCodeRunInput = {
   sourceCode: string;
 };
 
-export function useCodeRun(
-  onMessage?: (message: ServerMessage) => void,
-) {
-   
-  const [codeRun, setCodeRun] = useState<any>(null);
-  const [results, setResults] = useState<
-    CodeRunTestCaseResult[]
-  >([]);
+export function useCodeRun(onMessage?: (message: ServerMessage) => void) {
+  const [codeRun, setCodeRun] = useState<CodeRun | null>(null);
+  const [results, setResults] = useState<CodeRunTestCaseResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,29 +28,22 @@ export function useCodeRun(
       if (message.type === "CODE_RUN_TEST_CASE_RESULT") {
         setResults((currentResults) => {
           const existingIndex = currentResults.findIndex(
-            (result) =>
-              result.id === message.result.id,
+            (result) => result.id === message.result.id,
           );
 
           if (existingIndex !== -1) {
             return currentResults;
           }
 
-          return [
-            ...currentResults,
-            message.result,
-          ];
+          return [...currentResults, message.result];
         });
 
         return;
       }
 
       if (message.type === "CODE_RUN_COMPLETED") {
-        setCodeRun((currentCodeRun: any) => {
-          if (
-            !currentCodeRun ||
-            currentCodeRun.id !== message.codeRunId
-          ) {
+        setCodeRun((currentCodeRun) => {
+          if (!currentCodeRun || currentCodeRun.id !== message.codeRunId) {
             return currentCodeRun;
           }
 
@@ -77,22 +65,15 @@ export function useCodeRun(
       setError(null);
       setResults([]);
 
-      const created =
-        await codeRunApi.createCodeRun(data);
+      const created = await codeRunApi.createCodeRun(data);
 
-      const executed =
-        await codeRunApi.executeCodeRun(
-          created.id,
-        );
+      const executed = await codeRunApi.executeCodeRun(created.id);
 
       setCodeRun(executed);
 
       return executed;
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to run code";
+      const message = error instanceof Error ? error.message : "Failed to run code";
 
       setError(message);
       setIsRunning(false);

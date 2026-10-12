@@ -33,20 +33,11 @@ export type SubmissionWithResults = Submission & {
 };
 
 export const submissionApi = {
-  createSubmission(
-    data: CreateSubmissionRequest,
-  ) {
-    return apiClient.post<Submission>(
-      `/submissions`,
-      data,
-    );
+  createSubmission(data: CreateSubmissionRequest) {
+    return apiClient.post<Submission>(`/submissions`, data);
   },
 
-  getSubmission(
-    submissionId: string,
-  ) {
-    return apiClient.get<SubmissionWithResults>(
-      `/submissions/${submissionId}`,
-    );
+  getSubmission(submissionId: string) {
+    return apiClient.get<SubmissionWithResults>(`/submissions/${submissionId}`);
   },
 };

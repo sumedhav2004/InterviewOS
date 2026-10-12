@@ -22,7 +22,4 @@ export type InterviewParticipant = {
   interviewId: string;
 };
 
-export type InterviewWorkspaceType =
-    | "CODE"
-    | "WHITEBOARD"
-    | "FIGMA";
+export type InterviewWorkspaceType = "CODE" | "WHITEBOARD" | "FIGMA";

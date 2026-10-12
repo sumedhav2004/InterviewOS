@@ -18,11 +18,7 @@ type InvitationCardProps = {
   onDecline: (inviteId: string) => Promise<void>;
 };
 
-export function InvitationCard({
-  invitation,
-  onAccept,
-  onDecline
-}: InvitationCardProps) {
+export function InvitationCard({ invitation, onAccept, onDecline }: InvitationCardProps) {
   return (
     <Card className="overflow-hidden border-primary/30 shadow-[0_0_32px_oklch(0.62_0.22_278_/_10%)]">
       <CardContent className="p-6 sm:p-8">
@@ -38,15 +34,11 @@ export function InvitationCard({
                   Interview invitation
                 </p>
 
-                <h3 className="text-xl font-semibold tracking-tight">
-                  You've been invited
-                </h3>
+                <h3 className="text-xl font-semibold tracking-tight">You&apos;ve been invited</h3>
               </div>
             </div>
 
-            <Badge variant="outline">
-              {invitation.status}
-            </Badge>
+            <Badge variant="outline">{invitation.status}</Badge>
           </div>
 
           <div className="grid gap-4 border-y border-border/60 py-5 sm:grid-cols-2">
@@ -55,9 +47,7 @@ export function InvitationCard({
                 Invited As
               </p>
 
-              <p className="mt-1 text-sm font-medium">
-                {invitation.role}
-              </p>
+              <p className="mt-1 text-sm font-medium">{invitation.role}</p>
             </div>
 
             <div>
@@ -101,28 +91,22 @@ export function InvitationCard({
               <p className="mt-1 flex items-center gap-2 text-sm font-medium">
                 <Clock3 className="size-3.5 text-muted-foreground" />
                 {invitation.interview.scheduledAt
-                ? new Date(invitation.interview.scheduledAt).toLocaleDateString()
-                : "Not scheduled"}
+                  ? new Date(invitation.interview.scheduledAt).toLocaleDateString()
+                  : "Not scheduled"}
               </p>
             </div>
           </div>
 
           {invitation.status === "PENDING" && (
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <Button
-                variant="ghost"
-                onClick={() => onDecline(invitation.id)}
-                >
+              <Button variant="ghost" onClick={() => onDecline(invitation.id)}>
                 Decline
-                </Button>
+              </Button>
 
-                <Button
-                className="gap-2"
-                onClick={() => onAccept(invitation.id)}
-                >
+              <Button className="gap-2" onClick={() => onAccept(invitation.id)}>
                 Accept invitation
                 <ArrowRight className="size-4" />
-                </Button>
+              </Button>
             </div>
           )}
         </div>

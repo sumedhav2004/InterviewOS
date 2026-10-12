@@ -10,9 +10,7 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <ClerkProvider>
-      <AuthProvider>
-        {children}
-      </AuthProvider>
+      <AuthProvider>{children}</AuthProvider>
     </ClerkProvider>
   );
 }

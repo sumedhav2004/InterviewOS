@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { ResumeController } from "../controllers/resumes.controller";
 import { ResumeService } from "../services/resume.service";

@@ -9,7 +9,6 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-
 export function AuthProvider({ children }: AuthProviderProps) {
   const { getToken } = useAuth();
 
@@ -18,5 +17,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [getToken]);
 
   return <>{children}</>;
-
 }

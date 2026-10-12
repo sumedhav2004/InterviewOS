@@ -1,10 +1,4 @@
-import {
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  Clock3,
-  Video,
-} from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Clock3, Video } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,29 +12,20 @@ type InterviewListProps = {
   currentUserId: string;
 };
 
-export function InterviewList({
-  upcoming,
-  history,
-  currentUserId,
-}: InterviewListProps) {
+export function InterviewList({ upcoming, history, currentUserId }: InterviewListProps) {
   return (
     <section className="space-y-10">
       {/* Upcoming interviews */}
       <div className="space-y-4">
         <div className="flex items-end justify-between">
           <div className="space-y-1">
-            <p className="font-mono text-xs uppercase tracking-[0.18em] text-primary">
-              Interviews
-            </p>
+            <p className="font-mono text-xs uppercase tracking-[0.18em] text-primary">Interviews</p>
 
-            <h2 className="text-xl font-semibold tracking-tight">
-              Upcoming interviews
-            </h2>
+            <h2 className="text-xl font-semibold tracking-tight">Upcoming interviews</h2>
           </div>
 
           <span className="font-mono text-xs text-muted-foreground">
-            {upcoming.length}{" "}
-            {upcoming.length === 1 ? "interview" : "interviews"}
+            {upcoming.length} {upcoming.length === 1 ? "interview" : "interviews"}
           </span>
         </div>
 
@@ -51,21 +36,18 @@ export function InterviewList({
                 <CalendarDays className="size-5" />
               </div>
 
-              <h3 className="text-lg font-medium">
-                No upcoming interviews
-              </h3>
+              <h3 className="text-lg font-medium">No upcoming interviews</h3>
 
               <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-                Scheduled interviews will appear here when you're invited or
-                create one yourself.
+                Scheduled interviews will appear here when you&apos;re invited or create one
+                yourself.
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-4">
             {upcoming.map((interview) => {
-              const createdByMe =
-                interview.createdById === currentUserId;
+              const createdByMe = interview.createdById === currentUserId;
 
               return (
                 <Card
@@ -87,14 +69,10 @@ export function InterviewList({
 
                             <div className="flex flex-wrap gap-2">
                               <Badge variant="outline">
-                                {createdByMe
-                                  ? "CREATED BY YOU"
-                                  : "PARTICIPATING"}
+                                {createdByMe ? "CREATED BY YOU" : "PARTICIPATING"}
                               </Badge>
 
-                              <Badge variant="outline">
-                                {interview.status}
-                              </Badge>
+                              <Badge variant="outline">{interview.status}</Badge>
                             </div>
                           </div>
                         </div>
@@ -110,9 +88,7 @@ export function InterviewList({
                             <CalendarDays className="size-3.5 text-muted-foreground" />
 
                             {interview.scheduledAt
-                              ? new Date(
-                                  interview.scheduledAt,
-                                ).toLocaleString()
+                              ? new Date(interview.scheduledAt).toLocaleString()
                               : "Not scheduled"}
                           </p>
                         </div>
@@ -124,7 +100,6 @@ export function InterviewList({
 
                           <p className="mt-1 flex items-center gap-2 text-sm font-medium">
                             <Clock3 className="size-3.5 text-muted-foreground" />
-
                             {interview.durationMinutes} minutes
                           </p>
                         </div>
@@ -153,14 +128,11 @@ export function InterviewList({
               History
             </p>
 
-            <h2 className="text-xl font-semibold tracking-tight">
-              Interview history
-            </h2>
+            <h2 className="text-xl font-semibold tracking-tight">Interview history</h2>
           </div>
 
           <span className="font-mono text-xs text-muted-foreground">
-            {history.length}{" "}
-            {history.length === 1 ? "interview" : "interviews"}
+            {history.length} {history.length === 1 ? "interview" : "interviews"}
           </span>
         </div>
 
@@ -172,9 +144,7 @@ export function InterviewList({
               </div>
 
               <div>
-                <h3 className="text-sm font-medium">
-                  No interview history
-                </h3>
+                <h3 className="text-sm font-medium">No interview history</h3>
 
                 <p className="mt-1 text-sm text-muted-foreground">
                   Completed and cancelled interviews will appear here.
@@ -185,31 +155,21 @@ export function InterviewList({
         ) : (
           <div className="space-y-4">
             {history.map((interview) => {
-              const createdByMe =
-                interview.createdById === currentUserId;
+              const createdByMe = interview.createdById === currentUserId;
 
               return (
-                <Card
-                  key={interview.id}
-                  className="overflow-hidden border-border/60"
-                >
+                <Card key={interview.id} className="overflow-hidden border-border/60">
                   <CardContent className="p-6">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-2">
-                        <h3 className="font-semibold tracking-tight">
-                          {interview.title}
-                        </h3>
+                        <h3 className="font-semibold tracking-tight">{interview.title}</h3>
 
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline">
-                            {createdByMe
-                              ? "CREATED BY YOU"
-                              : "PARTICIPATING"}
+                            {createdByMe ? "CREATED BY YOU" : "PARTICIPATING"}
                           </Badge>
 
-                          <Badge variant="outline">
-                            {interview.status}
-                          </Badge>
+                          <Badge variant="outline">{interview.status}</Badge>
                         </div>
                       </div>
 
@@ -220,9 +180,7 @@ export function InterviewList({
 
                         <p className="mt-1 text-sm text-muted-foreground">
                           {interview.scheduledAt
-                            ? new Date(
-                                interview.scheduledAt,
-                              ).toLocaleDateString()
+                            ? new Date(interview.scheduledAt).toLocaleDateString()
                             : "Not scheduled"}
                         </p>
                       </div>

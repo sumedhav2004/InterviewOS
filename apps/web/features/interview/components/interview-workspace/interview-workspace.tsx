@@ -1,56 +1,49 @@
-import React, { PointerEvent, useRef, useState } from 'react'
-import { Participant, ParticipantMediaState } from '../../types/participant';
-import { ActiveInterviewQuestion } from '../../types/active-question';
-import { ProgrammingLanguage } from '../../types/programming-language';
-import { CodeRunTestCaseResult } from '../../types/coderun';
-import { SubmissionEvaluation, SubmissionTestCaseResult } from '../../types/submission';
-import { Code2, FileText } from 'lucide-react';
-import { ActiveQuestion } from '../active-question';
-import { CodeWorkspace } from '../code-workspace';
-import { LanguageSelector } from '../language-selector';
-import { Button } from '@/components/ui/button';
-import { VideoPanel } from '../video-panel';
-import { InterviewWorkspaceType } from '../../types/interview';
+import React, { PointerEvent, useRef, useState } from "react";
+import { Participant, ParticipantMediaState } from "../../types/participant";
+import { ActiveInterviewQuestion } from "../../types/active-question";
+import { ProgrammingLanguage } from "../../types/programming-language";
+import { CodeRunTestCaseResult } from "../../types/coderun";
+import { SubmissionEvaluation, SubmissionTestCaseResult } from "../../types/submission";
+import { Code2, FileText } from "lucide-react";
+import { ActiveQuestion } from "../active-question";
+import { CodeWorkspace } from "../code-workspace";
+import { LanguageSelector } from "../language-selector";
+import { Button } from "@/components/ui/button";
+import { VideoPanel } from "../video-panel";
+import { InterviewWorkspaceType } from "../../types/interview";
 
 type InterviewWorkspaceProps = {
-      localStream: MediaStream | null;
-      participantIds: string[];
-      participants: Participant[];
-      remoteStreams: Map<string, MediaStream>;
-      localMediaState: ParticipantMediaState;
-      remoteMediaStates: Map<
-        string,
-        ParticipantMediaState
-      >;
-      code: string;
-      onCodeChange: (code: string) => void;
-      activeInterviewQuestion:
-        | ActiveInterviewQuestion
-        | null;
-      participant: Participant;
-      language: ProgrammingLanguage;
-      onLanguageChange: (
-        language: ProgrammingLanguage,
-      ) => void;
-      codeRun: {
-        id: string;
-        status: string;
-      } | null;
-      results: CodeRunTestCaseResult[];
-      isRunning: boolean;
-      error: string | null;
-      onRunCode: () => Promise<void>;
-    
-      submission: {
-        id: string;
-        status: string;
-      } | null;
-      submissionResults: SubmissionTestCaseResult[];
-      evaluation: SubmissionEvaluation | null;
-      isSubmitting: boolean;
-      submissionError: string | null;
-      onSubmit: () => Promise<void>;
-}
+  localStream: MediaStream | null;
+  participantIds: string[];
+  participants: Participant[];
+  remoteStreams: Map<string, MediaStream>;
+  localMediaState: ParticipantMediaState;
+  remoteMediaStates: Map<string, ParticipantMediaState>;
+  code: string;
+  onCodeChange: (code: string) => void;
+  activeInterviewQuestion: ActiveInterviewQuestion | null;
+  participant: Participant;
+  language: ProgrammingLanguage;
+  onLanguageChange: (language: ProgrammingLanguage) => void;
+  codeRun: {
+    id: string;
+    status: string;
+  } | null;
+  results: CodeRunTestCaseResult[];
+  isRunning: boolean;
+  error: string | null;
+  onRunCode: () => Promise<void>;
+
+  submission: {
+    id: string;
+    status: string;
+  } | null;
+  submissionResults: SubmissionTestCaseResult[];
+  evaluation: SubmissionEvaluation | null;
+  isSubmitting: boolean;
+  submissionError: string | null;
+  onSubmit: () => Promise<void>;
+};
 
 type TerminalMode = "RUN" | "SUBMIT" | null;
 
@@ -79,91 +72,63 @@ const InterviewWorkspace = ({
   submissionError,
   onSubmit,
 }: InterviewWorkspaceProps) => {
-    const [terminalHeight, setTerminalHeight] =
-        useState(180);
-      const [terminalOpen, setTerminalOpen] =
-        useState(true);
-      const [terminalMode, setTerminalMode] =
-        useState<TerminalMode>(null);
-      const isDragging = useRef(false);
-    
-      const isCandidate =
-        participant?.role === "CANDIDATE";
-    
-      const handleRun = async () => {
-        setTerminalMode("RUN");
-        await onRunCode();
-      };
-    
-      const handleSubmit = async () => {
-        setTerminalMode("SUBMIT");
-        await onSubmit();
-      };
-    
-      const handleTerminalResizeStart = (
-        event: PointerEvent<HTMLDivElement>,
-      ) => {
-        event.preventDefault();
-    
-        isDragging.current = true;
-    
-        const startY = event.clientY;
-        const startHeight = terminalHeight;
-    
-        const handlePointerMove = (
-          pointerEvent: PointerEvent,
-        ) => {
-          if (!isDragging.current) {
-            return;
-          }
-    
-          const delta =
-            startY - pointerEvent.clientY;
-    
-          const newHeight = Math.min(
-            Math.max(
-              startHeight + delta,
-              80,
-            ),
-            500,
-          );
-    
-          setTerminalHeight(newHeight);
-        };
-    
-        const handlePointerUp = () => {
-          isDragging.current = false;
-    
-          window.removeEventListener(
-            "pointermove",
-            handlePointerMove,
-          );
-    
-          window.removeEventListener(
-            "pointerup",
-            handlePointerUp,
-          );
-        };
-    
-        window.addEventListener(
-          "pointermove",
-          handlePointerMove,
-        );
-    
-        window.addEventListener(
-          "pointerup",
-          handlePointerUp,
-        );
-      };
-    
-      
-      const activeTerminalMode: TerminalMode =
-        terminalMode ??
-        (evaluation || submission || isSubmitting
-          ? "SUBMIT"
-          : codeRun || results.length > 0 || isRunning
-            ? "RUN"
-            : null);
+  const [terminalHeight, setTerminalHeight] = useState(180);
+  const [terminalOpen, setTerminalOpen] = useState(true);
+  const [terminalMode, setTerminalMode] = useState<TerminalMode>(null);
+  const isDragging = useRef(false);
+
+  const isCandidate = participant?.role === "CANDIDATE";
+
+  const handleRun = async () => {
+    setTerminalMode("RUN");
+    await onRunCode();
+  };
+
+  const handleSubmit = async () => {
+    setTerminalMode("SUBMIT");
+    await onSubmit();
+  };
+
+  const handleTerminalResizeStart = (event: PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+
+    isDragging.current = true;
+
+    const startY = event.clientY;
+    const startHeight = terminalHeight;
+
+    const handlePointerMove = (pointerEvent: PointerEvent) => {
+      if (!isDragging.current) {
+        return;
+      }
+
+      const delta = startY - pointerEvent.clientY;
+
+      const newHeight = Math.min(Math.max(startHeight + delta, 80), 500);
+
+      setTerminalHeight(newHeight);
+    };
+
+    const handlePointerUp = () => {
+      isDragging.current = false;
+
+      window.removeEventListener("pointermove", handlePointerMove);
+
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+
+    window.addEventListener("pointerup", handlePointerUp);
+  };
+
+  const activeTerminalMode: TerminalMode =
+    terminalMode ??
+    (evaluation || submission || isSubmitting
+      ? "SUBMIT"
+      : codeRun || results.length > 0 || isRunning
+        ? "RUN"
+        : null);
   return (
     <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
       <section className="technical-grid min-h-0 border-b border-border lg:border-b-0 lg:border-r">
@@ -179,10 +144,7 @@ const InterviewWorkspace = ({
             </div>
 
             {isCandidate ? (
-              <LanguageSelector
-                value={language}
-                onChange={onLanguageChange}
-              />
+              <LanguageSelector value={language} onChange={onLanguageChange} />
             ) : (
               <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
                 {language}
@@ -193,18 +155,12 @@ const InterviewWorkspace = ({
           {/* Editor area */}
           <div className="relative min-h-0 flex-1 overflow-hidden">
             <div className="flex h-full min-h-0">
-              <ActiveQuestion
-                question={activeInterviewQuestion}
-              />
+              <ActiveQuestion question={activeInterviewQuestion} />
 
               <div className="relative flex min-w-0 flex-1">
                 {/* Code editor */}
                 <div className="h-full w-full">
-                  <CodeWorkspace
-                    code={code}
-                    onCodeChange={onCodeChange}
-                    language={language}
-                  />
+                  <CodeWorkspace code={code} onCodeChange={onCodeChange} language={language} />
                 </div>
 
                 {/* Candidate actions */}
@@ -213,26 +169,13 @@ const InterviewWorkspace = ({
                     <Button
                       variant="outline"
                       onClick={handleRun}
-                      disabled={
-                        isRunning ||
-                        isSubmitting
-                      }
+                      disabled={isRunning || isSubmitting}
                     >
-                      {isRunning
-                        ? "Running..."
-                        : "Run"}
+                      {isRunning ? "Running..." : "Run"}
                     </Button>
 
-                    <Button
-                      onClick={handleSubmit}
-                      disabled={
-                        isRunning ||
-                        isSubmitting
-                      }
-                    >
-                      {isSubmitting
-                        ? "Submitting..."
-                        : "Submit"}
+                    <Button onClick={handleSubmit} disabled={isRunning || isSubmitting}>
+                      {isSubmitting ? "Submitting..." : "Submit"}
                     </Button>
                   </div>
                 )}
@@ -247,9 +190,7 @@ const InterviewWorkspace = ({
                   >
                     {/* Resize handle */}
                     <div
-                      onPointerDown={
-                        handleTerminalResizeStart
-                      }
+                      onPointerDown={handleTerminalResizeStart}
                       className="group absolute -top-1 left-0 right-0 z-30 flex h-2 cursor-row-resize items-center justify-center"
                     >
                       <div className="h-1 w-10 rounded-full bg-muted-foreground/30 transition-colors group-hover:bg-muted-foreground/70" />
@@ -263,9 +204,7 @@ const InterviewWorkspace = ({
 
                       <button
                         type="button"
-                        onClick={() =>
-                          setTerminalOpen(false)
-                        }
+                        onClick={() => setTerminalOpen(false)}
                         className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-white/30 transition-colors hover:bg-white/5 hover:text-white/70"
                       >
                         Close
@@ -274,7 +213,6 @@ const InterviewWorkspace = ({
 
                     {/* Terminal content */}
                     <div className="min-h-0 flex-1 overflow-auto p-3">
-
                       {/* ================================================== */}
                       {/* RUN MODE                                            */}
                       {/* ================================================== */}
@@ -305,20 +243,15 @@ const InterviewWorkspace = ({
                                 >
                                   <div className="flex items-center justify-between gap-3">
                                     <span className="font-mono text-[10px] text-white/60">
-                                      Test Case{" "}
-                                      {result.testCaseId}
+                                      Test Case {result.testCaseId}
                                     </span>
 
                                     <span
                                       className={`font-mono text-[10px] uppercase ${
-                                        result.passed
-                                          ? "text-green-400"
-                                          : "text-red-400"
+                                        result.passed ? "text-green-400" : "text-red-400"
                                       }`}
                                     >
-                                      {result.passed
-                                        ? "PASSED"
-                                        : "FAILED"}
+                                      {result.passed ? "PASSED" : "FAILED"}
                                     </span>
                                   </div>
 
@@ -346,12 +279,9 @@ const InterviewWorkspace = ({
                                     </div>
                                   )}
 
-                                  {result.executionTimeMS !==
-                                    null && (
+                                  {result.executionTimeMS !== null && (
                                     <div className="mt-2 font-mono text-[9px] text-white/30">
-                                      {
-                                        result.executionTimeMS
-                                      }
+                                      {result.executionTimeMS}
                                       ms
                                     </div>
                                   )}
@@ -412,8 +342,7 @@ const InterviewWorkspace = ({
 
                                   <span
                                     className={`font-mono text-[10px] uppercase ${
-                                      evaluation.status ===
-                                      "PASSED"
+                                      evaluation.status === "PASSED"
                                         ? "text-green-400"
                                         : "text-red-400"
                                     }`}
@@ -440,19 +369,14 @@ const InterviewWorkspace = ({
                                   </div>
 
                                   <div className="mt-1 font-mono text-[14px] text-white/80">
-                                    {evaluation.passedTests}/
-                                    {evaluation.totalTests}
+                                    {evaluation.passedTests}/{evaluation.totalTests}
                                   </div>
                                 </div>
                               </div>
 
-                              {evaluation.executionTimeMS !==
-                                null && (
+                              {evaluation.executionTimeMS !== null && (
                                 <div className="font-mono text-[9px] text-white/30">
-                                  Total execution time:{" "}
-                                  {
-                                    evaluation.executionTimeMS
-                                  }
+                                  Total execution time: {evaluation.executionTimeMS}
                                   ms
                                 </div>
                               )}
@@ -496,13 +420,10 @@ const InterviewWorkspace = ({
                 ) : (
                   <button
                     type="button"
-                    onClick={() =>
-                      setTerminalOpen(true)
-                    }
+                    onClick={() => setTerminalOpen(true)}
                     className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 border border-border/50 bg-background/70 px-2 py-1 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground/50 backdrop-blur-sm transition-colors hover:border-border hover:bg-background hover:text-muted-foreground"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-
                     Terminal
                   </button>
                 )}
@@ -541,40 +462,22 @@ const InterviewWorkspace = ({
               <div className="space-y-3">
                 <div>
                   <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
-                    Question{" "}
-                    {
-                      activeInterviewQuestion.questionOrder
-                    }
+                    Question {activeInterviewQuestion.questionOrder}
                   </p>
 
                   <h2 className="mt-1 text-sm font-medium">
-                    {
-                      activeInterviewQuestion
-                        .question.title
-                    }
+                    {activeInterviewQuestion.question.title}
                   </h2>
                 </div>
 
                 <p className="font-mono text-[10px] leading-5 text-muted-foreground">
-                  {
-                    activeInterviewQuestion
-                      .question.description
-                  }
+                  {activeInterviewQuestion.question.description}
                 </p>
 
                 <div className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
-                  <span>
-                    Difficulty:{" "}
-                    {
-                      activeInterviewQuestion
-                        .question.difficulty
-                    }
-                  </span>
+                  <span>Difficulty: {activeInterviewQuestion.question.difficulty}</span>
 
-                  <span>
-                    Points:{" "}
-                    {activeInterviewQuestion.points}
-                  </span>
+                  <span>Points: {activeInterviewQuestion.points}</span>
                 </div>
               </div>
             )}
@@ -582,7 +485,7 @@ const InterviewWorkspace = ({
         </section>
       </aside>
     </main>
-  )
-}
+  );
+};
 
-export default InterviewWorkspace
+export default InterviewWorkspace;

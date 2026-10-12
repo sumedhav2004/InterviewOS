@@ -38,14 +38,10 @@ export const codeRunApi = {
   },
 
   executeCodeRun(codeRunId: string) {
-    return apiClient.post<CodeRun>(
-      `/coderuns/${codeRunId}/execute`,
-    );
+    return apiClient.post<CodeRun>(`/coderuns/${codeRunId}/execute`);
   },
 
   getCodeRunResults(codeRunId: string) {
-    return apiClient.get<CodeRunWithResults>(
-      `/coderuns/${codeRunId}/results`,
-    );
+    return apiClient.get<CodeRunWithResults>(`/coderuns/${codeRunId}/results`);
   },
 };

@@ -1,5 +1,5 @@
 import { env } from "./env";
 
 export const databaseConfig = {
-        dbURL : env.DATABASE_URL
-}
+  dbURL: env.DATABASE_URL,
+};

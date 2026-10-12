@@ -6,30 +6,18 @@ const inviteController = new InviteController();
 
 // Create an invite for an interview
 router.post(
-    "/interviews/:interviewId/invites",
-    inviteController.createInvite.bind(inviteController)
+  "/interviews/:interviewId/invites",
+  inviteController.createInvite.bind(inviteController),
 );
 
 // Actions on an existing invite
-router.patch(
-    "/invites/:inviteId/accept",
-    inviteController.acceptInvite.bind(inviteController)
-);
+router.patch("/invites/:inviteId/accept", inviteController.acceptInvite.bind(inviteController));
 
-router.patch(
-    "/invites/:inviteId/decline",
-    inviteController.declineInvite.bind(inviteController)
-);
+router.patch("/invites/:inviteId/decline", inviteController.declineInvite.bind(inviteController));
 
-router.patch(
-    "/invites/:inviteId/cancel",
-    inviteController.cancelInvite.bind(inviteController)
-);
+router.patch("/invites/:inviteId/cancel", inviteController.cancelInvite.bind(inviteController));
 
 router.get("/invites", inviteController.getReceivedInvites.bind(inviteController));
-router.get(
-  "/invites/sent",
-  inviteController.getSentInvites.bind(inviteController),
-);
+router.get("/invites/sent", inviteController.getSentInvites.bind(inviteController));
 
 export default router;

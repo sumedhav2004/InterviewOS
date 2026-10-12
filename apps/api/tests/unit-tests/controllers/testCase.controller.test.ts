@@ -1,246 +1,204 @@
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TestCaseController } from "../../../src/controllers/testCase.controller";
 
 const {
-    mockFindById,
-    mockFindAllTestCasesForAQuestion,
-    mockFindVisibleTestCasesForAQuestion,
-    mockCreateTestCase,
-    mockUpdateTestCase,
-    mockDeleteTestCase,
+  mockFindById,
+  mockFindAllTestCasesForAQuestion,
+  mockFindVisibleTestCasesForAQuestion,
+  mockCreateTestCase,
+  mockUpdateTestCase,
+  mockDeleteTestCase,
 } = vi.hoisted(() => ({
-    mockFindById: vi.fn(),
-    mockFindAllTestCasesForAQuestion: vi.fn(),
-    mockFindVisibleTestCasesForAQuestion: vi.fn(),
-    mockCreateTestCase: vi.fn(),
-    mockUpdateTestCase: vi.fn(),
-    mockDeleteTestCase: vi.fn(),
+  mockFindById: vi.fn(),
+  mockFindAllTestCasesForAQuestion: vi.fn(),
+  mockFindVisibleTestCasesForAQuestion: vi.fn(),
+  mockCreateTestCase: vi.fn(),
+  mockUpdateTestCase: vi.fn(),
+  mockDeleteTestCase: vi.fn(),
 }));
 
 vi.mock("../../../src/services/testCase.service", () => ({
-    TestCaseService: class {
-        findById = mockFindById;
-        findAllTestCasesForAQuestion = mockFindAllTestCasesForAQuestion;
-        findVisibleTestCasesForAQuestion =
-            mockFindVisibleTestCasesForAQuestion;
-        createTestCase = mockCreateTestCase;
-        updateTestCase = mockUpdateTestCase;
-        deleteTestCase = mockDeleteTestCase;
-    },
+  TestCaseService: class {
+    findById = mockFindById;
+    findAllTestCasesForAQuestion = mockFindAllTestCasesForAQuestion;
+    findVisibleTestCasesForAQuestion = mockFindVisibleTestCasesForAQuestion;
+    createTestCase = mockCreateTestCase;
+    updateTestCase = mockUpdateTestCase;
+    deleteTestCase = mockDeleteTestCase;
+  },
 }));
 
 describe("TestCaseController", () => {
-    let controller: TestCaseController;
-    let req: any;
-    let res: any;
+  let controller: TestCaseController;
+  let req: any;
+  let res: any;
 
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
 
-        controller = new TestCaseController();
+    controller = new TestCaseController();
 
-        req = {
-            params: {},
-            body: {},
-            user: { id: "user-1" },
-        };
+    req = {
+      params: {},
+      body: {},
+      user: { id: "user-1" },
+    };
 
-        res = {
-            status: vi.fn().mockReturnThis(),
-            json: vi.fn().mockReturnThis(),
-            sendStatus: vi.fn().mockReturnThis(),
-        };
+    res = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+      sendStatus: vi.fn().mockReturnThis(),
+    };
+  });
+
+  describe("findById", () => {
+    it("should return a test case with status 200", async () => {
+      const testCase = { id: "test-case-1", expectedOutput: "4" };
+
+      req.params.testCaseId = "test-case-1";
+      req.params.questionId = "question-1";
+      mockFindById.mockResolvedValue(testCase);
+
+      await controller.findById(req, res);
+
+      expect(mockFindById).toHaveBeenCalledWith("test-case-1", "user-1", "question-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(testCase);
     });
 
-    describe("findById", () => {
-        it("should return a test case with status 200", async () => {
-            const testCase = { id: "test-case-1", expectedOutput: "4" };
+    it("should propagate service errors", async () => {
+      req.params.testCaseId = "test-case-1";
+      req.params.questionId = "question-1";
+      mockFindById.mockRejectedValue(new Error("Lookup failed"));
 
-            req.params.testCaseId = "test-case-1";
-            req.params.questionId = "question-1";
-            mockFindById.mockResolvedValue(testCase);
+      await expect(controller.findById(req, res)).rejects.toThrow("Lookup failed");
+    });
+  });
 
-            await controller.findById(req, res);
+  describe("findAllTestCasesForAQuestion", () => {
+    it("should return all test cases with status 200", async () => {
+      const testCases = [{ id: "test-case-1" }, { id: "test-case-2" }];
 
-            expect(mockFindById).toHaveBeenCalledWith(
-                "test-case-1",
-                "user-1",
-                "question-1",
-            );
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(testCase);
-        });
+      req.params.questionId = "question-1";
+      mockFindAllTestCasesForAQuestion.mockResolvedValue(testCases);
 
-        it("should propagate service errors", async () => {
-            req.params.testCaseId = "test-case-1";
-            req.params.questionId = "question-1";
-            mockFindById.mockRejectedValue(new Error("Lookup failed"));
+      await controller.findAllTestCasesForAQuestion(req, res);
 
-            await expect(
-                controller.findById(req, res),
-            ).rejects.toThrow("Lookup failed");
-        });
+      expect(mockFindAllTestCasesForAQuestion).toHaveBeenCalledWith("question-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(testCases);
     });
 
-    describe("findAllTestCasesForAQuestion", () => {
-        it("should return all test cases with status 200", async () => {
-            const testCases = [
-                { id: "test-case-1" },
-                { id: "test-case-2" },
-            ];
+    it("should propagate service errors", async () => {
+      req.params.questionId = "question-1";
+      mockFindAllTestCasesForAQuestion.mockRejectedValue(new Error("Retrieval failed"));
 
-            req.params.questionId = "question-1";
-            mockFindAllTestCasesForAQuestion.mockResolvedValue(testCases);
+      await expect(controller.findAllTestCasesForAQuestion(req, res)).rejects.toThrow(
+        "Retrieval failed",
+      );
+    });
+  });
 
-            await controller.findAllTestCasesForAQuestion(req, res);
+  describe("findAllVisibleTestCasesForAQuestion", () => {
+    it("should return visible test cases with status 200", async () => {
+      const testCases = [{ id: "visible-test-case-1" }];
 
-            expect(mockFindAllTestCasesForAQuestion).toHaveBeenCalledWith(
-                "question-1",
-            );
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(testCases);
-        });
+      req.params.questionId = "question-1";
+      mockFindVisibleTestCasesForAQuestion.mockResolvedValue(testCases);
 
-        it("should propagate service errors", async () => {
-            req.params.questionId = "question-1";
-            mockFindAllTestCasesForAQuestion.mockRejectedValue(
-                new Error("Retrieval failed"),
-            );
+      await controller.findAllVisibleTestCasesForAQuestion(req, res);
 
-            await expect(
-                controller.findAllTestCasesForAQuestion(req, res),
-            ).rejects.toThrow("Retrieval failed");
-        });
+      expect(mockFindVisibleTestCasesForAQuestion).toHaveBeenCalledWith("question-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(testCases);
     });
 
-    describe("findAllVisibleTestCasesForAQuestion", () => {
-        it("should return visible test cases with status 200", async () => {
-            const testCases = [{ id: "visible-test-case-1" }];
+    it("should propagate service errors", async () => {
+      req.params.questionId = "question-1";
+      mockFindVisibleTestCasesForAQuestion.mockRejectedValue(
+        new Error("Visible test case lookup failed"),
+      );
 
-            req.params.questionId = "question-1";
-            mockFindVisibleTestCasesForAQuestion.mockResolvedValue(testCases);
+      await expect(controller.findAllVisibleTestCasesForAQuestion(req, res)).rejects.toThrow(
+        "Visible test case lookup failed",
+      );
+    });
+  });
 
-            await controller.findAllVisibleTestCasesForAQuestion(req, res);
+  describe("createTestCase", () => {
+    it("should create a test case and return status 201", async () => {
+      const data = {
+        input: "2 2",
+        expectedOutput: "4",
+        isVisible: true,
+      };
+      const createdTestCase = { id: "test-case-1", ...data };
 
-            expect(
-                mockFindVisibleTestCasesForAQuestion,
-            ).toHaveBeenCalledWith("question-1");
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(testCases);
-        });
+      req.params.questionId = "question-1";
+      req.body = data;
+      mockCreateTestCase.mockResolvedValue(createdTestCase);
 
-        it("should propagate service errors", async () => {
-            req.params.questionId = "question-1";
-            mockFindVisibleTestCasesForAQuestion.mockRejectedValue(
-                new Error("Visible test case lookup failed"),
-            );
+      await controller.createTestCase(req, res);
 
-            await expect(
-                controller.findAllVisibleTestCasesForAQuestion(req, res),
-            ).rejects.toThrow("Visible test case lookup failed");
-        });
+      expect(mockCreateTestCase).toHaveBeenCalledWith("question-1", "user-1", data);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(createdTestCase);
     });
 
-    describe("createTestCase", () => {
-        it("should create a test case and return status 201", async () => {
-            const data = {
-                input: "2 2",
-                expectedOutput: "4",
-                isVisible: true,
-            };
-            const createdTestCase = { id: "test-case-1", ...data };
+    it("should propagate service errors", async () => {
+      req.params.questionId = "question-1";
+      req.body = { input: "2 2", expectedOutput: "4" };
+      mockCreateTestCase.mockRejectedValue(new Error("Creation failed"));
 
-            req.params.questionId = "question-1";
-            req.body = data;
-            mockCreateTestCase.mockResolvedValue(createdTestCase);
+      await expect(controller.createTestCase(req, res)).rejects.toThrow("Creation failed");
+    });
+  });
 
-            await controller.createTestCase(req, res);
+  describe("updateTestCase", () => {
+    it("should update a test case and return status 200", async () => {
+      const data = { expectedOutput: "5" };
+      const updatedTestCase = { id: "test-case-1", ...data };
 
-            expect(mockCreateTestCase).toHaveBeenCalledWith(
-                "question-1",
-                "user-1",
-                data,
-            );
-            expect(res.status).toHaveBeenCalledWith(201);
-            expect(res.json).toHaveBeenCalledWith(createdTestCase);
-        });
+      req.params.questionId = "question-1";
+      req.params.testCaseId = "test-case-1";
+      req.body = data;
+      mockUpdateTestCase.mockResolvedValue(updatedTestCase);
 
-        it("should propagate service errors", async () => {
-            req.params.questionId = "question-1";
-            req.body = { input: "2 2", expectedOutput: "4" };
-            mockCreateTestCase.mockRejectedValue(
-                new Error("Creation failed"),
-            );
+      await controller.updateTestCase(req, res);
 
-            await expect(
-                controller.createTestCase(req, res),
-            ).rejects.toThrow("Creation failed");
-        });
+      expect(mockUpdateTestCase).toHaveBeenCalledWith("test-case-1", "question-1", "user-1", data);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(updatedTestCase);
     });
 
-    describe("updateTestCase", () => {
-        it("should update a test case and return status 200", async () => {
-            const data = { expectedOutput: "5" };
-            const updatedTestCase = { id: "test-case-1", ...data };
+    it("should propagate service errors", async () => {
+      req.params.questionId = "question-1";
+      req.params.testCaseId = "test-case-1";
+      req.body = { expectedOutput: "5" };
+      mockUpdateTestCase.mockRejectedValue(new Error("Update failed"));
 
-            req.params.questionId = "question-1";
-            req.params.testCaseId = "test-case-1";
-            req.body = data;
-            mockUpdateTestCase.mockResolvedValue(updatedTestCase);
+      await expect(controller.updateTestCase(req, res)).rejects.toThrow("Update failed");
+    });
+  });
 
-            await controller.updateTestCase(req, res);
+  describe("deleteTestCase", () => {
+    it("should delete a test case and return status 204", async () => {
+      req.params.questionId = "question-1";
+      req.params.testCaseId = "test-case-1";
+      mockDeleteTestCase.mockResolvedValue(undefined);
 
-            expect(mockUpdateTestCase).toHaveBeenCalledWith(
-                "test-case-1",
-                "question-1",
-                "user-1",
-                data,
-            );
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(updatedTestCase);
-        });
+      await controller.deleteTestCase(req, res);
 
-        it("should propagate service errors", async () => {
-            req.params.questionId = "question-1";
-            req.params.testCaseId = "test-case-1";
-            req.body = { expectedOutput: "5" };
-            mockUpdateTestCase.mockRejectedValue(
-                new Error("Update failed"),
-            );
-
-            await expect(
-                controller.updateTestCase(req, res),
-            ).rejects.toThrow("Update failed");
-        });
+      expect(mockDeleteTestCase).toHaveBeenCalledWith("test-case-1", "question-1", "user-1");
+      expect(res.sendStatus).toHaveBeenCalledWith(204);
     });
 
-    describe("deleteTestCase", () => {
-        it("should delete a test case and return status 204", async () => {
-            req.params.questionId = "question-1";
-            req.params.testCaseId = "test-case-1";
-            mockDeleteTestCase.mockResolvedValue(undefined);
+    it("should propagate service errors", async () => {
+      req.params.questionId = "question-1";
+      req.params.testCaseId = "test-case-1";
+      mockDeleteTestCase.mockRejectedValue(new Error("Deletion failed"));
 
-            await controller.deleteTestCase(req, res);
-
-            expect(mockDeleteTestCase).toHaveBeenCalledWith(
-                "test-case-1",
-                "question-1",
-                "user-1",
-            );
-            expect(res.sendStatus).toHaveBeenCalledWith(204);
-        });
-
-        it("should propagate service errors", async () => {
-            req.params.questionId = "question-1";
-            req.params.testCaseId = "test-case-1";
-            mockDeleteTestCase.mockRejectedValue(
-                new Error("Deletion failed"),
-            );
-
-            await expect(
-                controller.deleteTestCase(req, res),
-            ).rejects.toThrow("Deletion failed");
-        });
+      await expect(controller.deleteTestCase(req, res)).rejects.toThrow("Deletion failed");
     });
+  });
 });

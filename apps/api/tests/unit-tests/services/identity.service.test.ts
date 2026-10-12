@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findByClerkIdMock, createUserMock, getUserMock } = vi.hoisted(
-  () => ({
-    findByClerkIdMock: vi.fn(),
-    createUserMock: vi.fn(),
-    getUserMock: vi.fn(),
-  }),
-);
+const { findByClerkIdMock, createUserMock, getUserMock } = vi.hoisted(() => ({
+  findByClerkIdMock: vi.fn(),
+  createUserMock: vi.fn(),
+  getUserMock: vi.fn(),
+}));
 
 vi.mock("../../../src/repositories/user.repository", () => ({
   UserRepository: class {
@@ -59,13 +57,11 @@ describe("IdentityService", () => {
     });
 
     it("propagates repository errors", async () => {
-      findByClerkIdMock.mockRejectedValue(
-        new Error("Database connection failed"),
-      );
+      findByClerkIdMock.mockRejectedValue(new Error("Database connection failed"));
 
-      await expect(
-        service.getUserByClerkId("clerk_123"),
-      ).rejects.toThrow("Database connection failed");
+      await expect(service.getUserByClerkId("clerk_123")).rejects.toThrow(
+        "Database connection failed",
+      );
     });
   });
 
@@ -129,13 +125,9 @@ describe("IdentityService", () => {
     });
 
     it("propagates errors when looking up the existing user fails", async () => {
-      findByClerkIdMock.mockRejectedValue(
-        new Error("User lookup failed"),
-      );
+      findByClerkIdMock.mockRejectedValue(new Error("User lookup failed"));
 
-      await expect(
-        service.findOrCreateUser("clerk_123"),
-      ).rejects.toThrow("User lookup failed");
+      await expect(service.findOrCreateUser("clerk_123")).rejects.toThrow("User lookup failed");
 
       expect(getUserMock).not.toHaveBeenCalled();
       expect(createUserMock).not.toHaveBeenCalled();
@@ -143,13 +135,9 @@ describe("IdentityService", () => {
 
     it("propagates errors when fetching the user from Clerk fails", async () => {
       findByClerkIdMock.mockResolvedValue(null);
-      getUserMock.mockRejectedValue(
-        new Error("Clerk API unavailable"),
-      );
+      getUserMock.mockRejectedValue(new Error("Clerk API unavailable"));
 
-      await expect(
-        service.findOrCreateUser("clerk_123"),
-      ).rejects.toThrow("Clerk API unavailable");
+      await expect(service.findOrCreateUser("clerk_123")).rejects.toThrow("Clerk API unavailable");
 
       expect(createUserMock).not.toHaveBeenCalled();
     });
@@ -169,13 +157,9 @@ describe("IdentityService", () => {
         imageUrl: "https://example.com/avatar.png",
       });
 
-      createUserMock.mockRejectedValue(
-        new Error("User creation failed"),
-      );
+      createUserMock.mockRejectedValue(new Error("User creation failed"));
 
-      await expect(
-        service.findOrCreateUser("clerk_123"),
-      ).rejects.toThrow("User creation failed");
+      await expect(service.findOrCreateUser("clerk_123")).rejects.toThrow("User creation failed");
 
       expect(createUserMock).toHaveBeenCalledTimes(1);
     });
