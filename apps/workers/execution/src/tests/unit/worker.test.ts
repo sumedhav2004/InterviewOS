@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { processJob } from "./worker";
-import { executeJob } from "./executor";
+import { executeJob } from "../../executor";
+import { processJob } from "../../worker";
 
-vi.mock("./executor", () => ({
+vi.mock("../../executor", () => ({
   executeJob: vi.fn(),
 }));
 
@@ -16,6 +16,10 @@ describe("processJob", () => {
       language: "PYTHON" as const,
       sourceCode: 'print("hello")',
       status: "QUEUED" as const,
+      target: {
+        type: "CODE_RUN" as const,
+        codeRunId: "code-run-1",
+      },
     };
 
     vi.mocked(executeJob).mockResolvedValue({
@@ -46,6 +50,10 @@ describe("processJob", () => {
       language: "PYTHON" as const,
       sourceCode: "raise Exception()",
       status: "QUEUED" as const,
+      target: {
+        type: "CODE_RUN" as const,
+        codeRunId: "code-run-1",
+      },
     };
 
     vi.mocked(executeJob).mockResolvedValue({

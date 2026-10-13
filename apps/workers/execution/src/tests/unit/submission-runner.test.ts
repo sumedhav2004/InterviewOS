@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runSubmission } from "./submission-runner";
+import { runSubmission } from "../../submission-runner";
 
 describe("runSubmission", () => {
   it("should accept a submission when all test cases pass", async () => {
@@ -15,6 +15,10 @@ x = int(input())
 print(x * x)
 `,
         status: "QUEUED",
+        target: {
+  type: "CODE_RUN",
+  codeRunId: "code-run-1",
+},
       },
       [
         {
@@ -50,6 +54,10 @@ x = int(input())
 print(x + 1)
 `,
         status: "QUEUED",
+        target: {
+  type: "CODE_RUN",
+  codeRunId: "code-run-1",
+},
       },
       [
         {

@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { handleExecutionJob } from "./job-handler";
-import { processJob } from "./worker";
+import { processJob } from "../../worker";
+import { handleExecutionJob } from "../../job-handler";
 
-vi.mock("./worker", () => ({
+
+vi.mock("../../worker", () => ({
   processJob: vi.fn(),
 }));
 
@@ -18,12 +19,20 @@ describe("handleExecutionJob", () => {
       language: "PYTHON" as const,
       sourceCode: 'print("hello")',
       status: "QUEUED" as const,
+      target: {
+        type: "CODE_RUN" as const,
+        codeRunId: "code-run-1",
+      },
     };
 
     mockedProcessJob.mockResolvedValue({
       job: {
         ...job,
         status: "COMPLETED",
+        target: {
+          type: "CODE_RUN" as const,
+          codeRunId: "code-run-1",
+        },
       },
       result: {
         stdout: "hello\n",

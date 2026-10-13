@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { executePython } from "./docker-executor";
+import { executePython } from "../../docker-executor";
+
 
 describe("executePython", () => {
   it("should execute valid Python code", async () => {

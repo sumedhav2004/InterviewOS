@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { executeJob } from "./executor";
+import { executeJob } from "../../executor";
+
 
 describe("executeJob", () => {
   it("should execute a Python job", async () => {
@@ -20,6 +21,10 @@ print(x * x)
       input: "5\n",
 
       status: "QUEUED",
+      target: {
+  type: "CODE_RUN",
+  codeRunId: "code-run-1",
+},
     });
 
     expect(result.stdout).toBe("25\n");

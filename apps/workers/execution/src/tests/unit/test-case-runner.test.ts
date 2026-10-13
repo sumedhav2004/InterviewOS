@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runTestCase, runTestCases } from "./test-case-runner";
+import { runTestCase, runTestCases } from "../../test-case-runner";
 
 describe("test-case-runner", () => {
   it("should pass when output matches expected output", async () => {
@@ -15,6 +15,10 @@ x = int(input())
 print(x * x)
 `,
         status: "QUEUED",
+        target: {
+  type: "CODE_RUN" as const,
+  codeRunId: "code-run-1",
+},
       },
       {
         id: "test-1",
@@ -42,6 +46,10 @@ x = int(input())
 print(x + 1)
 `,
         status: "QUEUED",
+        target: {
+  type: "CODE_RUN" as const,
+  codeRunId: "code-run-1",
+},
       },
       {
         id: "test-2",
@@ -69,6 +77,10 @@ x = int(input())
 print(x * x)
 `,
         status: "QUEUED",
+        target: {
+  type: "CODE_RUN" as const,
+  codeRunId: "code-run-1",
+},
       },
       [
         {
