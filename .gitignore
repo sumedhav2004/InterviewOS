@@ -23,3 +23,9 @@ out
 
 # misc
 coverage
+
+.turbo
+/apps/web/.next
+/apps/web/.turbo
+/apps/api/dist
+/apps/workers/execution/.turbo
