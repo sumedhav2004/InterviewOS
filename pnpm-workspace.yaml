@@ -2,6 +2,11 @@ packages:
   - "apps/*"
   - "apps/workers/*"
   - "packages/*"
+
 allowBuilds:
-  sharp: set this to true or false
-  unrs-resolver: set this to true or false
+  sharp: true
+  unrs-resolver: true
+  "@prisma/client": true
+  "@prisma/engines": true
+  esbuild: true
+  prisma: true
