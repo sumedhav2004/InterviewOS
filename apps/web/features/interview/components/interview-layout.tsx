@@ -126,7 +126,7 @@ export function InterviewLayout({
     const startY = event.clientY;
     const startHeight = terminalHeight;
 
-    const handlePointerMove = (pointerEvent: PointerEvent) => {
+    const handlePointerMove = (pointerEvent: globalThis.PointerEvent) => {
       if (!isDragging.current) {
         return;
       }

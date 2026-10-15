@@ -27,7 +27,7 @@ export function DashboardPage() {
 
   const { user, loading, error } = useDashboard({
     isLoaded,
-    isSignedIn,
+    isSignedIn: isSignedIn ?? false,
   });
 
   const {
@@ -36,7 +36,7 @@ export function DashboardPage() {
     error: interviewsError,
   } = useInterviews({
     isLoaded,
-    isSignedIn,
+    isSignedIn: isSignedIn ?? false,
   });
 
   const upcomingInterviews = interviews.filter(
@@ -55,7 +55,7 @@ export function DashboardPage() {
     declineInvitation,
   } = useInvitations({
     isLoaded,
-    isSignedIn,
+    isSignedIn: isSignedIn ?? false,
   });
 
   if (!isLoaded) {

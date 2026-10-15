@@ -1,6 +1,7 @@
 import { CodeRunTestCaseResult } from "./coderun";
 import { Participant } from "./participant";
 import { ProgrammingLanguage } from "./programming-language";
+import { TestCase } from "./testcase";
 
 export type InterviewRealtimeEvent =
   | {
@@ -138,7 +139,8 @@ export type ServerMessage =
           id: string;
           title: string;
           description: string;
-          difficulty: "EASY" | "MEDIUM" | "HARD";
+          difficulty: string;
+          testCases: TestCase[];
         };
       } | null;
     }
@@ -234,11 +236,7 @@ export type ActiveQuestionChangedMessage = {
       title: string;
       description: string;
       difficulty: string;
-      testCases: {
-        id: string;
-        input: unknown;
-        expectedOutput: unknown;
-      }[];
+      testCases: TestCase[];
     };
   } | null;
 };

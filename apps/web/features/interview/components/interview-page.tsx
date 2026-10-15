@@ -381,6 +381,14 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
     );
   }
 
+  if (!participant) {
+    return (
+      <InterviewShell>
+        <LoadingState label="Joining interview room..." />
+      </InterviewShell>
+    );
+  }
+
   return (
     <InterviewRoomProvider>
       <InterviewShell>

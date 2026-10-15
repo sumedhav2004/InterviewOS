@@ -1,4 +1,4 @@
-import React, { PointerEvent, useRef, useState } from "react";
+import React, { useRef, useState, type PointerEvent } from "react";
 import { Participant, ParticipantMediaState } from "../../types/participant";
 import { ActiveInterviewQuestion } from "../../types/active-question";
 import { ProgrammingLanguage } from "../../types/programming-language";
@@ -97,7 +97,7 @@ const InterviewWorkspace = ({
     const startY = event.clientY;
     const startHeight = terminalHeight;
 
-    const handlePointerMove = (pointerEvent: PointerEvent) => {
+    const handlePointerMove = (pointerEvent: globalThis.PointerEvent) => {
       if (!isDragging.current) {
         return;
       }

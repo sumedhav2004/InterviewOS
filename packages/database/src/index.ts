@@ -1,6 +1,6 @@
 export * from "./client.js";
 
-export type { User, Prisma } from "@prisma/client";
+export type { User, Prisma, Participant } from "@prisma/client";
 
 export {
   ParticipantRole,
@@ -11,5 +11,4 @@ export {
   ExecutionStatus,
   TestCaseVisibility,
   EvaluationStatus,
-  Participant,
 } from "@prisma/client";
