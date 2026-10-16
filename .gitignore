@@ -29,3 +29,5 @@ coverage
 /apps/web/.turbo
 /apps/api/dist
 /apps/workers/execution/.turbo
+
+interview-os-vm_key.pem
