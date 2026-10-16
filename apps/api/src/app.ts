@@ -26,7 +26,11 @@ export function mountCodeRunRoutes(interviewRoom: InterviewRoom) {
 
 app.use(
   cors({
-    origin: config.server.frontend_url,
+    origin: [
+      'http://localhost:3000', // Update this if your local frontend runs on a different port (like 5173 for Vite)
+      'https://interview-os-flame.vercel.app',
+      config.server.frontend_url // keeps your config variable working too
+    ],
     credentials: true,
   }),
 );
