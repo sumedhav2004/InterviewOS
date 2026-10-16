@@ -17,6 +17,7 @@ import { createCodeRunRouter } from "./routes/code-run.routes";
 import testCaseRoutes from "./routes/test-case.routes";
 import submissionRoutes from "./routes/submission.routes";
 import { config } from "@interview-os/config";
+import healthRoute from "./routes/health.route"
 
 const app = express();
 
@@ -38,7 +39,7 @@ app.use(requestIdMiddleware);
 app.use(loggerMiddleware);
 app.use(express.json());
 app.use(clerkMiddleware());
-
+app.use("/health", healthRoute)
 app.use("/user", authMiddleware, userRoutes);
 app.use("/resumes", authMiddleware, resumeRoutes);
 app.use("/interviews", authMiddleware, interviewRoutes);
