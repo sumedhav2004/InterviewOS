@@ -16,6 +16,7 @@ import { InterviewRoom } from "./realtime/websocket/interview-room";
 import { createCodeRunRouter } from "./routes/code-run.routes";
 import testCaseRoutes from "./routes/test-case.routes";
 import submissionRoutes from "./routes/submission.routes";
+import { config } from "@interview-os/config";
 
 const app = express();
 
@@ -25,7 +26,7 @@ export function mountCodeRunRoutes(interviewRoom: InterviewRoom) {
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: config.server.frontend_url,
     credentials: true,
   }),
 );

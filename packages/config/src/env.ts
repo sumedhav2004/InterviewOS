@@ -17,7 +17,8 @@ const envSchema = z.object({
   REDIS_URL: z.string().min(1, "REDIS_URL is required"),
   CLERK_SECRET_KEY: z.string().min(1),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
-  NEXT_PUBLIC_BACKEND_URL: z.string().min(1, "BACKEND URL IS REQUIRED")
+  NEXT_PUBLIC_BACKEND_URL: z.string().min(1, "BACKEND URL IS REQUIRED"),
+  FRONTEND_URL: z.string().min(1, "FRONTEND URL IS NECESSARY")
 });
 
 export const env = envSchema.parse(process.env);
