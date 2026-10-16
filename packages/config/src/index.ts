@@ -1,6 +1,6 @@
-import { databaseConfig } from "./database";
-import { redisConfig } from "./redis";
-import { serverConfig } from "./server";
+import { databaseConfig } from "./database.js";
+import { redisConfig } from "./redis.js";
+import { serverConfig } from "./server.js";
 
 export const config = {
   server: serverConfig,
