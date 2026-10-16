@@ -1,1 +1,1 @@
-web: node apps/api/dist/index.js
+web: node apps/api/dist/src/server.js

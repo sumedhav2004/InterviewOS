@@ -32,3 +32,8 @@ coverage
 /apps/workers/execution/.turbo
 
 interview-os-vm_key.pem
+/packages/redis/dist
+/packages/config/dist
+/packages/database/dist
+/packages/logger/dist
+/packages/validation/dist
