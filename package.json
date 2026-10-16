@@ -12,7 +12,7 @@
     "lint": "eslint apps/api apps/workers packages && pnpm --filter web lint",
     "format": "prettier --write",
     "format:check": "prettier --check .",
-    "heroku-postbuild": "pnpm turbo run build --filter=api^..." 
+    "heroku-postbuild": "pnpm turbo run build --filter=api..." 
   },
   "keywords": [],
   "author": "",
