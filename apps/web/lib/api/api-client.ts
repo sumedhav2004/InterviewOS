@@ -1,5 +1,3 @@
-import { config } from "@interview-os/config";
-
 type TokenProvider = () => Promise<string | null>;
 
 export class ApiClient {
