@@ -12,7 +12,6 @@
     "@base-ui/react": "^1.8.0",
     "@clerk/nextjs": "^7.6.0",
     "@interview-os/database": "workspace:*",
-    "@interview-os/config": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "badge": "^1.0.3",
     "class-variance-authority": "^0.7.1",

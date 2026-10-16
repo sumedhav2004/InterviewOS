@@ -73,4 +73,4 @@ export class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(config.server.backend_url);
+export const apiClient = new ApiClient(process.env.NEXT_PUBLIC_BACKEND_URL!);
