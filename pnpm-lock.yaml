@@ -114,9 +114,6 @@ importers:
       '@clerk/nextjs':
         specifier: ^7.6.0
         version: 7.6.0(next@16.2.10(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@interview-os/config':
-        specifier: workspace:*
-        version: link:../../packages/config
       '@interview-os/database':
         specifier: workspace:*
         version: link:../../packages/database
