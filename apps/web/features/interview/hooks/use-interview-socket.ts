@@ -53,7 +53,7 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
       }
 
       // socket = new WebSocket("ws://localhost:3001/ws");
-      socket = new WebSocket(`ws://${process.env.NEXT_PUBLIC_WS_URL}/ws`);
+      socket = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}`);
 
       socket.onopen = () => {
         console.log("[WS] connected");
