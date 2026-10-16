@@ -1,5 +1,5 @@
 export { z } from "zod";
 
-export * from "./validate";
+export * from "./validate.js";
 
-export * from "./validate-error";
+export * from "./validate-error.js";

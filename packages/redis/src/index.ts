@@ -13,5 +13,5 @@ export async function connectRedis() {
   await redis.connect();
 }
 
-export * from "./queue";
-export * from "./pubsub";
+export * from "./queue.js";
+export * from "./pubsub.js";
