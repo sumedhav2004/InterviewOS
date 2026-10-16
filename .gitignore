@@ -30,6 +30,7 @@ coverage
 /apps/web/.turbo
 /apps/api/dist
 /apps/workers/execution/.turbo
+/apps/workers/execution/dist
 
 interview-os-vm_key.pem
 /packages/redis/dist

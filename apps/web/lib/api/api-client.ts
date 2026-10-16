@@ -1,3 +1,5 @@
+import { config } from "@interview-os/config";
+
 type TokenProvider = () => Promise<string | null>;
 
 export class ApiClient {
@@ -71,4 +73,4 @@ export class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient("http://localhost:3001");
+export const apiClient = new ApiClient(config.server.backend_url);
