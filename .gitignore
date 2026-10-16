@@ -38,3 +38,5 @@ interview-os-vm_key.pem
 /packages/database/dist
 /packages/logger/dist
 /packages/validation/dist
+
+local_dump.sql
