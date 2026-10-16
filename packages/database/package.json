@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
     "db:generate": "prisma generate",
