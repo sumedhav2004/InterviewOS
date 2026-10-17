@@ -40,3 +40,4 @@ interview-os-vm_key.pem
 /packages/validation/dist
 
 local_dump.sql
+/packages/database/generated
