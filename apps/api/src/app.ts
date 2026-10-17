@@ -30,6 +30,7 @@ app.use(
     origin: [
       'http://localhost:3000', // Update this if your local frontend runs on a different port (like 5173 for Vite)
       'https://interview-os-flame.vercel.app',
+      'https://interview-os.sumedhav.me',
       config.server.frontend_url // keeps your config variable working too
     ],
     credentials: true,

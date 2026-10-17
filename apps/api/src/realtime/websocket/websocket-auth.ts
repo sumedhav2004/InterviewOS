@@ -7,7 +7,7 @@ export async function authenticateWebSocketToken(token: string): Promise<string 
   try {
     const verifiedToken = await verifyToken(token, {
       secretKey: process.env.CLERK_SECRET_KEY,
-      authorizedParties: ["http://localhost:3000","https://interview-os-flame.vercel.app"],
+      authorizedParties: ["http://localhost:3000","https://interview-os-flame.vercel.app", "https://interview-os.sumedhav.me"],
     });
 
     if (!verifiedToken.sub) {
