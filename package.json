@@ -12,7 +12,7 @@
     "lint": "eslint apps/api apps/workers packages && pnpm --filter web lint",
     "format": "prettier --write",
     "format:check": "prettier --check .",
-    "heroku-postbuild": "pnpm --filter @interview-os/database exec prisma generate --schema=prisma/schema.prisma && pnpm turbo run build --filter=api..." 
+    "heroku-postbuild": "pnpm turbo run build --filter=api... && pnpm --filter @interview-os/database exec prisma generate --schema=prisma/schema.prisma && pnpm --filter @interview-os/database exec node --input-type=module -e 'import { ParticipantRole } from \"./dist/index.js\"; if (!ParticipantRole?.INTERVIEWER) throw new Error(\"Prisma enum export missing after generation\"); console.log(\"Prisma enum export verified\")'"
   },
   "keywords": [],
   "author": "",
