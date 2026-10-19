@@ -103,11 +103,8 @@ jobs:
           git switch main
           git pull --ff-only origin main
 
-          echo "Installing dependencies with pnpm 9.15.9..."
-          npx --yes pnpm@9.15.9 install --frozen-lockfile
-
-          echo "Building execution worker..."
-          npx --yes pnpm@9.15.9 exec turbo run build --filter=./apps/workers/execution...
+          corepack pnpm install --frozen-lockfile
+          corepack pnpm exec turbo run build --filter=./apps/workers/execution...
 
           echo "Restarting worker..."
           pm2 restart execution-worker --update-env
