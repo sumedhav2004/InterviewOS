@@ -41,3 +41,6 @@ interview-os-vm_key.pem
 
 local_dump.sql
 /packages/database/generated
+
+azure-deploy-key
+azure-deploy-key.pub
