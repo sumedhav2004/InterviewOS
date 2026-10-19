@@ -61,6 +61,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
       - name: Configure SSH
         env:
@@ -92,14 +93,14 @@ jobs:
           git switch main
           git pull --ff-only origin main
 
+          echo "Installing pnpm 9.15.9..."
+          npm install --global pnpm@9.15.9
+
           echo "Installing locked dependencies..."
-          corepack pnpm install --frozen-lockfile
+          pnpm install --frozen-lockfile
 
           echo "Building worker and its workspace dependencies..."
-          corepack pnpm exec turbo run build --filter=./apps/workers/execution...
-
-          echo "Restarting execution worker..."
-          pm2 restart execution-worker --update-env
+          pnpm exec turbo run build --filter=./apps/workers/execution...
 
           echo "Restarting execution worker..."
           pm2 restart execution-worker --update-env
@@ -117,5 +118,8 @@ jobs:
             console.log("SUCCESS: execution-worker is online");
           '
 
+          echo "Saving PM2 process list..."
           pm2 save
+
           echo "Deployment finished successfully."
+          REMOTE
