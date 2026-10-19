@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - main
-      - chore/ci-pipeline
   workflow_dispatch:
 
 permissions:
@@ -55,3 +54,33 @@ jobs:
 
       - name: Build workspace
         run: pnpm build
+
+  deploy-worker:
+    name: Deploy Execution Worker
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.AZURE_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.AZURE_SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/azure_deploy
+          chmod 600 ~/.ssh/azure_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Verify Azure SSH access
+        env:
+          AZURE_HOST: ${{ secrets.AZURE_HOST }}
+          AZURE_USER: ${{ secrets.AZURE_USER }}
+        run: |
+          ssh -i ~/.ssh/azure_deploy \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$AZURE_USER@$AZURE_HOST" \
+            'printf "Azure SSH authentication successful\n"'
