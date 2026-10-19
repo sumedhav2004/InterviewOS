@@ -85,32 +85,27 @@ jobs:
             -o StrictHostKeyChecking=yes \
             "$AZURE_USER@$AZURE_HOST" 'bash -se' <<'REMOTE'
           set -Eeuo pipefail
-
           cd /home/azureuser/InterviewOS
 
-          echo "Fetching latest main..."
+          echo "Updating main..."
           git fetch origin main
           git switch main
           git pull --ff-only origin main
 
-          echo "Installing pnpm 9.15.9..."
-          npm install --global pnpm@9.15.9
+          echo "Installing dependencies with pnpm 9.15.9..."
+          npx --yes pnpm@9.15.9 install --frozen-lockfile
 
-          echo "Installing locked dependencies..."
-          pnpm install --frozen-lockfile
+          echo "Building execution worker..."
+          npx --yes pnpm@9.15.9 exec turbo run build --filter=./apps/workers/execution...
 
-          echo "Building worker and its workspace dependencies..."
-          pnpm exec turbo run build --filter=./apps/workers/execution...
-
-          echo "Restarting execution worker..."
+          echo "Restarting worker..."
           pm2 restart execution-worker --update-env
-
           sleep 5
 
           node -e '
             const { execFileSync } = require("node:child_process");
-            const processes = JSON.parse(execFileSync("pm2", ["jlist"], { encoding: "utf8" }));
-            const worker = processes.find(p => p.name === "execution-worker");
+            const list = JSON.parse(execFileSync("pm2", ["jlist"], { encoding: "utf8" }));
+            const worker = list.find(p => p.name === "execution-worker");
             if (!worker || worker.pm2_env.status !== "online") {
               console.error("ERROR: execution-worker is not online");
               process.exit(1);
@@ -118,8 +113,6 @@ jobs:
             console.log("SUCCESS: execution-worker is online");
           '
 
-          echo "Saving PM2 process list..."
           pm2 save
-
           echo "Deployment finished successfully."
           REMOTE
