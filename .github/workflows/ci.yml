@@ -85,6 +85,17 @@ jobs:
             -o StrictHostKeyChecking=yes \
             "$AZURE_USER@$AZURE_HOST" 'bash -se' <<'REMOTE'
           set -Eeuo pipefail
+
+          # Make Node.js and PM2 available in non-interactive SSH sessions.
+          export NVM_DIR="/home/azureuser/.nvm"
+          export PATH="$NVM_DIR/versions/node/v24.22.0/bin:$PATH"
+
+          # Fail early if the deployment environment is incorrect.
+          echo "Node: $(command -v node)"
+          echo "PM2:  $(command -v pm2)"
+          node --version
+          pm2 --version
+
           cd /home/azureuser/InterviewOS
 
           echo "Updating main..."
