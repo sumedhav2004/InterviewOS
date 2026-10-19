@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import { processJob } from "../../worker";
 import { handleExecutionJob } from "../../job-handler";
 
-
 vi.mock("../../worker", () => ({
   processJob: vi.fn(),
 }));

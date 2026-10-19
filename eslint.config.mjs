@@ -10,6 +10,8 @@ export default defineConfig([
     "**/.next/**",
     "**/coverage/**",
     "**/.turbo/**",
+    "packages/database/generated/**",
+    "packages/database/prisma/generated/**",
   ]),
   {
     files: ["apps/api/**/*.ts", "apps/workers/**/*.ts", "packages/**/*.ts"],
