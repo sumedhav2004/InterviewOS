@@ -13,11 +13,7 @@ const {
 
 export * from "./client.js";
 
-export type {
-  User,
-  Prisma,
-  Participant,
-} from "../generated/client/index.js";
+export type { User, Prisma, Participant } from "../generated/client/index.js";
 
 export type ParticipantRole = (typeof ParticipantRole)[keyof typeof ParticipantRole];
 export type InviteStatus = (typeof InviteStatus)[keyof typeof InviteStatus];

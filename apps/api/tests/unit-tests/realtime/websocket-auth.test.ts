@@ -32,7 +32,11 @@ describe("authenticateWebSocketToken", () => {
     expect(result).toBe("user-1");
     expect(mockVerifyToken).toHaveBeenCalledWith("valid-token", {
       secretKey: "test-secret-key",
-      authorizedParties: ["http://localhost:3000"],
+      authorizedParties: [
+        "http://localhost:3000",
+        "https://interview-os-flame.vercel.app",
+        "https://interview-os.sumedhav.me",
+      ],
     });
     expect(mockFindOrCreateUser).toHaveBeenCalledWith("clerk-user-1");
   });
@@ -83,7 +87,11 @@ describe("authenticateWebSocketToken", () => {
 
     expect(mockVerifyToken).toHaveBeenCalledWith("valid-token", {
       secretKey: undefined,
-      authorizedParties: ["http://localhost:3000"],
+      authorizedParties: [
+        "http://localhost:3000",
+        "https://interview-os-flame.vercel.app",
+        "https://interview-os.sumedhav.me",
+      ],
     });
   });
 });

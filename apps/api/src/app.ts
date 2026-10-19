@@ -17,7 +17,7 @@ import { createCodeRunRouter } from "./routes/code-run.routes";
 import testCaseRoutes from "./routes/test-case.routes";
 import submissionRoutes from "./routes/submission.routes";
 import { config } from "@interview-os/config";
-import healthRoute from "./routes/health.route"
+import healthRoute from "./routes/health.route";
 
 const app = express();
 
@@ -28,10 +28,10 @@ export function mountCodeRunRoutes(interviewRoom: InterviewRoom) {
 app.use(
   cors({
     origin: [
-      'http://localhost:3000', // Update this if your local frontend runs on a different port (like 5173 for Vite)
-      'https://interview-os-flame.vercel.app',
-      'https://interview-os.sumedhav.me',
-      config.server.frontend_url // keeps your config variable working too
+      "http://localhost:3000", // Update this if your local frontend runs on a different port (like 5173 for Vite)
+      "https://interview-os-flame.vercel.app",
+      "https://interview-os.sumedhav.me",
+      config.server.frontend_url, // keeps your config variable working too
     ],
     credentials: true,
   }),
@@ -40,7 +40,7 @@ app.use(requestIdMiddleware);
 app.use(loggerMiddleware);
 app.use(express.json());
 app.use(clerkMiddleware());
-app.use("/health", healthRoute)
+app.use("/health", healthRoute);
 app.use("/user", authMiddleware, userRoutes);
 app.use("/resumes", authMiddleware, resumeRoutes);
 app.use("/interviews", authMiddleware, interviewRoutes);

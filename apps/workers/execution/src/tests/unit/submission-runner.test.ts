@@ -16,9 +16,9 @@ print(x * x)
 `,
         status: "QUEUED",
         target: {
-  type: "CODE_RUN",
-  codeRunId: "code-run-1",
-},
+          type: "CODE_RUN",
+          codeRunId: "code-run-1",
+        },
       },
       [
         {
@@ -55,9 +55,9 @@ print(x + 1)
 `,
         status: "QUEUED",
         target: {
-  type: "CODE_RUN",
-  codeRunId: "code-run-1",
-},
+          type: "CODE_RUN",
+          codeRunId: "code-run-1",
+        },
       },
       [
         {

@@ -16,9 +16,9 @@ print(x * x)
 `,
         status: "QUEUED",
         target: {
-  type: "CODE_RUN" as const,
-  codeRunId: "code-run-1",
-},
+          type: "CODE_RUN" as const,
+          codeRunId: "code-run-1",
+        },
       },
       {
         id: "test-1",
@@ -47,9 +47,9 @@ print(x + 1)
 `,
         status: "QUEUED",
         target: {
-  type: "CODE_RUN" as const,
-  codeRunId: "code-run-1",
-},
+          type: "CODE_RUN" as const,
+          codeRunId: "code-run-1",
+        },
       },
       {
         id: "test-2",
@@ -78,9 +78,9 @@ print(x * x)
 `,
         status: "QUEUED",
         target: {
-  type: "CODE_RUN" as const,
-  codeRunId: "code-run-1",
-},
+          type: "CODE_RUN" as const,
+          codeRunId: "code-run-1",
+        },
       },
       [
         {

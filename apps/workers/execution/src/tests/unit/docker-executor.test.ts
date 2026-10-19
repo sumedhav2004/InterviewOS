@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { executePython } from "../../docker-executor";
 
-
 describe("executePython", () => {
   it("should execute valid Python code", async () => {
     const result = await executePython('print("Hello from sandbox")\nprint(2 + 3)');
