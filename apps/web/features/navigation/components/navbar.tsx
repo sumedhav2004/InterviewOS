@@ -19,7 +19,7 @@ const navigationItems = [
 
 export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
-  const {isSignedIn, isLoaded, user} = useUser()
+  const { isSignedIn, isLoaded, user } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,26 +63,24 @@ export function Navigation() {
 
         <div className="hidden items-center gap-2 sm:flex">
           {isLoaded && isSignedIn ? (
-          <Link
-            href="/dashboard"
-            aria-label="Go to dashboard"
-            title="Dashboard"
-            className="rounded-full outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            <Avatar className="size-9">
-              <AvatarImage src={user?.imageUrl} alt="Your profile" />
-              <AvatarFallback>
-                {user?.firstName?.charAt(0) ?? "U"}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
-        ) : isLoaded ? (
-          <Button variant="ghost" size="sm">
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
-        ) : (
-          <div aria-hidden="true" className="size-9" />
-        )}
+            <Link
+              href="/dashboard"
+              aria-label="Go to dashboard"
+              title="Dashboard"
+              className="rounded-full outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <Avatar className="size-9">
+                <AvatarImage src={user?.imageUrl} alt="Your profile" />
+                <AvatarFallback>{user?.firstName?.charAt(0) ?? "U"}</AvatarFallback>
+              </Avatar>
+            </Link>
+          ) : isLoaded ? (
+            <Button variant="ghost" size="sm">
+              <Link href="/sign-in">Sign in</Link>
+            </Button>
+          ) : (
+            <div aria-hidden="true" className="size-9" />
+          )}
 
           <Button size="sm">
             Get started
