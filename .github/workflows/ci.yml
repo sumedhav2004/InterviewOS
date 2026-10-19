@@ -74,7 +74,7 @@ jobs:
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
 
-      - name: Verify Azure SSH access
+      - name: Deploy worker to Azure
         env:
           AZURE_HOST: ${{ secrets.AZURE_HOST }}
           AZURE_USER: ${{ secrets.AZURE_USER }}
@@ -82,5 +82,40 @@ jobs:
           ssh -i ~/.ssh/azure_deploy \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
-            "$AZURE_USER@$AZURE_HOST" \
-            'printf "Azure SSH authentication successful\n"'
+            "$AZURE_USER@$AZURE_HOST" 'bash -se' <<'REMOTE'
+          set -Eeuo pipefail
+
+          cd /home/azureuser/InterviewOS
+
+          echo "Fetching latest main..."
+          git fetch origin main
+          git switch main
+          git pull --ff-only origin main
+
+          echo "Installing locked dependencies..."
+          corepack pnpm install --frozen-lockfile
+
+          echo "Building worker and its workspace dependencies..."
+          corepack pnpm exec turbo run build --filter=./apps/workers/execution...
+
+          echo "Restarting execution worker..."
+          pm2 restart execution-worker --update-env
+
+          echo "Restarting execution worker..."
+          pm2 restart execution-worker --update-env
+
+          sleep 5
+
+          node -e '
+            const { execFileSync } = require("node:child_process");
+            const processes = JSON.parse(execFileSync("pm2", ["jlist"], { encoding: "utf8" }));
+            const worker = processes.find(p => p.name === "execution-worker");
+            if (!worker || worker.pm2_env.status !== "online") {
+              console.error("ERROR: execution-worker is not online");
+              process.exit(1);
+            }
+            console.log("SUCCESS: execution-worker is online");
+          '
+
+          pm2 save
+          echo "Deployment finished successfully."
