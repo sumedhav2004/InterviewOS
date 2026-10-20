@@ -55,6 +55,90 @@ jobs:
       - name: Build workspace
         run: pnpm build
 
+  migrate-database:
+    name: Migrate Production Database
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+            - name: Detect database changes
+        id: db-changes
+        env:
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ "$BEFORE" =~ ^0+$ ]] ||
+             ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "schema_changed=true" >> "$GITHUB_OUTPUT"
+            echo "migrations_changed=true" >> "$GITHUB_OUTPUT"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git diff --quiet "$BEFORE" "$SHA" -- \
+            packages/database/prisma/schema.prisma; then
+            echo "schema_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "schema_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if git diff --quiet "$BEFORE" "$SHA" -- \
+            packages/database/prisma/migrations/; then
+            echo "migrations_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "migrations_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          SCHEMA_CHANGED=$(git diff --quiet "$BEFORE" "$SHA" -- \
+            packages/database/prisma/schema.prisma && echo false || echo true)
+
+          MIGRATIONS_CHANGED=$(git diff --quiet "$BEFORE" "$SHA" -- \
+            packages/database/prisma/migrations/ && echo false || echo true)
+
+          if [[ "$SCHEMA_CHANGED" == "true" && "$MIGRATIONS_CHANGED" != "true" ]]; then
+            echo "ERROR: schema.prisma changed without a migration file."
+            exit 1
+          fi
+
+          if [[ "$MIGRATIONS_CHANGED" == "true" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.db-changes.outputs.changed == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply production migrations
+        if: steps.db-changes.outputs.changed == 'true'
+        working-directory: packages/database
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: pnpm exec prisma migrate deploy
+
+      - name: Skip migration
+        if: steps.db-changes.outputs.changed != 'true'
+        run: echo "No Prisma schema or migration changes detected."
+
   deploy-worker:
     name: Deploy Execution Worker
     needs: quality
