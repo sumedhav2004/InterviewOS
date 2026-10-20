@@ -12,7 +12,7 @@
     "lint": "eslint apps/api apps/workers packages && pnpm --filter web lint",
     "format": "prettier --write",
     "format:check": "prettier --check .",
-    "heroku-postbuild": "pnpm turbo run build --filter=api... --force && echo '--- API build output ---' && ls -la apps/api/dist/src && test -f apps/api/dist/src/server.js && pnpm --filter @interview-os/database exec prisma generate --schema=prisma/schema.prisma"
+    "heroku-postbuild": "pnpm --filter @interview-os/config build && pnpm --filter @interview-os/database build && pnpm --filter @interview-os/redis build && pnpm --filter api build && echo '--- API build output ---' && ls -la apps/api/dist/src && test -f apps/api/dist/src/server.js"
   },
   "keywords": [],
   "author": "",
