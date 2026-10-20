@@ -69,6 +69,31 @@ enum EvaluationStatus {
   PENDING
 }
 
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+model FriendRequest {
+  id          String              @id @default(uuid()) @db.Uuid
+  senderId    String              @db.Uuid
+  receiverId  String              @db.Uuid
+  status      FriendRequestStatus @default(PENDING)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  respondedAt DateTime?
+
+  sender   User @relation("FriendRequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("FriendRequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status, createdAt])
+  @@index([senderId, status, createdAt])
+  @@index([status])
+}
+
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   clerkId   String   @unique
@@ -82,6 +107,8 @@ model User {
   participants      Participant[]
   sentInvites       Invite[]      @relation("InviteSender")
   receivedInvites   Invite[]      @relation("InviteReceiver")
+  SentRequests     FriendRequest[] @relation("FriendRequestSender")
+  ReceivedRequests FriendRequest[] @relation("FriendRequestReceiver")
   questions         Question[]
   resumes          Resume[]     
 }
