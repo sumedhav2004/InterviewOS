@@ -79,7 +79,7 @@ jobs:
           node-version: 24
           cache: pnpm
 
-            - name: Detect database changes
+      - name: Detect database changes
         id: db-changes
         env:
           BEFORE: ${{ github.event.before }}
