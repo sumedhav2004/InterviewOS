@@ -1,15 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserController } from "../../../src/controllers/user.controller";
 
-const { mockUpdateUser, mockFindUser } = vi.hoisted(() => ({
+const { mockUpdateUser, mockFindUser, mockFindUserByEmail } = vi.hoisted(() => ({
   mockUpdateUser: vi.fn(),
   mockFindUser: vi.fn(),
+  mockFindUserByEmail: vi.fn(),
 }));
 
 vi.mock("../../../src/services/profile.service", () => ({
   ProfileService: class {
     updateUser = mockUpdateUser;
     findUser = mockFindUser;
+  },
+}));
+
+vi.mock("../../../src/services/identity.service", () => ({
+  IdentityService: class {
+    findUserByEmail = mockFindUserByEmail;
   },
 }));
 
@@ -109,6 +116,44 @@ describe("UserController", () => {
       mockFindUser.mockRejectedValue(new Error("User lookup failed"));
 
       await expect(controller.findUserById(req, res)).rejects.toThrow("User lookup failed");
+    });
+  });
+
+  describe("findUserByEmail", () => {
+    it("should return a user with status 200", async () => {
+      const user = {
+        id: "user-2",
+        name: "Another User",
+        email: "another@example.com",
+      };
+
+      req.params.emailId = "another@example.com";
+      mockFindUserByEmail.mockResolvedValue(user);
+
+      await controller.findUserByEmail(req, res);
+
+      expect(mockFindUserByEmail).toHaveBeenCalledWith("another@example.com", "user-1");
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(user);
+    });
+
+    it("should return 400 when emailId is not a string", async () => {
+      req.params.emailId = ["another@example.com"];
+
+      await controller.findUserByEmail(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Invalid email route parameter",
+      });
+      expect(mockFindUserByEmail).not.toHaveBeenCalled();
+    });
+
+    it("should propagate service errors", async () => {
+      req.params.emailId = "another@example.com";
+      mockFindUserByEmail.mockRejectedValue(new Error("Email lookup failed"));
+
+      await expect(controller.findUserByEmail(req, res)).rejects.toThrow("Email lookup failed");
     });
   });
 });

@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { ProfileService } from "../services/profile.service";
+import { IdentityService } from "../services/identity.service";
 
 export class UserController {
   profileService = new ProfileService();
+  identityService = new IdentityService();
 
   //to retrieve data regarding the user
   async getMe(req: Request, res: Response) {
@@ -25,6 +27,21 @@ export class UserController {
     }
 
     const user = await this.profileService.findUser(userId);
+    return res.status(200).json(user);
+  }
+
+  async findUserByEmail(req: Request, res: Response) {
+    const userId = req.user.id;
+    const emailId = req.params.emailId;
+
+    if (typeof emailId !== "string") {
+      return res.status(400).json({
+        message: "Invalid email route parameter",
+      });
+    }
+
+    const user = await this.identityService.findUserByEmail(emailId, userId);
+
     return res.status(200).json(user);
   }
 }

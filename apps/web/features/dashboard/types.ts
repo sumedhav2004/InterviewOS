@@ -1,5 +1,3 @@
-import { User } from "@interview-os/database";
-
 export type InviteStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "CANCELLED";
 
 export type ParticipantRole = "INTERVIEWER" | "CANDIDATE" | "OBSERVER";
@@ -35,3 +33,11 @@ export type Interview = {
   updatedAt: string;
   createdById: string;
 };
+
+export interface User {
+  id: string;
+  clerkId: string;
+  email: string;
+  name: string;
+  avatarUrl: string;
+}
