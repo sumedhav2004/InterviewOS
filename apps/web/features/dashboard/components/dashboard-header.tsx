@@ -54,7 +54,7 @@ export function DashboardHeader({ name }: DashboardHeaderProps) {
           </h1>
 
           <p className="max-w-2xl text-muted-foreground">
-            Here's what's happening with your interviews.
+            Here&apos;s what&apos;s happening with your interviews.
           </p>
         </div>
 
