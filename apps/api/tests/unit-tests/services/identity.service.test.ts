@@ -1,15 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findByClerkIdMock, createUserMock, getUserMock } = vi.hoisted(() => ({
+const {
+  findByClerkIdMock,
+  createUserMock,
+  getUserMock,
+  findByIdMock,
+  getUserByEmailMock,
+} = vi.hoisted(() => ({
   findByClerkIdMock: vi.fn(),
   createUserMock: vi.fn(),
   getUserMock: vi.fn(),
+  findByIdMock: vi.fn(),
+  getUserByEmailMock: vi.fn(),
 }));
 
 vi.mock("../../../src/repositories/user.repository", () => ({
   UserRepository: class {
     findByClerkId = findByClerkIdMock;
     createUser = createUserMock;
+    findById = findByIdMock;
+    getUserByEmail = getUserByEmailMock;
   },
 }));
 
@@ -164,4 +174,78 @@ describe("IdentityService", () => {
       expect(createUserMock).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("findUserByEmail", () => {
+    const requesterId = "requester_123";
+    const email = "candidate@example.com";
+
+    beforeEach(() => {
+      findByIdMock.mockResolvedValue({
+        id: requesterId,
+        email: "requester@example.com",
+      });
+    });
+
+    it("returns the user found by email when the requester exists", async () => {
+      const expectedUser = {
+        id: "user_456",
+        name: "Ada Lovelace",
+        email,
+      };
+
+      getUserByEmailMock.mockResolvedValue(expectedUser);
+
+      const result = await service.findUserByEmail(email, requesterId);
+
+      expect(findByIdMock).toHaveBeenCalledWith(requesterId);
+      expect(getUserByEmailMock).toHaveBeenCalledWith(email);
+      expect(result).toEqual(expectedUser);
+    });
+
+    it("returns null when no user matches the email", async () => {
+      getUserByEmailMock.mockResolvedValue(null);
+
+      const result = await service.findUserByEmail(email, requesterId);
+
+      expect(result).toBeNull();
+      expect(getUserByEmailMock).toHaveBeenCalledWith(email);
+    });
+
+    it("throws an unauthorized AppError when the requester does not exist", async () => {
+      findByIdMock.mockResolvedValue(null);
+
+      await expect(
+        service.findUserByEmail(email, requesterId),
+      ).rejects.toMatchObject({
+        message: "Unauthorized",
+        statusCode: 403,
+        code: "UNAUTHORIZED",
+      });
+
+      expect(getUserByEmailMock).not.toHaveBeenCalled();
+    });
+
+    it("propagates errors when checking the requester fails", async () => {
+      findByIdMock.mockRejectedValue(
+        new Error("Database connection failed"),
+      );
+
+      await expect(
+        service.findUserByEmail(email, requesterId),
+      ).rejects.toThrow("Database connection failed");
+
+      expect(getUserByEmailMock).not.toHaveBeenCalled();
+    });
+
+    it("propagates errors when the email lookup fails", async () => {
+      getUserByEmailMock.mockRejectedValue(
+        new Error("Email lookup failed"),
+      );
+
+      await expect(
+        service.findUserByEmail(email, requesterId),
+      ).rejects.toThrow("Email lookup failed");
+    });
+  });
+
 });

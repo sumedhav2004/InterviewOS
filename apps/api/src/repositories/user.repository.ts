@@ -31,4 +31,12 @@ export class UserRepository {
       data: data,
     });
   }
+
+  async getUserByEmail(emailId: string) {
+    return prisma.user.findUnique({
+      where: {
+        email: emailId,
+      },
+    });
+  }
 }
