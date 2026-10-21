@@ -37,6 +37,6 @@ export const dashboardApi = {
   },
 
   getUserByEmail(emailId: string) {
-      return apiClient.get<User>(`/user/email/${emailId}`)
+    return apiClient.get<User>(`/user/email/${emailId}`);
   },
 };

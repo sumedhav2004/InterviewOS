@@ -1,8 +1,5 @@
-
 import { useState } from "react";
 import { dashboardApi } from "../api/dashboard-api";
-
-
 
 export function useUserByEmail() {
   const [loading, setLoading] = useState(false);

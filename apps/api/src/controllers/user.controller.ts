@@ -30,7 +30,6 @@ export class UserController {
     return res.status(200).json(user);
   }
 
-  
   async findUserByEmail(req: Request, res: Response) {
     const userId = req.user.id;
     const emailId = req.params.emailId;

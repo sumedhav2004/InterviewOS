@@ -1,18 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  findByClerkIdMock,
-  createUserMock,
-  getUserMock,
-  findByIdMock,
-  getUserByEmailMock,
-} = vi.hoisted(() => ({
-  findByClerkIdMock: vi.fn(),
-  createUserMock: vi.fn(),
-  getUserMock: vi.fn(),
-  findByIdMock: vi.fn(),
-  getUserByEmailMock: vi.fn(),
-}));
+const { findByClerkIdMock, createUserMock, getUserMock, findByIdMock, getUserByEmailMock } =
+  vi.hoisted(() => ({
+    findByClerkIdMock: vi.fn(),
+    createUserMock: vi.fn(),
+    getUserMock: vi.fn(),
+    findByIdMock: vi.fn(),
+    getUserByEmailMock: vi.fn(),
+  }));
 
 vi.mock("../../../src/repositories/user.repository", () => ({
   UserRepository: class {
@@ -214,9 +209,7 @@ describe("IdentityService", () => {
     it("throws an unauthorized AppError when the requester does not exist", async () => {
       findByIdMock.mockResolvedValue(null);
 
-      await expect(
-        service.findUserByEmail(email, requesterId),
-      ).rejects.toMatchObject({
+      await expect(service.findUserByEmail(email, requesterId)).rejects.toMatchObject({
         message: "Unauthorized",
         statusCode: 403,
         code: "UNAUTHORIZED",
@@ -226,26 +219,21 @@ describe("IdentityService", () => {
     });
 
     it("propagates errors when checking the requester fails", async () => {
-      findByIdMock.mockRejectedValue(
-        new Error("Database connection failed"),
-      );
+      findByIdMock.mockRejectedValue(new Error("Database connection failed"));
 
-      await expect(
-        service.findUserByEmail(email, requesterId),
-      ).rejects.toThrow("Database connection failed");
+      await expect(service.findUserByEmail(email, requesterId)).rejects.toThrow(
+        "Database connection failed",
+      );
 
       expect(getUserByEmailMock).not.toHaveBeenCalled();
     });
 
     it("propagates errors when the email lookup fails", async () => {
-      getUserByEmailMock.mockRejectedValue(
-        new Error("Email lookup failed"),
-      );
+      getUserByEmailMock.mockRejectedValue(new Error("Email lookup failed"));
 
-      await expect(
-        service.findUserByEmail(email, requesterId),
-      ).rejects.toThrow("Email lookup failed");
+      await expect(service.findUserByEmail(email, requesterId)).rejects.toThrow(
+        "Email lookup failed",
+      );
     });
   });
-
 });

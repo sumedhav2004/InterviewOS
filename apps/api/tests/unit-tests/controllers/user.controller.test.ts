@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { UserController } from "../../../src/controllers/user.controller";
 
-const {
-  mockUpdateUser,
-  mockFindUser,
-  mockFindUserByEmail,
-} = vi.hoisted(() => ({
+const { mockUpdateUser, mockFindUser, mockFindUserByEmail } = vi.hoisted(() => ({
   mockUpdateUser: vi.fn(),
   mockFindUser: vi.fn(),
   mockFindUserByEmail: vi.fn(),
@@ -136,10 +132,7 @@ describe("UserController", () => {
 
       await controller.findUserByEmail(req, res);
 
-      expect(mockFindUserByEmail).toHaveBeenCalledWith(
-        "another@example.com",
-        "user-1",
-      );
+      expect(mockFindUserByEmail).toHaveBeenCalledWith("another@example.com", "user-1");
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(user);
     });
@@ -158,14 +151,9 @@ describe("UserController", () => {
 
     it("should propagate service errors", async () => {
       req.params.emailId = "another@example.com";
-      mockFindUserByEmail.mockRejectedValue(
-        new Error("Email lookup failed"),
-      );
+      mockFindUserByEmail.mockRejectedValue(new Error("Email lookup failed"));
 
-      await expect(
-        controller.findUserByEmail(req, res),
-      ).rejects.toThrow("Email lookup failed");
+      await expect(controller.findUserByEmail(req, res)).rejects.toThrow("Email lookup failed");
     });
   });
-
 });

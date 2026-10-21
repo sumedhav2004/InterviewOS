@@ -30,16 +30,12 @@ export class IdentityService {
     return newUser;
   }
 
-  async findUserByEmail(emailId: string, requesterId: string){
+  async findUserByEmail(emailId: string, requesterId: string) {
     const requester = await this.userRepository.findById(requesterId);
-    if(!requester){
-      throw new AppError(
-        "Unauthorized",
-        403,
-        "UNAUTHORIZED"
-      )
+    if (!requester) {
+      throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
-    const user = await this.userRepository.getUserByEmail(emailId)
-    return user
+    const user = await this.userRepository.getUserByEmail(emailId);
+    return user;
   }
 }

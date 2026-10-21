@@ -1,12 +1,10 @@
-import UserPage from '@/features/user/components/UserPage'
-import React from 'react'
+import UserPage from "@/features/user/components/UserPage";
+import React from "react";
 
-type Props = {}
+type Props = {};
 
 const page = (props: Props) => {
-  return (
-    <UserPage />
-  )
-}
+  return <UserPage />;
+};
 
-export default page
+export default page;

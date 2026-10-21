@@ -7,6 +7,6 @@ export const userApi = {
   },
 
   async getUserByEmail(emailId: string) {
-    return apiClient.get<User>(`/users/${emailId}`)
+    return apiClient.get<User>(`/users/${emailId}`);
   },
 };
