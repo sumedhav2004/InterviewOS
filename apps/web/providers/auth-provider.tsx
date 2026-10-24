@@ -1,9 +1,8 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
-
+import { ReactNode, useLayoutEffect } from "react";
 import { useAuth } from "@/lib/auth";
-import { apiClient, ApiClient } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -12,7 +11,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const { getToken } = useAuth();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     apiClient.setTokenProvider(getToken);
   }, [getToken]);
 

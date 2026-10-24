@@ -45,8 +45,13 @@ export class ApiClient {
     const headers = new Headers(initHeaders);
     headers.set("Content-Type", "application/json");
 
+    console.log("Token provider registered:", !!this.tokenProvider);
+
     if (this.tokenProvider) {
       const token = await this.tokenProvider();
+
+      console.log("Token received:", !!token);
+
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
       }

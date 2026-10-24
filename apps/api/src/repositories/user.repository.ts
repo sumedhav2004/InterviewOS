@@ -11,8 +11,17 @@ export class UserRepository {
 
   async findById(id: string) {
     return prisma.user.findUnique({
-      where: {
-        id,
+      where: { id },
+      include: {
+        participants: {
+          include: {
+            interview: true,
+          },
+        },
+        createdInterviews: true,
+        SentRequests: true,
+        ReceivedRequests: true,
+        questions: true,
       },
     });
   }
