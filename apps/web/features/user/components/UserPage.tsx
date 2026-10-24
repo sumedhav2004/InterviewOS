@@ -5,12 +5,10 @@ import { Container, Page, Stack } from "@/components/layout";
 import { useUser } from "../hooks/useUser";
 import UserProfileHeader from "./user-profile-header";
 import UserProfileStats from "./user-profile-stats";
-import UserInterviewActivity from "./user-interview-activity";
 import UserCreatedQuestions from "./user-created-questions";
 import type { User } from "../types";
-import { useEffect } from "react";
 import { useSendFriendRequest } from "../hooks/useSendFriendRequest";
-import { useAuth } from "@/lib/auth";
+
 
 function getUserProfileStats(user: User) {
   return {
