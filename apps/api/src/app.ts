@@ -18,6 +18,7 @@ import testCaseRoutes from "./routes/test-case.routes";
 import submissionRoutes from "./routes/submission.routes";
 import { config } from "@interview-os/config";
 import healthRoute from "./routes/health.route";
+import friendRequestRoutes from "./routes/friend-request.routes";
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use("/questions", authMiddleware, questionRoutes);
 app.use("/interviews", authMiddleware, interviewQuestionRoutes);
 app.use("/questions", authMiddleware, testCaseRoutes);
 app.use("/submissions", authMiddleware, submissionRoutes);
+app.use("/user/friends", authMiddleware, friendRequestRoutes);
 
 app.use(errorHandler);
 

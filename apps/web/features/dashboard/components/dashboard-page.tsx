@@ -10,6 +10,8 @@ import { useInvitations } from "../hooks/use-invitations";
 import { useInterviews } from "../hooks/use-interviews";
 import { InvitationList } from "./invitation-list";
 import { useEffect } from "react";
+import { useFriendRequest } from "../hooks/use-friend-request";
+import FriendsSection from "./friends-section";
 
 export function DashboardPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
@@ -29,6 +31,17 @@ export function DashboardPage() {
     isLoaded,
     isSignedIn: isSignedIn ?? false,
   });
+  const {
+    friends,
+    friendCount,
+    receivedRequests,
+    sentRequests,
+    acceptRequest,
+    declineRequest,
+    loadData,
+    loading: friendsLoading,
+    error: friendsError,
+  } = useFriendRequest(user?.id ?? "");
 
   const {
     interviews,
@@ -83,10 +96,20 @@ export function DashboardPage() {
       <Container>
         <Stack gap="xl">
           <DashboardHeader name={user.name} />
+
           <DashboardStats
             upcoming={upcomingInterviews.length}
             completed={interviewHistory.length}
             invites={invitations.filter((invite) => invite.status === "PENDING").length}
+          />
+
+          <FriendsSection
+            friends={friends}
+            friendCount={friendCount}
+            receivedRequests={receivedRequests}
+            sentRequests={sentRequests}
+            onAcceptRequest={acceptRequest}
+            onDeclineRequest={declineRequest}
           />
           <InterviewList
             upcoming={upcomingInterviews}

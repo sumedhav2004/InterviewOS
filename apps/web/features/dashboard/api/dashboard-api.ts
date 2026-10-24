@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/api-client";
 
 import { useAccessToken } from "@/lib/auth";
-import { Interview, Invite, InviteWithDetails, User } from "../types";
+import { FriendRequest, Interview, Invite, InviteWithDetails, User } from "../types";
 
 export const dashboardApi = {
   getCurrentUser() {
@@ -38,5 +38,25 @@ export const dashboardApi = {
 
   getUserByEmail(emailId: string) {
     return apiClient.get<User>(`/user/email/${emailId}`);
+  },
+
+  getAllFriendsofUser(userId: string) {
+    return apiClient.get<User[]>(`/user/friends/${userId}/all`);
+  },
+
+  getAllReceivedFriendRequests() {
+    return apiClient.get<FriendRequest[]>(`/user/friends/received`);
+  },
+
+  getAllSentFriendRequests() {
+    return apiClient.get<FriendRequest[]>(`/user/friends/sent`);
+  },
+
+  acceptFriendRequest(requestId: string) {
+    return apiClient.patch<FriendRequest>(`/user/friends/${requestId}/accept`);
+  },
+
+  declineFriendRequest(requestId: string) {
+    return apiClient.patch<FriendRequest>(`/user/friends/${requestId}/decline`);
   },
 };

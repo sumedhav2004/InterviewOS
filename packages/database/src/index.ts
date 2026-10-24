@@ -9,6 +9,7 @@ const {
   ExecutionStatus,
   TestCaseVisibility,
   EvaluationStatus,
+  FriendRequestStatus,
 } = pkg;
 
 export * from "./client.js";
@@ -23,6 +24,7 @@ export type ProgrammingLanguage = (typeof ProgrammingLanguage)[keyof typeof Prog
 export type ExecutionStatus = (typeof ExecutionStatus)[keyof typeof ExecutionStatus];
 export type TestCaseVisibility = (typeof TestCaseVisibility)[keyof typeof TestCaseVisibility];
 export type EvaluationStatus = (typeof EvaluationStatus)[keyof typeof EvaluationStatus];
+export type FriendRequestStatus = (typeof FriendRequestStatus)[keyof typeof FriendRequestStatus];
 
 export {
   ParticipantRole,
@@ -33,4 +35,5 @@ export {
   ExecutionStatus,
   TestCaseVisibility,
   EvaluationStatus,
+  FriendRequestStatus,
 };

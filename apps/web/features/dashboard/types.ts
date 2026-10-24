@@ -1,3 +1,5 @@
+import { Participant } from "@interview-os/database";
+
 export type InviteStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "CANCELLED";
 
 export type ParticipantRole = "INTERVIEWER" | "CANDIDATE" | "OBSERVER";
@@ -34,10 +36,35 @@ export type Interview = {
   createdById: string;
 };
 
+export type Question = {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: "EASY" | "MEDIUM" | "HARD";
+};
+
+export enum FriendRequestStatus {
+  PENDING = "PENDING",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
+}
+
+export type FriendRequest = {
+  id: string;
+  senderId: string;
+  requesterId: string;
+  status: FriendRequestStatus;
+  respondedAt?: Date;
+};
+
 export interface User {
   id: string;
   clerkId: string;
   email: string;
   name: string;
   avatarUrl: string;
+  createdInterviews: Interview[];
+  participants: Participant[];
+  questions: Question[];
 }
