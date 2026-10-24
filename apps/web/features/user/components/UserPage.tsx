@@ -9,7 +9,6 @@ import UserCreatedQuestions from "./user-created-questions";
 import type { User } from "../types";
 import { useSendFriendRequest } from "../hooks/useSendFriendRequest";
 
-
 function getUserProfileStats(user: User) {
   return {
     interviewsCreatedCount: user.createdInterviews?.length ?? 0,
