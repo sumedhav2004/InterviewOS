@@ -1,7 +1,7 @@
-import { User } from "@/features/auth/types";
 import { useEffect, useState } from "react";
 import { dashboardApi } from "../api/dashboard-api";
 import { useAccessToken, useAuth } from "@/lib/auth";
+import { User } from "../types";
 
 type UseDashboardOptions = {
   isLoaded: boolean;

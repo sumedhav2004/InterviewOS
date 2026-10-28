@@ -69,6 +69,51 @@ export class InterviewRepository {
           },
         ],
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+        participants: {
+          where: {
+            status: "ACTIVE",
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        questions: {
+          include: {
+            question: true,
+          },
+          orderBy: {
+            questionOrder: "asc",
+          },
+        },
+        invites: {
+          where: {
+            status: "PENDING",
+          },
+          include: {
+            receiver: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: {
         createdAt: "desc",
       },

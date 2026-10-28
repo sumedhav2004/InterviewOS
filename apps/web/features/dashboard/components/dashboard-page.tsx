@@ -12,9 +12,12 @@ import { InvitationList } from "./invitation-list";
 import { useEffect } from "react";
 import { useFriendRequest } from "../hooks/use-friend-request";
 import FriendsSection from "./friends-section";
+import { useState } from "react";
+import InvitePeopleDialog from "./invite-people-dialog";
 
 export function DashboardPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
+  const [inviteInterviewId, setInviteInterviewId] = useState<string | null>(null);
   useEffect(() => {
     async function logToken() {
       const token = await getToken();
@@ -47,6 +50,7 @@ export function DashboardPage() {
     interviews,
     loading: interviewsLoading,
     error: interviewsError,
+    refreshInterviews,
   } = useInterviews({
     isLoaded,
     isSignedIn: isSignedIn ?? false,
@@ -111,16 +115,24 @@ export function DashboardPage() {
             onAcceptRequest={acceptRequest}
             onDeclineRequest={declineRequest}
           />
+
           <InterviewList
             upcoming={upcomingInterviews}
             history={interviewHistory}
             currentUserId={user.id}
+            onInvitePeople={(interviewId) => {
+              setInviteInterviewId(interviewId);
+            }}
           />
 
-          <InvitationList
-            invitations={invitations}
-            onAccept={acceptInvitation}
-            onDecline={declineInvitation}
+          <InvitePeopleDialog
+            open={inviteInterviewId !== null}
+            onOpenChange={(open) => {
+              if (!open) setInviteInterviewId(null);
+            }}
+            interviewId={inviteInterviewId ?? ""}
+            friends={friends}
+            user={user}
           />
 
           {/* stats */}

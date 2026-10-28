@@ -1,4 +1,5 @@
 import { Participant } from "@interview-os/database";
+import { InterviewQuestion } from "../../../../packages/database/generated/client";
 
 export type InviteStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED" | "CANCELLED";
 
@@ -34,6 +35,7 @@ export type Interview = {
   createdAt: string;
   updatedAt: string;
   createdById: string;
+  interviewQuestions: InterviewQuestion[];
 };
 
 export type Question = {

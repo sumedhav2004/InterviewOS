@@ -1,7 +1,14 @@
 import { apiClient } from "@/lib/api/api-client";
 
 import { useAccessToken } from "@/lib/auth";
-import { FriendRequest, Interview, Invite, InviteWithDetails, User } from "../types";
+import {
+  FriendRequest,
+  Interview,
+  Invite,
+  InviteWithDetails,
+  ParticipantRole,
+  User,
+} from "../types";
 
 export const dashboardApi = {
   getCurrentUser() {
@@ -58,5 +65,9 @@ export const dashboardApi = {
 
   declineFriendRequest(requestId: string) {
     return apiClient.patch<FriendRequest>(`/user/friends/${requestId}/decline`);
+  },
+
+  sendInvite(interviewId: string, receiverId: string, role: ParticipantRole) {
+    return apiClient.post<Invite>(`/interviews/${interviewId}/invites/${receiverId}`, { role });
   },
 };
