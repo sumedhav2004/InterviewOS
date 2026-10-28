@@ -6,7 +6,7 @@ const inviteController = new InviteController();
 
 // Create an invite for an interview
 router.post(
-  "/interviews/:interviewId/invites",
+  "/interviews/:interviewId/invites/:receiverId",
   inviteController.createInvite.bind(inviteController),
 );
 

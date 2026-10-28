@@ -5,6 +5,7 @@ import { InvitesRepository } from "../repositories/invites.repository";
 import { ParticipantRepository } from "../repositories/participant.repository";
 import { UserRepository } from "../repositories/user.repository";
 import { CreateInviteData } from "../types/invite";
+import { FriendRequestRepository } from "../repositories/friend-request.repository";
 
 export class InviteService {
   constructor(
@@ -12,6 +13,7 @@ export class InviteService {
     private readonly interviewRepository = new InterviewRepository(),
     private readonly userRepository = new UserRepository(),
     private readonly participantRepository = new ParticipantRepository(),
+    private readonly friendRequestRepository = new FriendRequestRepository(),
   ) {}
 
   async createInvite(
@@ -40,6 +42,14 @@ export class InviteService {
 
     if (!receiver) {
       throw new AppError("Receiver Not Found", 404, "RECEIVER_NOT_FOUND");
+    }
+
+    const friendRequest = await this.friendRequestRepository.getFriendRequestBySenderAndReceiver(
+      senderId,
+      receiverId,
+    );
+    if (!friendRequest) {
+      throw new AppError("Not Friends", 400, "NOT_FRIENDS");
     }
 
     const participant = await this.participantRepository.findParticipant(receiverId, interviewId);

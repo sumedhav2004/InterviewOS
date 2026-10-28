@@ -57,8 +57,8 @@ describe("InviteController", () => {
       const invite = { id: "invite-1", status: "PENDING" };
 
       req.params.interviewId = "interview-1";
+      req.params.receiverId = "receiver-1";
       req.body = {
-        receiverId: "receiver-1",
         ...data,
       };
       mockCreateInvite.mockResolvedValue(invite);
@@ -85,7 +85,9 @@ describe("InviteController", () => {
 
     it("should propagate service errors", async () => {
       req.params.interviewId = "interview-1";
-      req.body = { receiverId: "receiver-1", message: "Hello" };
+      req.params.receiverId = "receiver-1";
+      req.body = { message: "Hello" };
+
       mockCreateInvite.mockRejectedValue(new Error("Creation failed"));
 
       await expect(controller.createInvite(req, res)).rejects.toThrow("Creation failed");

@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   findParticipant: vi.fn(),
   createParticipant: vi.fn(),
   transaction: vi.fn(),
+  friendRequestBySenderAndReceiver: vi.fn(),
 }));
 
 vi.mock("@interview-os/database", async (importOriginal) => {
@@ -25,6 +26,12 @@ vi.mock("@interview-os/database", async (importOriginal) => {
     },
   };
 });
+
+vi.mock("../../../src/repositories/friend-request.repository", () => ({
+  FriendRequestRepository: class {
+    getFriendRequestBySenderAndReceiver = mocks.friendRequestBySenderAndReceiver;
+  },
+}));
 
 vi.mock("../../../src/repositories/invites.repository", () => ({
   InvitesRepository: class {
@@ -99,6 +106,11 @@ describe("InviteService", () => {
       mocks.findParticipant.mockResolvedValue(null);
       mocks.findByInterviewAndReceiver.mockResolvedValue(null);
       mocks.createInvite.mockResolvedValue(invite);
+      mocks.friendRequestBySenderAndReceiver.mockResolvedValue({
+        senderId,
+        receiverId,
+        status: "ACCEPTED",
+      });
     });
 
     it("creates an invite when all validations pass", async () => {
@@ -111,6 +123,20 @@ describe("InviteService", () => {
       expect(mocks.findParticipant).toHaveBeenCalledWith(receiverId, interviewId);
       expect(mocks.findByInterviewAndReceiver).toHaveBeenCalledWith(interviewId, receiverId);
       expect(mocks.createInvite).toHaveBeenCalledWith(senderId, receiverId, interviewId, data);
+      expect(mocks.friendRequestBySenderAndReceiver).toHaveBeenCalledWith(senderId, receiverId);
+    });
+
+    it("rejects invites when the sender and receiver are not friends", async () => {
+      mocks.friendRequestBySenderAndReceiver.mockResolvedValue(null);
+
+      await expect(
+        service.createInvite(senderId, receiverId, interviewId, data as any),
+      ).rejects.toMatchObject({
+        statusCode: 400,
+        code: "NOT_FRIENDS",
+      });
+
+      expect(mocks.createInvite).not.toHaveBeenCalled();
     });
 
     it("throws when the interview does not exist", async () => {

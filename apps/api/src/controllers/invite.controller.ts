@@ -7,13 +7,19 @@ export class InviteController {
   async createInvite(req: Request, res: Response) {
     const senderId = req.user.id;
     const interviewId = req.params.interviewId;
+    const receiverId = req.params.receiverId;
 
     if (typeof interviewId !== "string") {
       return res.status(400).json({
         message: "Invalid route parameter",
       });
     }
-    const { receiverId, ...data } = req.body;
+    if (typeof receiverId !== "string") {
+      return res.status(400).json({
+        message: "Invalid route parameter",
+      });
+    }
+    const { ...data } = req.body;
 
     const invite = await this.inviteService.createInvite(senderId, receiverId, interviewId, data);
     return res.status(201).json(invite);

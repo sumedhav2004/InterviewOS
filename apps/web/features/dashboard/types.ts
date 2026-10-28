@@ -22,6 +22,14 @@ export type InviteWithDetails = Invite & {
   interview: Interview;
 };
 
+export type InterviewQuestion = {
+  id: string;
+  questionOrder: number;
+  points: number;
+  interviewId: string;
+  questionId: string;
+};
+
 export type InterviewStatus = "DRAFT" | "SCHEDULED" | "INPROGRESS" | "COMPLETED" | "CANCELLED";
 
 export type Interview = {
@@ -34,6 +42,7 @@ export type Interview = {
   createdAt: string;
   updatedAt: string;
   createdById: string;
+  interviewQuestions: InterviewQuestion[];
 };
 
 export type Question = {
