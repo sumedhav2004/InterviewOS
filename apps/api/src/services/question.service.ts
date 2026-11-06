@@ -3,21 +3,41 @@ import { createQuestionData, updateQuestionData } from "../types/question";
 import { AppError } from "../../core/errors/app-error";
 import { UserRepository } from "../repositories/user.repository";
 
+type FindQuestionsOptions = {
+  page: number;
+  limit: number;
+  search?: string;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  tag?: string;
+};
+
 export class QuestionService {
   constructor(
     private readonly questionsRepository = new QuestionsRepository(),
     private readonly userRepository = new UserRepository(),
   ) {}
 
+  async findAll(options: FindQuestionsOptions) {
+    return this.questionsRepository.findAll(options);
+  }
+
   async findById(id: string) {
-    return this.questionsRepository.findById(id);
+    const question = await this.questionsRepository.findById(id);
+
+    if (!question) {
+      throw new AppError("Question Not Found", 404, "QUESTION_NOT_FOUND");
+    }
+
+    return question;
   }
 
   async findMyQuestions(userId: string) {
     const user = await this.userRepository.findById(userId);
+
     if (!user) {
       throw new AppError("User Not Found", 404, "USER_NOT_FOUND");
     }
+
     return this.questionsRepository.findMyQuestions(userId);
   }
 
@@ -31,9 +51,11 @@ export class QuestionService {
     if (!question) {
       throw new AppError("Question Not Found", 404, "QUESTION_NOT_FOUND");
     }
+
     if (question.createdById !== userId) {
       throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
+
     return this.questionsRepository.deleteQuestion(id);
   }
 
@@ -43,9 +65,11 @@ export class QuestionService {
     if (!question) {
       throw new AppError("Question Not Found", 404, "QUESTION_NOT_FOUND");
     }
+
     if (question.createdById !== userId) {
       throw new AppError("Unauthorized", 403, "UNAUTHORIZED");
     }
+
     return this.questionsRepository.updateQuestion(id, data);
   }
 }

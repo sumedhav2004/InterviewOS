@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   deleteQuestionMock: vi.fn(),
   updateQuestionMock: vi.fn(),
   findUserByIdMock: vi.fn(),
+  findAllMock: vi.fn(),
 }));
 
 vi.mock("../../../src/repositories/questions.repository", () => ({
@@ -17,6 +18,7 @@ vi.mock("../../../src/repositories/questions.repository", () => ({
     createQuestion = mocks.createQuestionMock;
     deleteQuestion = mocks.deleteQuestionMock;
     updateQuestion = mocks.updateQuestionMock;
+    findAll = mocks.findAllMock;
   },
 }));
 
@@ -50,10 +52,14 @@ describe("QuestionService", () => {
       expect(mocks.findByIdMock).toHaveBeenCalledWith(questionId);
     });
 
-    it("returns null when the question does not exist", async () => {
+    it("throws QUESTION_NOT_FOUND when the question does not exist", async () => {
       mocks.findByIdMock.mockResolvedValue(null);
 
-      await expect(service.findById(questionId)).resolves.toBeNull();
+      await expect(service.findById(questionId)).rejects.toMatchObject({
+        message: "Question Not Found",
+        statusCode: 404,
+        code: "QUESTION_NOT_FOUND",
+      });
     });
 
     it("propagates repository errors", async () => {
@@ -216,6 +222,47 @@ describe("QuestionService", () => {
         "Database error",
       );
       expect(mocks.updateQuestionMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("findAll", () => {
+    it("returns questions with the provided filters and pagination", async () => {
+      const options = {
+        page: 2,
+        limit: 20,
+        search: "javascript",
+        difficulty: "MEDIUM" as const,
+        tag: "backend",
+      };
+
+      const questions = [
+        { id: "question-1", title: "JavaScript fundamentals" },
+        { id: "question-2", title: "JavaScript closures" },
+      ];
+
+      mocks.findAllMock.mockResolvedValue(questions);
+
+      await expect(service.findAll(options)).resolves.toEqual(questions);
+
+      expect(mocks.findAllMock).toHaveBeenCalledWith(options);
+      expect(mocks.findAllMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns an empty array when no questions are found", async () => {
+      mocks.findAllMock.mockResolvedValue([]);
+
+      await expect(service.findAll({ page: 1, limit: 10 })).resolves.toEqual([]);
+
+      expect(mocks.findAllMock).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+      });
+    });
+
+    it("propagates repository errors", async () => {
+      mocks.findAllMock.mockRejectedValue(new Error("Query failed"));
+
+      await expect(service.findAll({ page: 1, limit: 10 })).rejects.toThrow("Query failed");
     });
   });
 });
