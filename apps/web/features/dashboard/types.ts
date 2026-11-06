@@ -45,11 +45,28 @@ export type Interview = {
   interviewQuestions: InterviewQuestion[];
 };
 
+export enum QuestionDifficulty {
+  EASY = "EASY",
+  MEDIUM = "MEDIUM",
+  HARD = "HARD",
+}
+
+export type QuestionTag = {
+  questionId: string;
+  tagId: string;
+  tag: {
+    name: string;
+    slug: string;
+  };
+};
+
 export type Question = {
   id: string;
   title: string;
   description: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
+  difficulty: QuestionDifficulty;
+  slug: string;
+  tags: QuestionTag[];
 };
 
 export enum FriendRequestStatus {

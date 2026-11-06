@@ -5,6 +5,7 @@ import {
   Clock3,
   FileQuestion,
   Plus,
+  Trash,
   Users,
   Video,
 } from "lucide-react";
@@ -67,6 +68,12 @@ type InterviewCardProps = {
   variant?: "upcoming" | "history";
   onOpen?: (interviewId: string) => void;
   onInvite?: (interviewId: string) => void;
+  onAddQuestion?: (interviewId: string) => void;
+  onRemoveInterviewQuestion: (
+    interviewId: string,
+    questionId: string,
+    interviewQuestionId: string,
+  ) => Promise<unknown>;
 };
 
 const statusStyles: Record<string, string> = {
@@ -112,6 +119,8 @@ function InterviewCard({
   variant = "upcoming",
   onOpen,
   onInvite,
+  onAddQuestion,
+  onRemoveInterviewQuestion,
 }: InterviewCardProps) {
   const isHistory = variant === "history";
   const createdByMe = interview.createdById === currentUserId;
@@ -119,6 +128,12 @@ function InterviewCard({
   const activeParticipants = (interview.participants ?? []).filter(
     (participant) => participant.status === "ACTIVE",
   );
+
+  const myParticipant = interview.participants?.find(
+    (participant) => participant.user.id === currentUserId,
+  );
+  const isInterviewer = myParticipant?.role === "INTERVIEWER";
+  const canManageQuestions = !isHistory && isInterviewer;
 
   const questions = [...(interview.questions ?? [])].sort(
     (a, b) => a.questionOrder - b.questionOrder,
@@ -128,13 +143,22 @@ function InterviewCard({
 
   const scheduledAt = interview.scheduledAt;
 
+  const handleRemoveInterviewQuestion = (
+    interviewId: string,
+    questionId: string,
+    interviewQuestionId: string,
+  ) => {
+    console.log("DELETE IDS: ", interviewId, " q:", questionId, " iq:", interviewQuestionId);
+    onRemoveInterviewQuestion(interviewId, questionId, interviewQuestionId);
+  };
+
   return (
     <Card
       className={`overflow-hidden transition-colors ${
         isHistory ? "border-border/60" : "border-primary/20 hover:border-primary/40"
       }`}
     >
-      <CardContent className="space-y-6 p-6 sm:p-8">
+      <CardContent className="space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-start gap-4">
           <div className="shrink-0 rounded-md border border-primary/30 bg-primary/10 p-3 text-primary">
@@ -161,7 +185,7 @@ function InterviewCard({
         </div>
 
         {/* Interview metadata */}
-        <div className="grid gap-4 border-y border-border/60 py-5 sm:grid-cols-3">
+        <div className="grid gap-2 border-y border-border/60 py-5 sm:grid-cols-3">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground">
               Scheduled
@@ -260,48 +284,58 @@ function InterviewCard({
         </div>
 
         {/* Question preview */}
-        {!isHistory && questions.length > 0 && (
+        {/* Question preview */}
+        {canManageQuestions && (
           <div className="space-y-3">
-            <div className="flex justify-between">
+            <div className="flex items-center justify-between gap-3">
               <h4 className="text-sm font-medium">Question preview</h4>
-              <Button variant="outline" className="" onClick={() => {}}>
-                <Plus />
+
+              <Button variant="outline" onClick={() => onAddQuestion?.(interview.id)}>
+                <Plus className="size-4" />
                 Add Question
               </Button>
             </div>
 
-            <div className="space-y-2">
-              {questions.slice(0, 3).map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-3 rounded-md border border-border/60 bg-muted/20 p-3"
-                >
-                  <span className="pt-0.5 font-mono text-xs text-muted-foreground">
-                    {String(item.questionOrder).padStart(2, "0")}
-                  </span>
+            {questions.length > 0 ? (
+              <div className="max-h-64 space-y-2 overflow-y-auto pr-2">
+                {questions.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-3 rounded-md border border-border/60 bg-muted/20 p-3"
+                  >
+                    <span className="pt-0.5 font-mono text-xs text-muted-foreground">
+                      {String(item.questionOrder).padStart(2, "0")}
+                    </span>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{item.question.title}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium">{item.question.title}</p>
 
-                    <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                      <span className={difficultyStyles[item.question.difficulty] ?? ""}>
-                        {item.question.difficulty}
-                      </span>
+                      <div className="mt-1 flex flex-wrap justify-between items-center text-xs">
+                        <span className={difficultyStyles[item.question.difficulty] ?? ""}>
+                          {item.question.difficulty}
+                        </span>
 
-                      <span className="text-muted-foreground">
-                        {item.points} {item.points === 1 ? "point" : "points"}
-                      </span>
+                        <span className="text-muted-foreground">
+                          {item.points} {item.points === 1 ? "point" : "points"}
+                        </span>
+
+                        <Button
+                          variant="destructive"
+                          className="cursor-pointer hover:bg-red-900"
+                          onClick={() =>
+                            handleRemoveInterviewQuestion(interview.id, item.question.id, item.id)
+                          }
+                        >
+                          <Trash className="size-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-
-              {questions.length > 3 && (
-                <p className="text-xs text-muted-foreground">
-                  +{questions.length - 3} more questions
-                </p>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No questions added yet.</p>
+            )}
           </div>
         )}
 
@@ -325,6 +359,12 @@ type InterviewListProps = {
   currentUserId: string;
   onOpenInterview?: (interviewId: string) => void;
   onInvitePeople?: (interviewId: string) => void;
+  onAddQuestion?: (interviewId: string) => void;
+  onRemoveInterviewQuestion: (
+    interviewId: string,
+    questionId: string,
+    interviewQuestionId: string,
+  ) => Promise<unknown>;
 };
 
 export function InterviewList({
@@ -333,6 +373,8 @@ export function InterviewList({
   currentUserId,
   onOpenInterview,
   onInvitePeople,
+  onAddQuestion,
+  onRemoveInterviewQuestion,
 }: InterviewListProps) {
   return (
     <section className="space-y-10">
@@ -366,7 +408,7 @@ export function InterviewList({
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {upcoming.map((interview) => (
               <InterviewCard
                 key={interview.id}
@@ -374,6 +416,8 @@ export function InterviewList({
                 currentUserId={currentUserId}
                 onOpen={onOpenInterview}
                 onInvite={onInvitePeople}
+                onAddQuestion={onAddQuestion}
+                onRemoveInterviewQuestion={onRemoveInterviewQuestion}
               />
             ))}
           </div>
@@ -413,14 +457,16 @@ export function InterviewList({
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-1 lg:grid-cols-2">
             {history.map((interview) => (
               <InterviewCard
                 key={interview.id}
                 interview={interview}
                 currentUserId={currentUserId}
-                variant="history"
                 onOpen={onOpenInterview}
+                onInvite={onInvitePeople}
+                onAddQuestion={onAddQuestion}
+                onRemoveInterviewQuestion={onRemoveInterviewQuestion}
               />
             ))}
           </div>

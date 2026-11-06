@@ -14,10 +14,13 @@ import { useFriendRequest } from "../hooks/use-friend-request";
 import FriendsSection from "./friends-section";
 import { useState } from "react";
 import InvitePeopleDialog from "./invite-people-dialog";
+import AddQuestionDialog from "./add-question-dialog";
 
 export function DashboardPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const [inviteInterviewId, setInviteInterviewId] = useState<string | null>(null);
+  const [addQuestionInterviewId, setAddQuestionInterviewId] = useState<string | null>(null);
+
   useEffect(() => {
     async function logToken() {
       const token = await getToken();
@@ -51,6 +54,8 @@ export function DashboardPage() {
     loading: interviewsLoading,
     error: interviewsError,
     refreshInterviews,
+    createInterviewQuestion,
+    removeInterviewQuestion,
   } = useInterviews({
     isLoaded,
     isSignedIn: isSignedIn ?? false,
@@ -59,6 +64,7 @@ export function DashboardPage() {
   const upcomingInterviews = interviews.filter(
     (interview) => interview.status === "SCHEDULED" || interview.status === "INPROGRESS",
   );
+  console.log(" THIS IS THE NEWEST LOG: ", upcomingInterviews);
 
   const interviewHistory = interviews.filter(
     (interview) => interview.status === "COMPLETED" || interview.status === "CANCELLED",
@@ -123,6 +129,20 @@ export function DashboardPage() {
             onInvitePeople={(interviewId) => {
               setInviteInterviewId(interviewId);
             }}
+            onAddQuestion={(interviewId) => {
+              setAddQuestionInterviewId(interviewId);
+            }}
+            onRemoveInterviewQuestion={removeInterviewQuestion}
+          />
+
+          <AddQuestionDialog
+            open={addQuestionInterviewId !== null}
+            onOpenChange={(open) => {
+              if (!open) setAddQuestionInterviewId(null);
+            }}
+            interviewId={addQuestionInterviewId ?? ""}
+            existingInterviews={upcomingInterviews}
+            onCreateInterviewQuestion={createInterviewQuestion}
           />
 
           <InvitePeopleDialog

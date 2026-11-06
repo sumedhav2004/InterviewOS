@@ -185,8 +185,10 @@ model Invite {
 model Question {
   id          String             @id @default(uuid()) @db.Uuid
   title       String
+  slug        String             @unique
   description String
   difficulty  QuestionDifficulty
+  tags        QuestionTag[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
@@ -197,6 +199,27 @@ model Question {
   testCases          TestCase[]
 
   @@index([createdById])
+  @@index([difficulty, createdAt])
+}
+
+model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  questions QuestionTag[]
+}
+
+model QuestionTag {
+  questionId String @db.Uuid
+  tagId      String @db.Uuid
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([questionId, tagId])
+  @@index([tagId])
 }
 
 model InterviewQuestion {

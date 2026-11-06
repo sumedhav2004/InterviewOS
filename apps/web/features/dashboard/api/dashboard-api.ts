@@ -4,11 +4,36 @@ import { useAccessToken } from "@/lib/auth";
 import {
   FriendRequest,
   Interview,
+  InterviewQuestion,
   Invite,
   InviteWithDetails,
   ParticipantRole,
+  Question,
   User,
 } from "../types";
+
+export type QuestionFilters = {
+  search?: string;
+  difficulty?: "EASY" | "MEDIUM" | "HARD";
+  tags?: string[];
+  page?: number;
+  limit?: number;
+};
+
+export type CreateInterviewQuestionPayload = {
+  questionOrder: number;
+  points: number;
+};
+
+export type QuestionsResponse = {
+  data: Question[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
 
 export const dashboardApi = {
   getCurrentUser() {
@@ -69,5 +94,50 @@ export const dashboardApi = {
 
   sendInvite(interviewId: string, receiverId: string, role: ParticipantRole) {
     return apiClient.post<Invite>(`/interviews/${interviewId}/invites/${receiverId}`, { role });
+  },
+
+  getQuestions(filters: QuestionFilters = {}) {
+    const params = new URLSearchParams();
+
+    if (filters.search?.trim()) {
+      params.set("search", filters.search.trim());
+    }
+    if (filters.difficulty) {
+      params.set("difficulty", filters.difficulty);
+    }
+    if (filters.tags?.length) {
+      params.set("tags", filters.tags.join(","));
+    }
+    if (filters.page !== undefined) {
+      params.set("page", String(filters.page));
+    }
+    if (filters.limit !== undefined) {
+      params.set("limit", String(filters.limit));
+    }
+
+    const query = params.toString();
+
+    return apiClient.get<QuestionsResponse>(`/questions${query ? `?${query}` : ""}`);
+  },
+
+  createInterviewQuestion(
+    interviewId: string,
+    questionId: string,
+    data: CreateInterviewQuestionPayload,
+  ) {
+    return apiClient.post<InterviewQuestion>(
+      `/interviews/${interviewId}/questions/${questionId}`,
+      data,
+    );
+  },
+
+  removeInterviewQuestion(interviewId: string, questionId: string, interviewQuestionId: string) {
+    return apiClient.delete(
+      `/interviews/${interviewId}/questions/${questionId}/${interviewQuestionId}`,
+    );
+  },
+
+  getInterviewQuestions(interviewId: string) {
+    return apiClient.get<InterviewQuestion[]>(`/interviews/${interviewId}/questions`);
   },
 };

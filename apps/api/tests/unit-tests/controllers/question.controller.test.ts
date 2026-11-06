@@ -7,12 +7,14 @@ const {
   mockCreateQuestion,
   mockDeleteQuestion,
   mockUpdateQuestion,
+  mockFindAll,
 } = vi.hoisted(() => ({
   mockFindById: vi.fn(),
   mockFindMyQuestions: vi.fn(),
   mockCreateQuestion: vi.fn(),
   mockDeleteQuestion: vi.fn(),
   mockUpdateQuestion: vi.fn(),
+  mockFindAll: vi.fn(),
 }));
 
 vi.mock("../../../src/services/question.service", () => ({
@@ -22,6 +24,7 @@ vi.mock("../../../src/services/question.service", () => ({
     createQuestion = mockCreateQuestion;
     deleteQuestion = mockDeleteQuestion;
     updateQuestion = mockUpdateQuestion;
+    findAll = mockFindAll;
   },
 }));
 
@@ -37,6 +40,7 @@ describe("QuestionController", () => {
 
     req = {
       params: {},
+      query: {},
       body: {},
       user: { id: "user-1" },
     };
@@ -46,6 +50,112 @@ describe("QuestionController", () => {
       json: vi.fn().mockReturnThis(),
       sendStatus: vi.fn().mockReturnThis(),
     };
+  });
+
+  describe("findAll", () => {
+    it("should return all questions with default pagination", async () => {
+      const questions = [{ id: "question-1" }];
+      mockFindAll.mockResolvedValue(questions);
+
+      await controller.findAll(req, res);
+
+      expect(mockFindAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        search: undefined,
+        difficulty: undefined,
+        tag: undefined,
+      });
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(questions);
+    });
+
+    it("should pass valid query parameters to the service", async () => {
+      const questions = [{ id: "question-1" }];
+
+      req.query = {
+        page: "2",
+        limit: "20",
+        search: "  javascript  ",
+        difficulty: "MEDIUM",
+        tag: "  backend  ",
+      };
+
+      mockFindAll.mockResolvedValue(questions);
+
+      await controller.findAll(req, res);
+
+      expect(mockFindAll).toHaveBeenCalledWith({
+        page: 2,
+        limit: 20,
+        search: "javascript",
+        difficulty: "MEDIUM",
+        tag: "backend",
+      });
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(questions);
+    });
+
+    it("should return 400 for an invalid difficulty", async () => {
+      req.query = {
+        difficulty: "INVALID",
+      };
+
+      await controller.findAll(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        message: "Invalid difficulty. Use EASY, MEDIUM, or HARD.",
+      });
+
+      expect(mockFindAll).not.toHaveBeenCalled();
+    });
+
+    it("should use default pagination for invalid pagination values", async () => {
+      req.query = {
+        page: "-1",
+        limit: "abc",
+      };
+
+      mockFindAll.mockResolvedValue([]);
+
+      await controller.findAll(req, res);
+
+      expect(mockFindAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        search: undefined,
+        difficulty: undefined,
+        tag: undefined,
+      });
+    });
+
+    it("should cap the limit at 100", async () => {
+      req.query = {
+        page: "1",
+        limit: "200",
+      };
+
+      mockFindAll.mockResolvedValue([]);
+
+      await controller.findAll(req, res);
+
+      expect(mockFindAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 100,
+        search: undefined,
+        difficulty: undefined,
+        tag: undefined,
+      });
+    });
+
+    it("should propagate service errors", async () => {
+      mockFindAll.mockRejectedValue(new Error("Question retrieval failed"));
+
+      await expect(controller.findAll(req, res)).rejects.toThrow("Question retrieval failed");
+    });
   });
 
   describe("findById", () => {

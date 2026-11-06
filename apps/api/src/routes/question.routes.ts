@@ -4,7 +4,8 @@ import { QuestionController } from "../controllers/question.controller";
 const router = Router();
 const questionController = new QuestionController();
 
-router.get("/", questionController.findMyQuestions.bind(questionController));
+router.get("/mine", questionController.findMyQuestions.bind(questionController));
+router.get("/", questionController.findAll.bind(questionController));
 router.post("/", questionController.createQuestion.bind(questionController));
 router.get("/:id", questionController.findById.bind(questionController));
 router.delete("/:id", questionController.deleteQuestion.bind(questionController));

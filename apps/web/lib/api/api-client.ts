@@ -72,6 +72,11 @@ export class ApiClient {
       throw new Error(`Request failed: ${response.status}`);
     }
 
+    // Handle responses with no content (e.g. DELETE 204)
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
     return response.json() as Promise<T>;
   }
 }
