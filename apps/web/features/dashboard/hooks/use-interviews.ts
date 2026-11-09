@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import { CreateInterviewQuestionPayload, dashboardApi } from "../api/dashboard-api";
+import {
+  CreateInterviewPayload,
+  CreateInterviewQuestionPayload,
+  dashboardApi,
+} from "../api/dashboard-api";
 import type { Interview } from "../types";
 
 type UseInterviewsOptions = {
@@ -14,6 +18,21 @@ export const useInterviews = ({ isLoaded, isSignedIn }: UseInterviewsOptions) =>
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function createInterview(data: CreateInterviewPayload) {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await dashboardApi.createInterview(data);
+      await refreshInterviews();
+      return res;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create Interview");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function createInterviewQuestion(
     interviewId: string,
@@ -85,5 +104,6 @@ export const useInterviews = ({ isLoaded, isSignedIn }: UseInterviewsOptions) =>
     refreshInterviews,
     createInterviewQuestion,
     removeInterviewQuestion,
+    createInterview,
   };
 };

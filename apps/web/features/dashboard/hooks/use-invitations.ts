@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { dashboardApi } from "../api/dashboard-api";
-import type { Invite, Interview } from "../types";
-import type { User } from "@/features/auth/types";
 import type { InviteWithDetails } from "../types";
 
 type UseInvitationsOptions = {
@@ -17,63 +15,58 @@ export const useInvitations = ({ isLoaded, isSignedIn }: UseInvitationsOptions) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const acceptInvitation = async (inviteId: string) => {
-    const updatedInvite = await dashboardApi.acceptInvitation(inviteId);
+  const refreshInvitations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    setInvitations((current) =>
-      current.map((invite) =>
-        invite.id === inviteId
-          ? {
-              ...invite,
-              status: updatedInvite.status,
-              respondedAt: updatedInvite.respondedAt,
-              updatedAt: updatedInvite.updatedAt,
-            }
-          : invite,
-      ),
-    );
+      const data = await dashboardApi.getReceivedInvites();
+      setInvitations(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load invitations");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const acceptInvitation = async (inviteId: string) => {
+    try {
+      setError(null);
+      await dashboardApi.acceptInvitation(inviteId);
+      await refreshInvitations();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to accept invitation");
+      throw err;
+    }
   };
 
   const declineInvitation = async (inviteId: string) => {
-    const updatedInvite = await dashboardApi.declineInvitation(inviteId);
-
-    setInvitations((current) =>
-      current.map((invite) =>
-        invite.id === inviteId
-          ? {
-              ...invite,
-              status: updatedInvite.status,
-              respondedAt: updatedInvite.respondedAt,
-              updatedAt: updatedInvite.updatedAt,
-            }
-          : invite,
-      ),
-    );
+    try {
+      setError(null);
+      await dashboardApi.declineInvitation(inviteId);
+      await refreshInvitations();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to decline invitation");
+      throw err;
+    }
   };
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
-      return;
-    }
+    if (!isLoaded || !isSignedIn) return;
 
-    async function loadInvitations() {
-      try {
-        const data = await dashboardApi.getReceivedInvites();
-        setInvitations(data);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : "Failed to load invitations");
-      } finally {
-        setLoading(false);
-      }
-    }
+    const timer = setTimeout(() => {
+      void refreshInvitations().catch(() => {});
+    }, 0);
 
-    loadInvitations();
+    return () => clearTimeout(timer);
   }, [isLoaded, isSignedIn]);
 
   return {
     invitations,
     loading,
     error,
+    refreshInvitations,
     acceptInvitation,
     declineInvitation,
   };
