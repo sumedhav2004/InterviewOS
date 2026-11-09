@@ -122,6 +122,7 @@ function InterviewCard({
   onAddQuestion,
   onRemoveInterviewQuestion,
 }: InterviewCardProps) {
+  const isDraft = interview.status === "DRAFT";
   const isHistory = variant === "history";
   const createdByMe = interview.createdById === currentUserId;
 
@@ -132,6 +133,7 @@ function InterviewCard({
   const myParticipant = interview.participants?.find(
     (participant) => participant.user.id === currentUserId,
   );
+
   const isInterviewer = myParticipant?.role === "INTERVIEWER";
   const canManageQuestions = !isHistory && isInterviewer;
 
@@ -148,20 +150,27 @@ function InterviewCard({
     questionId: string,
     interviewQuestionId: string,
   ) => {
-    console.log("DELETE IDS: ", interviewId, " q:", questionId, " iq:", interviewQuestionId);
     onRemoveInterviewQuestion(interviewId, questionId, interviewQuestionId);
   };
 
   return (
     <Card
       className={`overflow-hidden transition-colors ${
-        isHistory ? "border-border/60" : "border-primary/20 hover:border-primary/40"
+        isDraft || isHistory
+          ? "border-dashed border-border bg-muted/100"
+          : "border-primary/20 hover:border-primary/40"
       }`}
     >
       <CardContent className="space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-start gap-4">
-          <div className="shrink-0 rounded-md border border-primary/30 bg-primary/10 p-3 text-primary">
+          <div
+            className={`shrink-0 rounded-md border p-3 ${
+              isDraft || isHistory
+                ? "border-border bg-muted text-muted-foreground"
+                : "border-primary/30 bg-primary/10 text-primary"
+            }`}
+          >
             <Video className="size-5" />
           </div>
 
@@ -225,9 +234,7 @@ function InterviewCard({
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Users className="size-4 text-muted-foreground" />
-
               <h4 className="text-sm font-medium">Participants</h4>
-
               <Badge variant="secondary">{activeParticipants.length}</Badge>
             </div>
 
@@ -284,7 +291,6 @@ function InterviewCard({
         </div>
 
         {/* Question preview */}
-        {/* Question preview */}
         {canManageQuestions && (
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
@@ -310,7 +316,7 @@ function InterviewCard({
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium">{item.question.title}</p>
 
-                      <div className="mt-1 flex flex-wrap justify-between items-center text-xs">
+                      <div className="mt-1 flex flex-wrap items-center justify-between text-xs">
                         <span className={difficultyStyles[item.question.difficulty] ?? ""}>
                           {item.question.difficulty}
                         </span>
@@ -342,7 +348,7 @@ function InterviewCard({
         {/* Actions */}
         {!isHistory && (
           <div className="flex justify-end border-t border-border/60 pt-4">
-            <Button className="gap-2" onClick={() => onOpen?.(interview.id)}>
+            <Button variant="secondary" className="gap-2" onClick={() => onOpen?.(interview.id)}>
               Open interview
               <ArrowRight className="size-4" />
             </Button>
@@ -354,6 +360,7 @@ function InterviewCard({
 }
 
 type InterviewListProps = {
+  drafts: InterviewCardData[];
   upcoming: InterviewCardData[];
   history: InterviewCardData[];
   currentUserId: string;
@@ -368,6 +375,7 @@ type InterviewListProps = {
 };
 
 export function InterviewList({
+  drafts,
   upcoming,
   history,
   currentUserId,
@@ -378,9 +386,44 @@ export function InterviewList({
 }: InterviewListProps) {
   return (
     <section className="space-y-10">
+      {/* Draft interviews */}
+      {drafts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-end justify-between border-b border-border/60 pb-3">
+            <div className="space-y-1">
+              <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Work in progress
+              </p>
+
+              <h2 className="text-xl font-semibold tracking-tight">Draft interviews</h2>
+            </div>
+
+            <span className="font-mono text-xs text-muted-foreground">
+              {drafts.length} {drafts.length === 1 ? "draft" : "drafts"}
+            </span>
+          </div>
+
+          <div className="max-h-[600px] overflow-y-auto pr-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {drafts.map((interview) => (
+                <InterviewCard
+                  key={interview.id}
+                  interview={interview}
+                  currentUserId={currentUserId}
+                  onOpen={onOpenInterview}
+                  onInvite={onInvitePeople}
+                  onAddQuestion={onAddQuestion}
+                  onRemoveInterviewQuestion={onRemoveInterviewQuestion}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Upcoming interviews */}
       <div className="space-y-4">
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between border-b border-border/60 pb-3">
           <div className="space-y-1">
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-primary">Interviews</p>
 
@@ -408,25 +451,27 @@ export function InterviewList({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {upcoming.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                interview={interview}
-                currentUserId={currentUserId}
-                onOpen={onOpenInterview}
-                onInvite={onInvitePeople}
-                onAddQuestion={onAddQuestion}
-                onRemoveInterviewQuestion={onRemoveInterviewQuestion}
-              />
-            ))}
+          <div className="max-h-[1000px] overflow-y-auto pr-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              {upcoming.map((interview) => (
+                <InterviewCard
+                  key={interview.id}
+                  interview={interview}
+                  currentUserId={currentUserId}
+                  onOpen={onOpenInterview}
+                  onInvite={onInvitePeople}
+                  onAddQuestion={onAddQuestion}
+                  onRemoveInterviewQuestion={onRemoveInterviewQuestion}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
 
       {/* Interview history */}
       <div className="space-y-4">
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between border-b border-border/60 pb-3">
           <div className="space-y-1">
             <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted-foreground">
               History
@@ -457,18 +502,21 @@ export function InterviewList({
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-1 lg:grid-cols-2">
-            {history.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                interview={interview}
-                currentUserId={currentUserId}
-                onOpen={onOpenInterview}
-                onInvite={onInvitePeople}
-                onAddQuestion={onAddQuestion}
-                onRemoveInterviewQuestion={onRemoveInterviewQuestion}
-              />
-            ))}
+          <div className="max-h-[600px] overflow-y-auto pr-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-1 lg:grid-cols-2">
+              {history.map((interview) => (
+                <InterviewCard
+                  key={interview.id}
+                  interview={interview}
+                  currentUserId={currentUserId}
+                  variant="history"
+                  onOpen={onOpenInterview}
+                  onInvite={onInvitePeople}
+                  onAddQuestion={onAddQuestion}
+                  onRemoveInterviewQuestion={onRemoveInterviewQuestion}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>

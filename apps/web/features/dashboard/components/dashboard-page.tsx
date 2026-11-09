@@ -15,23 +15,14 @@ import FriendsSection from "./friends-section";
 import { useState } from "react";
 import InvitePeopleDialog from "./invite-people-dialog";
 import AddQuestionDialog from "./add-question-dialog";
+import CreateInterviewDialog from "./create-interview-dialog";
+import { Button } from "@/components/ui/button";
 
 export function DashboardPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const [inviteInterviewId, setInviteInterviewId] = useState<string | null>(null);
   const [addQuestionInterviewId, setAddQuestionInterviewId] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function logToken() {
-      const token = await getToken();
-
-      console.log("Clerk token:", token);
-    }
-
-    if (isLoaded && isSignedIn) {
-      logToken();
-    }
-  }, [isLoaded, isSignedIn, getToken]);
+  const [createInterviewOpen, setCreateInterviewOpen] = useState(false);
 
   const { user, loading, error } = useDashboard({
     isLoaded,
@@ -54,6 +45,7 @@ export function DashboardPage() {
     loading: interviewsLoading,
     error: interviewsError,
     refreshInterviews,
+    createInterview,
     createInterviewQuestion,
     removeInterviewQuestion,
   } = useInterviews({
@@ -61,10 +53,11 @@ export function DashboardPage() {
     isSignedIn: isSignedIn ?? false,
   });
 
+  const draftInterviews = interviews.filter((interview) => interview.status === "DRAFT");
+
   const upcomingInterviews = interviews.filter(
     (interview) => interview.status === "SCHEDULED" || interview.status === "INPROGRESS",
   );
-  console.log(" THIS IS THE NEWEST LOG: ", upcomingInterviews);
 
   const interviewHistory = interviews.filter(
     (interview) => interview.status === "COMPLETED" || interview.status === "CANCELLED",
@@ -80,6 +73,11 @@ export function DashboardPage() {
     isLoaded,
     isSignedIn: isSignedIn ?? false,
   });
+
+  const handleAcceptInvitation = async (inviteId: string) => {
+    await acceptInvitation(inviteId);
+    await refreshInterviews();
+  };
 
   if (!isLoaded) {
     return <main>Loading...</main>;
@@ -122,7 +120,18 @@ export function DashboardPage() {
             onDeclineRequest={declineRequest}
           />
 
+          <InvitationList
+            invitations={invitations}
+            onAccept={handleAcceptInvitation}
+            onDecline={declineInvitation}
+          />
+
+          <div className="flex justify-end">
+            <Button onClick={() => setCreateInterviewOpen(true)}>Create interview</Button>
+          </div>
+
           <InterviewList
+            drafts={draftInterviews}
             upcoming={upcomingInterviews}
             history={interviewHistory}
             currentUserId={user.id}
@@ -153,6 +162,12 @@ export function DashboardPage() {
             interviewId={inviteInterviewId ?? ""}
             friends={friends}
             user={user}
+          />
+
+          <CreateInterviewDialog
+            open={createInterviewOpen}
+            onOpenChange={setCreateInterviewOpen}
+            onCreateInterview={createInterview}
           />
 
           {/* stats */}

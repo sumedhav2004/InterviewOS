@@ -25,6 +25,14 @@ export type CreateInterviewQuestionPayload = {
   points: number;
 };
 
+export type CreateInterviewPayload = {
+  title: string;
+  description: string;
+  scheduledAt?: Date;
+  durationMinutes: number;
+  createdAs: ParticipantRole;
+};
+
 export type QuestionsResponse = {
   data: Question[];
   pagination: {
@@ -139,5 +147,9 @@ export const dashboardApi = {
 
   getInterviewQuestions(interviewId: string) {
     return apiClient.get<InterviewQuestion[]>(`/interviews/${interviewId}/questions`);
+  },
+
+  createInterview(data: CreateInterviewPayload) {
+    return apiClient.post(`/interviews`, data);
   },
 };
