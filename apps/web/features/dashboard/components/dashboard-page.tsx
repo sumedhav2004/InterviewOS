@@ -17,12 +17,17 @@ import InvitePeopleDialog from "./invite-people-dialog";
 import AddQuestionDialog from "./add-question-dialog";
 import CreateInterviewDialog from "./create-interview-dialog";
 import { Button } from "@/components/ui/button";
+import UpdateInterviewDialog from "./update-interview-dialog";
+import { Interview } from "../types";
+import ScheduleInterviewDateTimePicker from "./schedule-interview-dialog";
 
 export function DashboardPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const [inviteInterviewId, setInviteInterviewId] = useState<string | null>(null);
   const [addQuestionInterviewId, setAddQuestionInterviewId] = useState<string | null>(null);
   const [createInterviewOpen, setCreateInterviewOpen] = useState(false);
+  const [editingInterview, setEditingInterview] = useState<Interview | null>(null);
+  const [schedulingInterviewId, setSchedulingInterviewId] = useState<string | null>(null);
 
   const { user, loading, error } = useDashboard({
     isLoaded,
@@ -48,6 +53,10 @@ export function DashboardPage() {
     createInterview,
     createInterviewQuestion,
     removeInterviewQuestion,
+    updateInterview,
+    scheduleInterview,
+    startInterview,
+    cancelInterview,
   } = useInterviews({
     isLoaded,
     isSignedIn: isSignedIn ?? false,
@@ -142,6 +151,8 @@ export function DashboardPage() {
               setAddQuestionInterviewId(interviewId);
             }}
             onRemoveInterviewQuestion={removeInterviewQuestion}
+            onEditInterview={(interview) => setEditingInterview(interview)}
+            onScheduleInterview={(interviewId) => setSchedulingInterviewId(interviewId)}
           />
 
           <AddQuestionDialog
@@ -168,6 +179,25 @@ export function DashboardPage() {
             open={createInterviewOpen}
             onOpenChange={setCreateInterviewOpen}
             onCreateInterview={createInterview}
+          />
+
+          <UpdateInterviewDialog
+            key={editingInterview?.id ?? "closed"}
+            open={editingInterview !== null}
+            onOpenChange={(open) => {
+              if (!open) setEditingInterview(null);
+            }}
+            onUpdateInterview={updateInterview}
+            interview={editingInterview}
+          />
+
+          <ScheduleInterviewDateTimePicker
+            open={schedulingInterviewId !== null}
+            onOpenChange={(open) => {
+              if (!open) setSchedulingInterviewId(null);
+            }}
+            interviewId={schedulingInterviewId ?? ""}
+            onScheduleInterview={scheduleInterview}
           />
 
           {/* stats */}

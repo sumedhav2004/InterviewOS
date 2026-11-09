@@ -214,7 +214,7 @@ describe("InterviewController", () => {
 
       await controller.scheduleInterview(req, res);
 
-      expect(mockScheduleInterview).toHaveBeenCalledWith("user-1", "interview-1", data);
+      expect(mockScheduleInterview).toHaveBeenCalledWith("user-1", "interview-1", data.scheduledAt);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith(scheduledInterview);
     });

@@ -6,6 +6,7 @@ import {
   CreateInterviewPayload,
   CreateInterviewQuestionPayload,
   dashboardApi,
+  UpdateInterviewPayload,
 } from "../api/dashboard-api";
 import type { Interview } from "../types";
 
@@ -24,6 +25,68 @@ export const useInterviews = ({ isLoaded, isSignedIn }: UseInterviewsOptions) =>
       setLoading(true);
       setError(null);
       const res = await dashboardApi.createInterview(data);
+      await refreshInterviews();
+      return res;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create Interview");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function updateInterview(interviewId: string, data: UpdateInterviewPayload) {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await dashboardApi.updateInterview(interviewId, data);
+      await refreshInterviews();
+      return res;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create Interview");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function scheduleInterview(interviewId: string, scheduledAt: Date) {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await dashboardApi.scheduleInterview(interviewId, scheduledAt.toISOString());
+
+      await refreshInterviews();
+      return res;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to schedule interview");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function startInterview(interviewId: string) {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await dashboardApi.startInterview(interviewId);
+      await refreshInterviews();
+      return res;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create Interview");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function cancelInterview(interviewId: string) {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await dashboardApi.cancelInterview(interviewId);
       await refreshInterviews();
       return res;
     } catch (err) {
@@ -103,6 +166,10 @@ export const useInterviews = ({ isLoaded, isSignedIn }: UseInterviewsOptions) =>
     error,
     refreshInterviews,
     createInterviewQuestion,
+    updateInterview,
+    scheduleInterview,
+    startInterview,
+    cancelInterview,
     removeInterviewQuestion,
     createInterview,
   };

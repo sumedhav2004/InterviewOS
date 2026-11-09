@@ -63,6 +63,8 @@ export class InterviewController {
   }
 
   async scheduleInterview(req: Request, res: Response) {
+    console.log("SCHEDULE BODY:", req.body);
+    console.log("SCHEDULED AT:", new Date(req.body.scheduledAt));
     const id = req.params.id;
 
     if (typeof id !== "string") {
@@ -73,7 +75,11 @@ export class InterviewController {
     const userId = req.user.id;
     const data = req.body;
 
-    const scheduledInterview = await this.interviewService.scheduleInterview(userId, id, data);
+    const scheduledInterview = await this.interviewService.scheduleInterview(
+      userId,
+      id,
+      data.scheduledAt,
+    );
     return res.status(200).json(scheduledInterview);
   }
 
