@@ -33,6 +33,14 @@ export type CreateInterviewPayload = {
   createdAs: ParticipantRole;
 };
 
+export type UpdateInterviewPayload = {
+  title?: string;
+  description?: string;
+  scheduledAt?: Date;
+  durationMinutes?: number;
+  createdAs?: ParticipantRole;
+};
+
 export type QuestionsResponse = {
   data: Question[];
   pagination: {
@@ -151,5 +159,27 @@ export const dashboardApi = {
 
   createInterview(data: CreateInterviewPayload) {
     return apiClient.post(`/interviews`, data);
+  },
+
+  updateInterview(interviewId: string, data: UpdateInterviewPayload) {
+    return apiClient.patch(`/interviews/${interviewId}`, data);
+  },
+
+  scheduleInterview(interviewId: string, scheduledAt: string) {
+    return apiClient.patch(`/interviews/${interviewId}/schedule`, {
+      scheduledAt,
+    });
+  },
+
+  startInterview(interviewId: string) {
+    return apiClient.patch(`/interviews/${interviewId}/schedule`);
+  },
+
+  completeInterview(interviewId: string) {
+    return apiClient.patch(`/interviews/${interviewId}/schedule`);
+  },
+
+  cancelInterview(interviewId: string) {
+    return apiClient.patch(`/interviews/${interviewId}/cancel`);
   },
 };

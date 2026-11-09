@@ -74,6 +74,8 @@ type InterviewCardProps = {
     questionId: string,
     interviewQuestionId: string,
   ) => Promise<unknown>;
+  onEdit?: (interview: InterviewCardData) => void;
+  onSchedule?: (interviewId: string) => void;
 };
 
 const statusStyles: Record<string, string> = {
@@ -121,6 +123,8 @@ function InterviewCard({
   onInvite,
   onAddQuestion,
   onRemoveInterviewQuestion,
+  onEdit,
+  onSchedule,
 }: InterviewCardProps) {
   const isDraft = interview.status === "DRAFT";
   const isHistory = variant === "history";
@@ -348,11 +352,27 @@ function InterviewCard({
         {/* Actions */}
         {!isHistory && (
           <div className="flex justify-end border-t border-border/60 pt-4">
-            <Button variant="secondary" className="gap-2" onClick={() => onOpen?.(interview.id)}>
+            <Button
+              variant="outline"
+              className="gap-2 border-primary"
+              onClick={() => onOpen?.(interview.id)}
+            >
               Open interview
               <ArrowRight className="size-4" />
             </Button>
           </div>
+        )}
+
+        {createdByMe && !isHistory && (
+          <Button variant="outline" onClick={() => onEdit?.(interview)}>
+            Edit interview
+          </Button>
+        )}
+
+        {isDraft && createdByMe && (
+          <Button variant="outline" onClick={() => onSchedule?.(interview.id)}>
+            Schedule interview
+          </Button>
         )}
       </CardContent>
     </Card>
@@ -372,6 +392,8 @@ type InterviewListProps = {
     questionId: string,
     interviewQuestionId: string,
   ) => Promise<unknown>;
+  onEditInterview?: (interview: InterviewCardData) => void;
+  onScheduleInterview?: (interviewId: string) => void;
 };
 
 export function InterviewList({
@@ -383,6 +405,8 @@ export function InterviewList({
   onInvitePeople,
   onAddQuestion,
   onRemoveInterviewQuestion,
+  onEditInterview,
+  onScheduleInterview,
 }: InterviewListProps) {
   return (
     <section className="space-y-10">
@@ -414,6 +438,8 @@ export function InterviewList({
                   onInvite={onInvitePeople}
                   onAddQuestion={onAddQuestion}
                   onRemoveInterviewQuestion={onRemoveInterviewQuestion}
+                  onEdit={onEditInterview}
+                  onSchedule={onScheduleInterview}
                 />
               ))}
             </div>
@@ -462,6 +488,8 @@ export function InterviewList({
                   onInvite={onInvitePeople}
                   onAddQuestion={onAddQuestion}
                   onRemoveInterviewQuestion={onRemoveInterviewQuestion}
+                  onEdit={onEditInterview}
+                  onSchedule={onScheduleInterview}
                 />
               ))}
             </div>
@@ -514,6 +542,8 @@ export function InterviewList({
                   onInvite={onInvitePeople}
                   onAddQuestion={onAddQuestion}
                   onRemoveInterviewQuestion={onRemoveInterviewQuestion}
+                  onEdit={onEditInterview}
+                  onSchedule={onScheduleInterview}
                 />
               ))}
             </div>
