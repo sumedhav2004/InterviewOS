@@ -59,10 +59,44 @@ export class InterviewQuestionRepository {
   }
 
   async deleteInterviewQuestion(id: string) {
-    return prisma.interviewQuestion.delete({
-      where: {
-        id,
-      },
+    return prisma.$transaction(async (tx) => {
+      const interviewQuestion = await tx.interviewQuestion.findUnique({
+        where: { id },
+        select: {
+          interviewId: true,
+          questionOrder: true,
+        },
+      });
+
+      if (!interviewQuestion) return;
+
+      const { interviewId, questionOrder } = interviewQuestion;
+
+      await tx.interviewQuestion.delete({
+        where: { id },
+      });
+
+      // Move later questions temporarily to avoid unique constraint conflicts
+      await tx.interviewQuestion.updateMany({
+        where: {
+          interviewId,
+          questionOrder: { gt: questionOrder },
+        },
+        data: {
+          questionOrder: { increment: 1000000 },
+        },
+      });
+
+      // Move them back, reducing their order by one
+      await tx.interviewQuestion.updateMany({
+        where: {
+          interviewId,
+          questionOrder: { gt: 1000000 },
+        },
+        data: {
+          questionOrder: { decrement: 1000001 },
+        },
+      });
     });
   }
 
