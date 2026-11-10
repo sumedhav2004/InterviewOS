@@ -159,13 +159,13 @@ function InterviewCard({
 
   return (
     <Card
-      className={`overflow-hidden transition-colors ${
+      className={`flex h-full flex-col overflow-hidden transition-colors ${
         isDraft || isHistory
           ? "border-dashed border-border bg-muted/100"
           : "border-primary/20 hover:border-primary/40"
       }`}
     >
-      <CardContent className="space-y-6 p-4 sm:p-6">
+      <CardContent className="flex flex-1 flex-col space-y-6 p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-start gap-4">
           <div
@@ -307,7 +307,7 @@ function InterviewCard({
             </div>
 
             {questions.length > 0 ? (
-              <div className="max-h-64 space-y-2 overflow-y-auto pr-2">
+              <div className="max-h-64 min-h-0 space-y-2 overflow-y-auto pr-2">
                 {questions.map((item) => (
                   <div
                     key={item.id}
@@ -351,28 +351,30 @@ function InterviewCard({
 
         {/* Actions */}
         {!isHistory && (
-          <div className="flex justify-end border-t border-border/60 pt-4">
-            <Button
-              variant="outline"
-              className="gap-2 border-primary"
-              onClick={() => onOpen?.(interview.id)}
-            >
-              Open interview
-              <ArrowRight className="size-4" />
-            </Button>
+          <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t border-border/60 pt-4">
+            {!isDraft && (
+              <Button
+                variant="outline"
+                className="gap-2 border-primary"
+                onClick={() => onOpen?.(interview.id)}
+              >
+                Open interview
+                <ArrowRight className="size-4" />
+              </Button>
+            )}
+
+            {createdByMe && (
+              <Button variant="outline" onClick={() => onEdit?.(interview)}>
+                Edit interview
+              </Button>
+            )}
+
+            {isDraft && createdByMe && (
+              <Button variant="outline" onClick={() => onSchedule?.(interview.id)}>
+                Schedule interview
+              </Button>
+            )}
           </div>
-        )}
-
-        {createdByMe && !isHistory && (
-          <Button variant="outline" onClick={() => onEdit?.(interview)}>
-            Edit interview
-          </Button>
-        )}
-
-        {isDraft && createdByMe && (
-          <Button variant="outline" onClick={() => onSchedule?.(interview.id)}>
-            Schedule interview
-          </Button>
         )}
       </CardContent>
     </Card>
@@ -428,7 +430,7 @@ export function InterviewList({
           </div>
 
           <div className="max-h-[600px] overflow-y-auto pr-2">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 items-stretch lg:grid-cols-2">
               {drafts.map((interview) => (
                 <InterviewCard
                   key={interview.id}
@@ -478,7 +480,7 @@ export function InterviewList({
           </Card>
         ) : (
           <div className="max-h-[1000px] overflow-y-auto pr-2">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 items-stretch lg:grid-cols-2">
               {upcoming.map((interview) => (
                 <InterviewCard
                   key={interview.id}
@@ -531,7 +533,7 @@ export function InterviewList({
           </Card>
         ) : (
           <div className="max-h-[600px] overflow-y-auto pr-2">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-1 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-1 items-stretch lg:grid-cols-2">
               {history.map((interview) => (
                 <InterviewCard
                   key={interview.id}
