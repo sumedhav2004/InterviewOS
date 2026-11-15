@@ -1,7 +1,7 @@
 "use client";
 
+import { ActiveInterviewQuestion } from "@/features/interview/types/active-question";
 import { FileText } from "lucide-react";
-import { ActiveInterviewQuestion } from "../types/active-question";
 
 type ActiveQuestionProps = {
   question: ActiveInterviewQuestion | null;
@@ -10,7 +10,7 @@ type ActiveQuestionProps = {
 export function ActiveQuestion({ question }: ActiveQuestionProps) {
   if (!question) {
     return (
-      <section className="shrink-0 border-b border-border bg-card/20 ">
+      <section className="w-full shrink-0 border-b border-border bg-card/20 lg:w-72 lg:border-b-0 lg:border-r">
         <div className="flex h-10 items-center gap-2 border-b border-border px-4">
           <FileText className="h-3.5 w-3.5 text-primary" />
 
@@ -27,7 +27,7 @@ export function ActiveQuestion({ question }: ActiveQuestionProps) {
   }
 
   return (
-    <section className="shrink-0 border-b border-border bg-card/20 overflow-y-auto">
+    <section className="w-full shrink-0 overflow-y-auto border-b border-border bg-card/20 lg:w-72 lg:border-b-0 lg:border-r">
       <div className="flex h-10 items-center justify-between border-b border-border px-4">
         <div className="flex items-center gap-2">
           <FileText className="h-3.5 w-3.5 text-primary" />
@@ -79,7 +79,7 @@ export function ActiveQuestion({ question }: ActiveQuestionProps) {
                     Test Case {index + 1}
                   </p>
 
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3">
                     <div>
                       <p className="mb-1 font-mono text-[9px] text-muted-foreground">Input</p>
 

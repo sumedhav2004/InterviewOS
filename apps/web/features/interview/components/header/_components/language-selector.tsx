@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { PROGRAMMING_LANGUAGES, ProgrammingLanguage } from "../types/programming-language";
+import { PROGRAMMING_LANGUAGES, ProgrammingLanguage } from "../../../types/programming-language";
 
 type LanguageSelectorProps = {
   value: ProgrammingLanguage;

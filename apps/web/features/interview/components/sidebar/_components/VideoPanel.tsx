@@ -1,9 +1,8 @@
 "use client";
 
+import { Participant, ParticipantMediaState } from "@/features/interview/types/participant";
 import { MoreHorizontal, Video } from "lucide-react";
-
-import { ParticipantTile } from "./participant-tile";
-import { Participant, ParticipantMediaState } from "../types/participant";
+import { ParticipantTile } from "./ParticipantTile";
 
 type VideoPanelProps = {
   localStream: MediaStream | null;

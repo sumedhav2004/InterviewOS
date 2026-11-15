@@ -3,19 +3,19 @@
 import Editor, { BeforeMount, OnMount } from "@monaco-editor/react";
 
 import { spaceCadetTheme } from "@/lib/monaco/themes/space-cadet";
-import { PROGRAMMING_LANGUAGES, ProgrammingLanguage } from "../types/programming-language";
+import { PROGRAMMING_LANGUAGES, ProgrammingLanguage } from "../../../../types/programming-language";
 
 const handleBeforeMount: BeforeMount = (monaco) => {
   monaco.editor.defineTheme("space-cadet", spaceCadetTheme);
 };
 
-type CodeWorkspaceProps = {
+type EditorAreaProps = {
   code: string;
   onCodeChange: (code: string) => void;
   language: ProgrammingLanguage;
 };
 
-export function CodeWorkspace({ code, onCodeChange, language }: CodeWorkspaceProps) {
+export function EditorArea({ code, onCodeChange, language }: EditorAreaProps) {
   const handleMount: OnMount = (editor) => {
     requestAnimationFrame(() => {
       editor.layout();
