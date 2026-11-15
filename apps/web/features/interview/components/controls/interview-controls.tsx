@@ -14,12 +14,15 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { InterviewWorkspaceType } from "../../types/interview";
 
 type InterviewControlsProps = {
   cameraEnabled: boolean;
   microphoneEnabled: boolean;
   onToggleCamera: () => void;
   onToggleMicrophone: () => void;
+  workspace: InterviewWorkspaceType;
+  onWorkspaceChange: (workspace: InterviewWorkspaceType) => void;
 };
 
 export function InterviewControls({
@@ -27,6 +30,8 @@ export function InterviewControls({
   microphoneEnabled,
   onToggleCamera,
   onToggleMicrophone,
+  workspace,
+  onWorkspaceChange,
 }: InterviewControlsProps) {
   return (
     <footer className="flex h-16 shrink-0 items-center justify-between border-t border-border bg-background/90 px-3 backdrop-blur-xl sm:px-5">
@@ -55,11 +60,21 @@ export function InterviewControls({
       </div>
 
       <div className="flex items-center gap-1">
-        <Button size="icon" variant="ghost" title="Code">
+        <Button
+          size="icon"
+          variant={workspace === "CODE" ? "default" : "ghost"}
+          title="Code"
+          onClick={() => onWorkspaceChange("CODE")}
+        >
           <Code2 />
         </Button>
 
-        <Button size="icon" variant="ghost" title="Whiteboard">
+        <Button
+          size="icon"
+          variant={workspace === "WHITEBOARD" ? "default" : "ghost"}
+          title="Whiteboard"
+          onClick={() => onWorkspaceChange("WHITEBOARD")}
+        >
           <Network />
         </Button>
 

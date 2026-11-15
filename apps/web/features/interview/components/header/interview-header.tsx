@@ -1,8 +1,7 @@
 "use client";
 
 import { CircleDot, Clock3, ShieldCheck } from "lucide-react";
-
-import type { Interview } from "../types/interview";
+import { Interview } from "../../types/interview";
 
 type InterviewHeaderProps = {
   interview: Interview;

@@ -9,17 +9,18 @@ import { useInterviewSocket } from "../hooks/use-interview-socket";
 import { useWebRTC } from "../hooks/use-webrtc";
 import { useLocalMedia } from "../hooks/use-local-media";
 
-import { InterviewHeader } from "./interview-header";
-import { InterviewControls } from "./interview-controls";
-
 import type { ActiveInterviewQuestion, ServerMessage, WebRTCSignal } from "../types/realtime";
 import type { ProgrammingLanguage } from "../types/programming-language";
 import { useCodeRun } from "../hooks/use-coderun";
 import { useSubmission } from "../hooks/use-submission";
 import { ParticipantMediaState } from "../types/participant";
-import InterviewWorkspace from "./interview-workspace/interview-workspace";
+
 import { InterviewWorkspaceType } from "../types/interview";
 import { InterviewRoomProvider } from "./interview-room-provider";
+import { InterviewHeader } from "./header/interview-header";
+import { InterviewControls } from "./controls/interview-controls";
+import InterviewShell from "./layout/InterviewShell";
+import InterviewWorkspace from "./workspace/interview-workspace";
 
 type InterviewPageProps = {
   interviewId: string;
@@ -33,7 +34,7 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
     useState<ActiveInterviewQuestion | null>(null);
 
   const [language, setLanguage] = useState<ProgrammingLanguage>("PYTHON");
-  const [workspace, setWorkspace] = useState<InterviewWorkspaceType>();
+  const [workspace, setWorkspace] = useState<InterviewWorkspaceType>("CODE");
 
   const [remoteMediaStates, setRemoteMediaStates] = useState<Map<string, ParticipantMediaState>>(
     new Map(),
@@ -393,7 +394,6 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
     <InterviewRoomProvider>
       <InterviewShell>
         <InterviewHeader interview={interview} />
-
         <InterviewWorkspace
           code={code}
           activeInterviewQuestion={activeInterviewQuestion}
@@ -440,6 +440,7 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
           isSubmitting={isSubmitting}
           submissionError={submissionError}
           onSubmit={handleSubmitCode}
+          workspace={workspace}
         />
 
         {mediaError && (
@@ -453,17 +454,11 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
           microphoneEnabled={microphoneEnabled}
           onToggleCamera={toggleCamera}
           onToggleMicrophone={toggleMicrophone}
+          workspace={workspace}
+          onWorkspaceChange={setWorkspace}
         />
       </InterviewShell>
     </InterviewRoomProvider>
-  );
-}
-
-function InterviewShell({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
-      {children}
-    </main>
   );
 }
 
