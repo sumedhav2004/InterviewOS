@@ -15,6 +15,7 @@ describe("handleExecutionJob", () => {
       participantId: "participant-1",
       interviewQuestionId: "question-1",
       testCaseId: "test-case-1",
+      input: null,
       language: "PYTHON" as const,
       sourceCode: 'print("hello")',
       status: "QUEUED" as const,

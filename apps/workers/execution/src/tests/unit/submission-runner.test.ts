@@ -9,10 +9,14 @@ describe("runSubmission", () => {
         participantId: "participant-1",
         interviewQuestionId: "question-1",
         testCaseId: "test-case-1",
+        input: null,
         language: "PYTHON",
         sourceCode: `
-x = int(input())
-print(x * x)
+import json
+import sys
+
+x = json.load(sys.stdin)
+print(json.dumps(x * x))
 `,
         status: "QUEUED",
         target: {
@@ -23,14 +27,14 @@ print(x * x)
       [
         {
           id: "test-1",
-          input: "5\n",
-          expectedOutput: "25\n",
+          input: 5,
+          expectedOutput: 25,
           isHidden: false,
         },
         {
           id: "test-2",
-          input: "10\n",
-          expectedOutput: "100\n",
+          input: 10,
+          expectedOutput: 100,
           isHidden: false,
         },
       ],
@@ -48,10 +52,14 @@ print(x * x)
         participantId: "participant-1",
         interviewQuestionId: "question-1",
         testCaseId: "test-case-1",
+        input: null,
         language: "PYTHON",
         sourceCode: `
-x = int(input())
-print(x + 1)
+import json
+import sys
+
+x = json.load(sys.stdin)
+print(json.dumps(x + 1))
 `,
         status: "QUEUED",
         target: {
@@ -62,8 +70,8 @@ print(x + 1)
       [
         {
           id: "test-1",
-          input: "5\n",
-          expectedOutput: "25\n",
+          input: 5,
+          expectedOutput: 25,
           isHidden: false,
         },
       ],

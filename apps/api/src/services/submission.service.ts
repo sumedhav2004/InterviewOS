@@ -6,7 +6,7 @@ import { TestCaseRepository } from "../repositories/testCase.repository";
 import { CreateSubmissionData } from "../types/submission";
 
 import { AppError } from "../../core/errors/app-error";
-import { EvaluationStatus, ExecutionStatus, ParticipantRole } from "@interview-os/database";
+import { EvaluationStatus, ExecutionStatus, ParticipantRole, Prisma } from "@interview-os/database";
 import { RedisQueue } from "@interview-os/redis";
 import { randomUUID } from "node:crypto";
 import { ExecutionCompletedEvent, ExecutionJob } from "../types/codeRun";
@@ -14,6 +14,42 @@ import { SubmissionTestCaseResultRepository } from "../repositories/submission-t
 import { EvaluationRepository } from "../repositories/evaluation.repository";
 import { InterviewRepository } from "../repositories/interview.repository";
 import { InterviewRoom } from "../realtime/websocket/interview-room";
+
+function parseJsonOutput(output: string): Prisma.JsonValue | undefined {
+  try {
+    return JSON.parse(output.trim()) as Prisma.JsonValue;
+  } catch {
+    return undefined;
+  }
+}
+
+function jsonEqual(a: Prisma.JsonValue, b: Prisma.JsonValue): boolean {
+  if (a === b) return true;
+
+  if (typeof a !== "object" || a === null || typeof b !== "object" || b === null) {
+    return false;
+  }
+
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((value, index) => jsonEqual(value, b[index]));
+  }
+
+  const aObject = a as { [key: string]: Prisma.JsonValue };
+  const bObject = b as { [key: string]: Prisma.JsonValue };
+
+  const aKeys = Object.keys(aObject);
+  const bKeys = Object.keys(bObject);
+
+  return (
+    aKeys.length === bKeys.length &&
+    aKeys.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(bObject, key) && jsonEqual(aObject[key], bObject[key]),
+    )
+  );
+}
 
 export class SubmissionService {
   constructor(
@@ -85,7 +121,7 @@ export class SubmissionService {
 
         status: "QUEUED",
 
-        input: testCase.input as string,
+        input: testCase?.input,
       };
 
       await this.queue.enqueue(job);
@@ -146,11 +182,14 @@ export class SubmissionService {
 
     const status = event.status === "SUCCESS" ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
 
-    const expectedOutput = String(testCase.expectedOutput ?? "").trim();
+    const actualOutput = parseJsonOutput(event.stdout);
 
-    const actualOutput = String(event.stdout ?? "").trim();
+    const expectedOutput = testCase.expectedOutput as Prisma.JsonValue;
 
-    const passed = status === ExecutionStatus.SUCCESS && actualOutput === expectedOutput;
+    const passed =
+      status === ExecutionStatus.SUCCESS &&
+      actualOutput !== undefined &&
+      jsonEqual(actualOutput, expectedOutput);
 
     const submissionResult = await this.submissionTestCaseResultRepository.createSubmissionResult({
       submissionId,

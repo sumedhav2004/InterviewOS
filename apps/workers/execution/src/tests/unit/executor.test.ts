@@ -13,11 +13,14 @@ describe("executeJob", () => {
       language: "PYTHON",
 
       sourceCode: `
-x = int(input())
-print(x * x)
+import json
+import sys
+
+x = json.load(sys.stdin)
+print(json.dumps(x * x))
 `,
 
-      input: "5\n",
+      input: 5,
 
       status: "QUEUED",
       target: {
