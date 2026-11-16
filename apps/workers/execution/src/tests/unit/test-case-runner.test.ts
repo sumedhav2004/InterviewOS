@@ -9,6 +9,7 @@ describe("test-case-runner", () => {
         participantId: "participant-1",
         interviewQuestionId: "question-1",
         testCaseId: "test-case-1",
+        input: null,
         language: "PYTHON",
         sourceCode: `
 import json
@@ -43,6 +44,7 @@ print(json.dumps(x * x))
         participantId: "participant-1",
         interviewQuestionId: "question-1",
         testCaseId: "test-case-1",
+        input: null,
         language: "PYTHON",
         sourceCode: `
 import json
@@ -77,6 +79,7 @@ print(json.dumps(x + 1))
         participantId: "participant-1",
         interviewQuestionId: "question-1",
         testCaseId: "test-case-1",
+        input: null,
         language: "PYTHON",
         sourceCode: `
 import json
