@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { ExecutionResult } from "./types";
+import { ExecutionResult, JsonValue } from "./types";
 
 const TIMEOUT_MS = 5000;
 const MAX_OUTPUT_BYTES = 1024 * 1024;
 
-export function executeRust(sourceCode: string, input?: string): Promise<ExecutionResult> {
+export function executeRust(sourceCode: string, input?: JsonValue): Promise<ExecutionResult> {
   return new Promise((resolve) => {
     const start = Date.now();
     const containerName = `interviewos-exec-${randomUUID()}`;
@@ -176,7 +176,7 @@ export function executeRust(sourceCode: string, input?: string): Promise<Executi
     });
 
     if (input !== undefined) {
-      child.stdin.write(input);
+      child.stdin.write(JSON.stringify(input));
     }
 
     child.stdin.end();

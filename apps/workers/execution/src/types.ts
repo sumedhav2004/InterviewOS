@@ -1,3 +1,6 @@
+export type JsonValue =
+  string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 export interface ExecutionResult {
   stdout: string;
   stderr: string;
@@ -6,6 +9,7 @@ export interface ExecutionResult {
   outputLimitExceeded: boolean;
   executionTimeMS: number;
 }
+
 export type ExecutionTarget =
   | {
       type: "CODE_RUN";
@@ -25,7 +29,8 @@ export type ExecutionJob = {
   language: "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP" | "C" | "GO" | "RUST";
 
   sourceCode: string;
-  input?: string;
+  input: JsonValue;
+
   timeoutMs?: number;
   memoryLimitMB?: number;
   status: ExecutionJobStatus;
@@ -37,16 +42,16 @@ export type ExecutionJobStatus = "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
 
 export type ExecutionTestCase = {
   id: string;
-  input: string;
-  expectedOutput: string;
+  input: JsonValue;
+  expectedOutput: JsonValue;
   isHidden: boolean;
 };
 
 export type TestCaseResult = {
   testCaseId: string;
   passed: boolean;
-  input: string;
-  expectedOutput: string;
+  input: JsonValue;
+  expectedOutput: JsonValue;
   actualOutput: string;
   stderr: string;
   executionTimeMS: number;
@@ -71,15 +76,11 @@ export type ExecutionCompletedEvent = {
   type: "EXECUTION_COMPLETED";
   target: ExecutionTarget;
   testCaseId: string;
-
   status: "SUCCESS" | "FAILED";
-
   stdout: string;
   stderr: string;
-
   exitCode: number | null;
   timedOut: boolean;
   outputLimitExceeded: boolean;
-
   executionTimeMS: number;
 };

@@ -412,7 +412,7 @@ describe("CodeRunService", () => {
       },
       testCaseId: "test_case_1",
       status: "SUCCESS",
-      stdout: "hello\n",
+      stdout: '"hello"\n',
       stderr: "",
       executionTimeMS: 25,
     };
@@ -424,7 +424,7 @@ describe("CodeRunService", () => {
         testCaseId: "test_case_1",
         status: ExecutionStatus.SUCCESS,
         passed: true,
-        stdout: "hello\n",
+        stdout: '"hello"\n',
         stderr: "",
         executionTimeMS: 25,
       };
@@ -448,7 +448,7 @@ describe("CodeRunService", () => {
         testCaseId: "test_case_1",
         status: ExecutionStatus.SUCCESS,
         passed: true,
-        stdout: "hello\n",
+        stdout: '"hello"\n',
         stderr: "",
         executionTimeMS: 25,
       });
@@ -556,22 +556,39 @@ describe("CodeRunService", () => {
       });
     });
 
-    it("throws when the test case expected output is not a string", async () => {
+    it("accepts null as a valid expected output", async () => {
       vi.spyOn(console, "log").mockImplementation(() => {});
 
-      codeRunRepository.findById.mockResolvedValue(codeRun);
-      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
       testCaseRepository.findById.mockResolvedValue({
         ...testCase,
         expectedOutput: null,
       });
 
-      await expect(service.handleExecutionCompleted(event as never)).rejects.toMatchObject({
-        statusCode: 500,
-        code: "INVALID_TEST_CASE_EXPECTED_OUTPUT",
+      codeRunRepository.findById.mockResolvedValue(codeRun);
+      interviewQuestionRepository.findById.mockResolvedValue(interviewQuestion);
+
+      codeRunTestCaseResultRepository.createResult.mockResolvedValue({
+        id: "result_1",
+        status: ExecutionStatus.SUCCESS,
+        passed: true,
       });
 
-      expect(codeRunTestCaseResultRepository.createResult).not.toHaveBeenCalled();
+      testCaseRepository.getVisibleTestCasesForAQuestion.mockResolvedValue([
+        { ...testCase, expectedOutput: null },
+      ]);
+
+      codeRunTestCaseResultRepository.getResultsForCodeRun.mockResolvedValue([]);
+
+      await service.handleExecutionCompleted({
+        ...event,
+        stdout: "null\n",
+      } as never);
+
+      expect(codeRunTestCaseResultRepository.createResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          passed: true,
+        }),
+      );
     });
   });
 });

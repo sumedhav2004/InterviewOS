@@ -1,9 +1,12 @@
-import { ExecutionStatus, ProgrammingLanguage } from "@interview-os/database";
+import { ExecutionStatus, Prisma, ProgrammingLanguage } from "@interview-os/database";
 
 export type CreateCodeRunData = {
   language: ProgrammingLanguage;
   sourceCode: string;
 };
+
+export type JsonValue =
+  string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type UpdateCodeRunData = {
   status: ExecutionStatus;
@@ -28,7 +31,7 @@ export type ExecutionJob = {
   language: "PYTHON" | "JAVASCRIPT" | "JAVA" | "CPP" | "C" | "GO" | "RUST";
 
   sourceCode: string;
-  input?: string;
+  input?: Prisma.JsonValue;
   timeoutMs?: number;
   memoryLimitMB?: number;
   status: ExecutionJobStatus;

@@ -8,12 +8,48 @@ import {
   UpdateCodeRunData,
 } from "../types/codeRun";
 import { AppError } from "../../core/errors/app-error";
-import { ExecutionStatus, ParticipantRole } from "@interview-os/database";
+import { ExecutionStatus, ParticipantRole, Prisma } from "@interview-os/database";
 import { TestCaseRepository } from "../repositories/testCase.repository";
 import { RedisQueue } from "@interview-os/redis";
 import { randomUUID } from "node:crypto";
 import { CodeRunTestCaseResultRepository } from "../repositories/code-run-testCase-result.repository";
 import { InterviewRoom } from "../realtime/websocket/interview-room";
+
+function parseJsonOutput(output: string): Prisma.JsonValue | undefined {
+  try {
+    return JSON.parse(output.trim()) as Prisma.JsonValue;
+  } catch {
+    return undefined;
+  }
+}
+
+function jsonEqual(a: Prisma.JsonValue, b: Prisma.JsonValue): boolean {
+  if (a === b) return true;
+
+  if (typeof a !== "object" || a === null || typeof b !== "object" || b === null) {
+    return false;
+  }
+
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((value, index) => jsonEqual(value, b[index]));
+  }
+
+  const aObject = a as { [key: string]: Prisma.JsonValue };
+  const bObject = b as { [key: string]: Prisma.JsonValue };
+
+  const aKeys = Object.keys(aObject);
+  const bKeys = Object.keys(bObject);
+
+  return (
+    aKeys.length === bKeys.length &&
+    aKeys.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(bObject, key) && jsonEqual(aObject[key], bObject[key]),
+    )
+  );
+}
 
 export class CodeRunService {
   constructor(
@@ -155,7 +191,7 @@ export class CodeRunService {
         language: codeRun.language,
         sourceCode: codeRun.sourceCode,
         status: "QUEUED",
-        input: testCase.input as string,
+        input: testCase.input,
       };
 
       await queue.enqueue(job);
@@ -217,16 +253,14 @@ export class CodeRunService {
 
     const status = event.status === "SUCCESS" ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
 
-    if (typeof testCase.expectedOutput !== "string") {
-      throw new AppError(
-        "Test Case Expected Output Must Be A String",
-        500,
-        "INVALID_TEST_CASE_EXPECTED_OUTPUT",
-      );
-    }
+    const actualOutput = parseJsonOutput(event.stdout);
+
+    const expectedOutput = testCase.expectedOutput as Prisma.JsonValue;
 
     const passed =
-      status === ExecutionStatus.SUCCESS && event.stdout.trim() === testCase.expectedOutput.trim();
+      status === ExecutionStatus.SUCCESS &&
+      actualOutput !== undefined &&
+      jsonEqual(actualOutput, expectedOutput);
 
     const createdResult = await this.codeRunTestCaseResultRepository.createResult({
       codeRunId: event.target.codeRunId,

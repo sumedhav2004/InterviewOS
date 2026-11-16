@@ -28,13 +28,16 @@ describe("executePython", () => {
     expect(result.outputLimitExceeded).toBe(true);
   });
 
-  it("should provide input to the Python program", async () => {
+  it("should provide JSON input to the Python program", async () => {
     const result = await executePython(
       `
-x = int(input())
-print(x * x)
+import json
+import sys
+
+x = json.load(sys.stdin)
+print(json.dumps(x * x))
 `,
-      "5\n",
+      5,
     );
 
     expect(result.stdout).toBe("25\n");

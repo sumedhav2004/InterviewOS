@@ -261,7 +261,7 @@ describe("SubmissionService", () => {
       target: { type: "SUBMISSION", submissionId: "submission_1" },
       testCaseId: "test_case_1",
       status: "SUCCESS",
-      stdout: "hello\n",
+      stdout: `${JSON.stringify("hello")}\n`,
       stderr: "",
       executionTimeMS: 25,
     };
@@ -301,7 +301,7 @@ describe("SubmissionService", () => {
         testCaseId: "test_case_1",
         status: ExecutionStatus.SUCCESS,
         passed: true,
-        stdout: "hello\n",
+        stdout: `${JSON.stringify("hello")}\n`,
         stderr: "",
         executionTimeMS: 25,
       });
