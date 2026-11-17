@@ -11,7 +11,7 @@ import CodeHeader from "./codeWorkspace/_components/code-header";
 import { EditorArea } from "./codeWorkspace/_components/EditorArea";
 import CodeWorkspace from "./codeWorkspace/codeWorkspace";
 import WhiteBoardWorkspce from "./whiteBoardWorkspace/whiteBoardWorkspce";
-import { InterviewWorkspaceType } from "../../types/interview";
+import { InterviewQuestion, InterviewWorkspaceType } from "../../types/interview";
 
 type InterviewWorkspaceProps = {
   localStream: MediaStream | null;
@@ -22,7 +22,7 @@ type InterviewWorkspaceProps = {
   remoteMediaStates: Map<string, ParticipantMediaState>;
   code: string;
   onCodeChange: (code: string) => void;
-  activeInterviewQuestion: ActiveInterviewQuestion | null;
+  activeInterviewQuestion: InterviewQuestion | null;
   participant: Participant;
   language: ProgrammingLanguage;
   onLanguageChange: (language: ProgrammingLanguage) => void;
@@ -45,6 +45,10 @@ type InterviewWorkspaceProps = {
   submissionError: string | null;
   onSubmit: () => Promise<void>;
   workspace: InterviewWorkspaceType;
+
+  deleteActiveQuestion: () => Promise<void>;
+  addActiveQuestion: (interviewId: string) => Promise<void>;
+  onOpenQuestionDialog: () => void;
 };
 
 type TerminalMode = "RUN" | "SUBMIT" | null;
@@ -74,6 +78,9 @@ const InterviewWorkspace = ({
   submissionError,
   onSubmit,
   workspace,
+  deleteActiveQuestion,
+  addActiveQuestion,
+  onOpenQuestionDialog,
 }: InterviewWorkspaceProps) => {
   const [terminalHeight, setTerminalHeight] = useState(180);
   const [terminalOpen, setTerminalOpen] = useState(true);
@@ -133,7 +140,7 @@ const InterviewWorkspace = ({
         ? "RUN"
         : null);
   return (
-    <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.85fr)]">
+    <main className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.85fr)_minmax(360px,1fr)]">
       {workspace === "CODE" ? (
         <CodeWorkspace
           code={code}
@@ -154,6 +161,10 @@ const InterviewWorkspace = ({
           submissionError={submissionError}
           onSubmit={onSubmit}
           isCandidate={isCandidate}
+
+          deleteActiveQuestion={deleteActiveQuestion}
+          addActiveQuestion={addActiveQuestion}
+          onOpenQuestionDialog={onOpenQuestionDialog}
         />
       ) : (
         <WhiteBoardWorkspce />

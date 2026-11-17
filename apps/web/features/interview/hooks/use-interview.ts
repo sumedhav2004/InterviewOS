@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { interviewApi } from "../api/interview-api";
 import type { Interview } from "../types/interview";
 
@@ -15,19 +15,20 @@ export function useInterview({ interviewId, isLoaded, isSignedIn }: UseInterview
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const refreshInterview = useCallback(async () => {
+    const data = await interviewApi.getInterview(interviewId);
+    console.log("INTERVIEW DATA FROM useinterview(): ", data);
+    setInterview(data);
+  }, [interviewId]);
+
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
-      return;
-    }
+    if (!isLoaded || !isSignedIn) return;
 
     async function loadInterview() {
       try {
         setLoading(true);
         setError(null);
-
-        const data = await interviewApi.getInterview(interviewId);
-
-        setInterview(data);
+        await refreshInterview();
       } catch (error) {
         setError(error instanceof Error ? error.message : "Failed to load interview");
       } finally {
@@ -36,11 +37,38 @@ export function useInterview({ interviewId, isLoaded, isSignedIn }: UseInterview
     }
 
     loadInterview();
-  }, [interviewId, isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, refreshInterview]);
+
+  const deleteActiveQuestion = async () => {
+    try {
+      setError(null);
+
+      await interviewApi.removeActiveQuestion(interviewId);
+      await refreshInterview();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to remove active question");
+      throw error;
+    }
+  };
+
+  const addActiveQuestion = async (interviewQuestionId: string) => {
+    try {
+      setError(null);
+
+      await interviewApi.addActiveQuestion(interviewId, interviewQuestionId);
+      await refreshInterview();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to add active question");
+      throw error;
+    }
+  };
 
   return {
     interview,
     loading,
     error,
+    refreshInterview,
+    deleteActiveQuestion,
+    addActiveQuestion,
   };
 }

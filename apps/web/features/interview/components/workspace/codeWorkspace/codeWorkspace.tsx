@@ -12,11 +12,12 @@ import {
   SubmissionTestCaseResult,
 } from "@/features/interview/types/submission";
 import Terminal from "./_components/terminal/terminal";
+import { InterviewQuestion } from "@/features/interview/types/interview";
 
 type Props = {
   code: string;
   onCodeChange: (code: string) => void;
-  activeInterviewQuestion: ActiveInterviewQuestion | null;
+  activeInterviewQuestion: InterviewQuestion | null;
   participant: Participant;
   language: ProgrammingLanguage;
   onLanguageChange: (language: ProgrammingLanguage) => void;
@@ -40,6 +41,9 @@ type Props = {
   onSubmit: () => Promise<void>;
 
   isCandidate: boolean;
+  deleteActiveQuestion: () => Promise<void>;
+  addActiveQuestion: (interviewQuestionId: string) => Promise<void>;
+  onOpenQuestionDialog: () => void;
 };
 
 type TerminalMode = "RUN" | "SUBMIT" | null;
@@ -63,6 +67,9 @@ const CodeWorkspace = ({
   submissionError,
   onSubmit,
   isCandidate,
+  deleteActiveQuestion,
+  addActiveQuestion,
+  onOpenQuestionDialog,
 }: Props) => {
   const [terminalMode, setTerminalMode] = useState<TerminalMode>(null);
 
@@ -96,7 +103,12 @@ const CodeWorkspace = ({
         {/* Editor area */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
           <div className="flex h-full min-h-0">
-            <ActiveQuestion question={activeInterviewQuestion} />
+            <ActiveQuestion
+              question={activeInterviewQuestion}
+              deleteActiveQuestion={deleteActiveQuestion}
+              addActiveQuestion={addActiveQuestion}
+              onOpenQuestionDialog={onOpenQuestionDialog}
+            />
 
             <div className="relative flex min-w-0 flex-1">
               {/* Code editor */}

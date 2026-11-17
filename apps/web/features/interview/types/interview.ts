@@ -1,4 +1,5 @@
 import { InterviewStatus, ParticipantRole } from "@interview-os/database";
+import { TestCase } from "./testcase";
 
 export type Interview = {
   id: string;
@@ -10,6 +11,30 @@ export type Interview = {
   createdAt: string;
   updatedAt: string;
   createdById: string;
+  questions: InterviewQuestion[];
+  activeInterviewQuestionId: string;
+  activeInterviewQuestion: InterviewQuestion;
+};
+
+export type InterviewQuestion = {
+  id: string;
+  questionOrder: number;
+  points: number;
+  question: Question;
+};
+
+export enum QuestionDifficulty {
+  EASY = "EASY",
+  MEDIUM = "MEDIUM",
+  HARD = "HARD",
+}
+
+export type Question = {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: QuestionDifficulty;
+  testCases: TestCase[];
 };
 
 export type InterviewParticipant = {
