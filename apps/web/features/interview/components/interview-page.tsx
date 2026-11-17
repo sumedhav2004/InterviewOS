@@ -9,7 +9,7 @@ import { useInterviewSocket } from "../hooks/use-interview-socket";
 import { useWebRTC } from "../hooks/use-webrtc";
 import { useLocalMedia } from "../hooks/use-local-media";
 
-import type { ActiveInterviewQuestion, ServerMessage, WebRTCSignal } from "../types/realtime";
+import type { ServerMessage, WebRTCSignal } from "../types/realtime";
 import type { ProgrammingLanguage } from "../types/programming-language";
 import { useCodeRun } from "../hooks/use-coderun";
 import { useSubmission } from "../hooks/use-submission";
@@ -21,6 +21,7 @@ import { InterviewHeader } from "./header/interview-header";
 import { InterviewControls } from "./controls/interview-controls";
 import InterviewShell from "./layout/InterviewShell";
 import InterviewWorkspace from "./workspace/interview-workspace";
+import InterviewQuestionSelectionDialog from "./interview-question-selection-dialog";
 
 type InterviewPageProps = {
   interviewId: string;
@@ -29,12 +30,17 @@ type InterviewPageProps = {
 export function InterviewPage({ interviewId }: InterviewPageProps) {
   const { isLoaded, isSignedIn } = useAuth();
   const [code, setCode] = useState("");
-
-  const [activeInterviewQuestion, setActiveInterviewQuestion] =
-    useState<ActiveInterviewQuestion | null>(null);
+  const [questionDialogOpen, setQuestionDialogOpen] = useState(false);
 
   const [language, setLanguage] = useState<ProgrammingLanguage>("PYTHON");
   const [workspace, setWorkspace] = useState<InterviewWorkspaceType>("CODE");
+
+  const { interview, loading, error, deleteActiveQuestion, addActiveQuestion, refreshInterview } =
+    useInterview({
+      interviewId,
+      isLoaded,
+      isSignedIn: Boolean(isSignedIn),
+    });
 
   const [remoteMediaStates, setRemoteMediaStates] = useState<Map<string, ParticipantMediaState>>(
     new Map(),
@@ -85,22 +91,6 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
     handleMessage: handleSubmissionMessage,
   } = useSubmission();
 
-  /*
-   * WebSocket message handling.
-   *
-   * Participant state itself is owned by
-   * useInterviewSocket.
-   *
-   * This callback only handles page-level concerns:
-   * - WebRTC signaling
-   * - remote media state
-   * - code
-   * - active question
-   * - language
-   * - code run results
-   * - submission results
-   * - WebRTC cleanup when someone leaves
-   */
   const handleSocketMessage = useCallback(
     (message: ServerMessage) => {
       console.log("[Interview] received:", message);
@@ -181,7 +171,7 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
        * Active interview question.
        */
       if (message.type === "ACTIVE_QUESTION_STATE") {
-        setActiveInterviewQuestion(message.interviewQuestion);
+        void refreshInterview();
 
         return;
       }
@@ -213,7 +203,7 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
         return;
       }
     },
-    [handleCodeRunMessage, handleSubmissionMessage],
+    [handleCodeRunMessage, handleSubmissionMessage, refreshInterview],
   );
 
   const { sendMessage, userId, joined, participant, participants, sendLanguageChange } =
@@ -318,11 +308,7 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
     });
   }, [joined, localStream, cameraEnabled, microphoneEnabled, sendMessage]);
 
-  const { interview, loading, error } = useInterview({
-    interviewId,
-    isLoaded,
-    isSignedIn: Boolean(isSignedIn),
-  });
+  const activeInterviewQuestion = interview?.activeInterviewQuestion ?? null;
 
   const handleRunCode = useCallback(async () => {
     if (!activeInterviewQuestion || !participant) {
@@ -441,6 +427,10 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
           submissionError={submissionError}
           onSubmit={handleSubmitCode}
           workspace={workspace}
+
+          deleteActiveQuestion={deleteActiveQuestion}
+          addActiveQuestion={addActiveQuestion}
+          onOpenQuestionDialog={() => setQuestionDialogOpen(true)}
         />
 
         {mediaError && (
@@ -448,6 +438,13 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
             <p className="font-mono text-xs text-destructive">{mediaError}</p>
           </div>
         )}
+        <InterviewQuestionSelectionDialog
+          open={questionDialogOpen}
+          onOpenChange={setQuestionDialogOpen}
+          questions={interview?.questions ?? []}
+          activeQuestionId={interview?.activeInterviewQuestionId ?? null}
+          onSelectQuestion={addActiveQuestion}
+        />
 
         <InterviewControls
           cameraEnabled={cameraEnabled}

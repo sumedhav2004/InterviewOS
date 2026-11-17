@@ -1,22 +1,36 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { ActiveInterviewQuestion } from "@/features/interview/types/active-question";
-import { FileText } from "lucide-react";
+import { InterviewQuestion } from "@/features/interview/types/interview";
+import { FileText, Plus, Trash2 } from "lucide-react";
 
 type ActiveQuestionProps = {
-  question: ActiveInterviewQuestion | null;
+  question: InterviewQuestion | null;
+  deleteActiveQuestion: () => Promise<void>;
+  addActiveQuestion: (interviewQuestionId: string) => Promise<void>;
+  onOpenQuestionDialog: () => void;
 };
 
-export function ActiveQuestion({ question }: ActiveQuestionProps) {
+export function ActiveQuestion({
+  question,
+  deleteActiveQuestion,
+  addActiveQuestion,
+  onOpenQuestionDialog,
+}: ActiveQuestionProps) {
   if (!question) {
     return (
-      <section className="w-full shrink-0 border-b border-border bg-card/20 lg:w-72 lg:border-b-0 lg:border-r">
-        <div className="flex h-10 items-center gap-2 border-b border-border px-4">
+      <section className="w-full shrink-0 border-b border-border bg-card/20 lg:w-60 lg:border-b-0 lg:border-r">
+        <div className="flex h-10 items-center justify-between gap-2 border-b border-border px-4">
           <FileText className="h-3.5 w-3.5 text-primary" />
 
           <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
             Question
           </span>
+
+          <Button variant="outline" className="cursor-pointer" onClick={onOpenQuestionDialog}>
+            <Plus />
+          </Button>
         </div>
 
         <div className="px-4 py-5">
@@ -38,6 +52,10 @@ export function ActiveQuestion({ question }: ActiveQuestionProps) {
         </div>
 
         <span className="font-mono text-[9px] text-muted-foreground">{question.questionOrder}</span>
+
+        <Button variant="destructive" className="cursor-pointer" onClick={deleteActiveQuestion}>
+          <Trash2 />
+        </Button>
       </div>
 
       <div className="space-y-3 px-4 py-4">

@@ -39,6 +39,72 @@ export class InterviewRepository {
       where: {
         id,
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+        participants: {
+          where: {
+            status: "ACTIVE",
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        questions: {
+          include: {
+            question: {
+              include: {
+                testCases: {
+                  where: {
+                    visibility: "VISIBLE",
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            questionOrder: "asc",
+          },
+        },
+        invites: {
+          where: {
+            status: "PENDING",
+          },
+          include: {
+            receiver: {
+              select: {
+                id: true,
+                name: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+        activeInterviewQuestion: {
+          include: {
+            question: {
+              include: {
+                testCases: {
+                  where: {
+                    visibility: "VISIBLE",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -109,6 +175,19 @@ export class InterviewRepository {
                 id: true,
                 name: true,
                 avatarUrl: true,
+              },
+            },
+          },
+        },
+        activeInterviewQuestion: {
+          include: {
+            question: {
+              include: {
+                testCases: {
+                  where: {
+                    visibility: "VISIBLE",
+                  },
+                },
               },
             },
           },
