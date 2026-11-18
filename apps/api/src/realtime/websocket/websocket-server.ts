@@ -34,7 +34,6 @@ export class RealtimeWebSocketServer {
       socket.on("message", async (data) => {
         try {
           const message = JSON.parse(data.toString());
-          console.log("[WS SERVER] received:", message);
           logger.info(
             {
               message,

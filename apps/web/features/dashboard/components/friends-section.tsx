@@ -107,7 +107,6 @@ export default function FriendsSection({
   onAcceptRequest,
   onDeclineRequest,
 }: FriendsSectionProps) {
-  console.log("The friends are: ", friends);
   return (
     <section className="space-y-10">
       {/* Friends list */}

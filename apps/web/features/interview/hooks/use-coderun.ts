@@ -21,8 +21,6 @@ export function useCodeRun(onMessage?: (message: ServerMessage) => void) {
 
   const handleMessage = useCallback(
     (message: ServerMessage) => {
-      console.log("[CODE RUN HOOK] RECEIVED:", message);
-
       onMessage?.(message);
 
       if (message.type === "CODE_RUN_TEST_CASE_RESULT") {

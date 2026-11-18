@@ -221,8 +221,6 @@ export class CodeRunService {
   }
 
   async handleExecutionCompleted(event: ExecutionCompletedEvent) {
-    console.log("🔥 [CODE RUN] EXECUTION_COMPLETED RECEIVED:", event);
-
     if (event.target.type !== "CODE_RUN") {
       throw new AppError("Unsupported Execution Target", 500, "UNSUPPORTED_EXECUTION_TARGET");
     }

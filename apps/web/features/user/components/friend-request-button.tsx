@@ -19,7 +19,6 @@ export default function FriendRequestButton({
   onAcceptRequest,
   onDeclineRequest,
 }: FriendRequestButtonProps) {
-  console.log("Button received status:", status);
   if (status === "FRIENDS") {
     return (
       <button

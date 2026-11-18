@@ -62,8 +62,6 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
       socket = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}`);
 
       socket.onopen = () => {
-        console.log("[WS] connected");
-
         socket?.send(
           JSON.stringify({
             type: "AUTHENTICATE",
@@ -74,8 +72,6 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
 
       socket.onmessage = (event) => {
         const message: ServerMessage = JSON.parse(event.data);
-
-        console.log("[WS] message:", message);
 
         onMessageRef.current?.(message);
 
@@ -135,12 +131,22 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
         }
       };
 
-      socket.onerror = (error) => {
-        console.error("[WS] error:", error);
+      socket.onerror = (event) => {
+        console.error("[WS] error", {
+          url: socket?.url,
+          readyState: socket?.readyState,
+          time: new Date().toISOString(),
+          event,
+        });
       };
 
-      socket.onclose = () => {
-        console.log("[WS] disconnected");
+      socket.onclose = (event) => {
+        console.error("[WS] closed", {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+          time: new Date().toISOString(),
+        });
 
         setJoined(false);
         setParticipant(null);
@@ -181,8 +187,6 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
 
       return;
     }
-
-    console.log("[WS] sending:", message);
 
     socket.send(JSON.stringify(message));
   }, []);

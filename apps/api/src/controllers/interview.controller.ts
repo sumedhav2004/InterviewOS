@@ -63,8 +63,6 @@ export class InterviewController {
   }
 
   async scheduleInterview(req: Request, res: Response) {
-    console.log("SCHEDULE BODY:", req.body);
-    console.log("SCHEDULED AT:", new Date(req.body.scheduledAt));
     const id = req.params.id;
 
     if (typeof id !== "string") {

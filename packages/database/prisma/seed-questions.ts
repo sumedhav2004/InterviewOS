@@ -365,7 +365,6 @@ async function main() {
   });
   if (!user)
     throw new Error("No User exists. Sign in/create a user first, then rerun this seed script.");
-  console.log(`Using creator ${user.id} (${user.email})`);
 
   for (const [name, slug] of tagSeeds) {
     await prisma.tag.upsert({ where: { slug }, update: { name }, create: { name, slug } });
@@ -402,7 +401,6 @@ async function main() {
       })),
     });
     totalTests += q.tests.length;
-    console.log(`✓ ${question.slug}: ${q.tests.length} test cases`);
   }
 
   console.log(

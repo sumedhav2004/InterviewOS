@@ -27,8 +27,6 @@ export function useSubmission(onMessage?: (message: ServerMessage) => void) {
 
   const handleMessage = useCallback(
     (message: ServerMessage) => {
-      console.log("[SUBMISSION HOOK] RECEIVED:", message);
-
       onMessage?.(message);
 
       if (message.type === "SUBMISSION_TEST_CASE_RESULT") {
