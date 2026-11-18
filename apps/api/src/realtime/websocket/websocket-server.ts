@@ -7,12 +7,14 @@ import { InterviewRoom } from "./interview-room";
 
 type AuthenticatedSocket = WebSocket & {
   userId?: string;
+  isAlive?: boolean;
 };
 
 export class RealtimeWebSocketServer {
   private readonly wss: WebSocketServer;
   private readonly interviewGateway: InterviewGateway;
   private readonly room: InterviewRoom;
+  private heartbeatInterval: ReturnType<typeof setInterval>;
 
   constructor(server: HttpServer, room: InterviewRoom) {
     this.wss = new WebSocketServer({
@@ -25,11 +27,39 @@ export class RealtimeWebSocketServer {
     this.interviewGateway = new InterviewGateway(this.room);
 
     this.registerHandlers();
+
+    this.heartbeatInterval = setInterval(() => {
+      this.wss.clients.forEach((client) => {
+        const socket = client as AuthenticatedSocket;
+
+        if (socket.readyState !== WebSocket.OPEN) {
+          return;
+        }
+
+        if (socket.isAlive === false) {
+          logger.warn("WebSocket heartbeat failed; terminating connection");
+          socket.terminate();
+          return;
+        }
+
+        socket.isAlive = false;
+        socket.ping();
+      });
+    }, 25_000);
+
+    this.wss.on("close", () => {
+      clearInterval(this.heartbeatInterval);
+    });
   }
 
   private registerHandlers() {
     this.wss.on("connection", (socket: AuthenticatedSocket) => {
       logger.info("WebSocket client connected");
+      socket.isAlive = true;
+
+      socket.on("pong", () => {
+        socket.isAlive = true;
+      });
 
       socket.on("message", async (data) => {
         try {
