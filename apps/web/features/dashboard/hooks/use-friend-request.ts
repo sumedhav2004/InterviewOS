@@ -12,7 +12,6 @@ export const useFriendRequest = (userId: string) => {
 
   const getAllFriends = useCallback(async () => {
     const res = await dashboardApi.getAllFriendsofUser(userId);
-    console.log("MY ALL FREINDS FROM THE HOOK: ", res);
     setFriends(res);
     setFriendCount(res.length);
   }, [userId]);

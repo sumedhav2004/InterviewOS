@@ -93,14 +93,9 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
 
   const handleSocketMessage = useCallback(
     (message: ServerMessage) => {
-      console.log("[Interview] received:", message);
-
       handleCodeRunMessage(message);
       handleSubmissionMessage(message);
 
-      /*
-       * WebRTC signaling belongs to useWebRTC.
-       */
       if (
         message.type === "WEBRTC_OFFER" ||
         message.type === "WEBRTC_ANSWER" ||
@@ -111,17 +106,8 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
         return;
       }
 
-      /*
-       * Participant membership is owned by
-       * useInterviewSocket.
-       *
-       * We only need to clean up resources
-       * associated with a participant who left.
-       */
       if (message.type === "PARTICIPANT_LEFT") {
         const userId = message.userId;
-
-        console.log("[Interview] participant left:", userId);
 
         setRemoteMediaStates((currentStates) => {
           const nextStates = new Map(currentStates);
@@ -131,18 +117,11 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
           return nextStates;
         });
 
-        /*
-         * Close only this participant's
-         * WebRTC connection.
-         */
         removeParticipantRef.current?.(userId);
 
         return;
       }
 
-      /*
-       * Remote microphone/camera state.
-       */
       if (message.type === "MEDIA_STATE") {
         setRemoteMediaStates((currentStates) => {
           const nextStates = new Map(currentStates);
@@ -158,45 +137,30 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
         return;
       }
 
-      /*
-       * Initial code state.
-       */
       if (message.type === "CODE_SNAPSHOT") {
         setCode(message.code);
 
         return;
       }
 
-      /*
-       * Active interview question.
-       */
       if (message.type === "ACTIVE_QUESTION_STATE") {
         void refreshInterview();
 
         return;
       }
 
-      /*
-       * Remote code changes.
-       */
       if (message.type === "CODE_CHANGE") {
         setCode(message.code);
 
         return;
       }
 
-      /*
-       * Remote language changes.
-       */
       if (message.type === "LANGUAGE_CHANGED") {
         setLanguage(message.language);
 
         return;
       }
 
-      /*
-       * Initial language state.
-       */
       if (message.type === "LANGUAGE_SNAPSHOT") {
         setLanguage(message.language);
 
@@ -209,13 +173,6 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
   const { sendMessage, userId, joined, participant, participants, sendLanguageChange } =
     useInterviewSocket(interviewId, handleSocketMessage);
 
-  /*
-   * Derive the user IDs needed by WebRTC from the
-   * complete participant objects supplied by the
-   * socket hook.
-   *
-   * The participant objects remain the source of truth.
-   */
   const participantIds = useMemo(
     () => participants.map((currentParticipant) => currentParticipant.userId),
     [participants],
@@ -239,29 +196,11 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
     localStream,
   );
 
-  /*
-   * Keep the latest WebRTC handlers available to
-   * the WebSocket callback.
-   */
-
-  /*
-   * Keep the latest WebRTC handlers available to
-   * the WebSocket callback.
-   */
   useEffect(() => {
     signalHandlerRef.current = handleSignal;
     removeParticipantRef.current = removeParticipant;
   }, [handleSignal, removeParticipant]);
 
-  /*
-   * N-participant WebRTC orchestration.
-   *
-   * The participant role has no bearing on WebRTC
-   * connection ownership.
-   *
-   * The userId comparison determines which side
-   * creates the OFFER.
-   */
   useEffect(() => {
     if (!joined || !userId || !localStream) {
       return;
@@ -274,28 +213,10 @@ export function InterviewPage({ interviewId }: InterviewPageProps) {
 
       const shouldInitiate = userId < participantId;
 
-      console.log("[Interview] ensuring WebRTC connection:", {
-        participantId,
-        shouldInitiate,
-      });
-
       void ensureConnection(participantId, shouldInitiate);
     }
   }, [joined, userId, localStream, participantIds, ensureConnection]);
 
-  /*
-   * Broadcast our current media state whenever:
-   *
-   * - we join the room
-   * - our camera changes
-   * - our microphone changes
-   *
-   * The participant list is intentionally not used
-   * as a dependency here. A participant joining does
-   * not require us to rebroadcast our state because
-   * the joining participant will receive the current
-   * room state through the existing realtime flow.
-   */
   useEffect(() => {
     if (!joined || !localStream) {
       return;

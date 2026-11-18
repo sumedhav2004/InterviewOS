@@ -97,8 +97,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
       for (const candidate of pending) {
         try {
           await peerConnection.addIceCandidate(candidate);
-
-          console.log("[WebRTC] queued ICE candidate added:", remoteUserId);
         } catch (error) {
           console.error("[WebRTC] failed to add queued ICE candidate:", remoteUserId, error);
         }
@@ -128,11 +126,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
 
       const currentStream = localStreamRef.current;
 
-      console.log("[WebRTC] creating peer connection:", {
-        remoteUserId,
-        hasLocalStream: Boolean(currentStream),
-      });
-
       /*
        * Add the current local tracks to this
        * participant's connection.
@@ -151,13 +144,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
        * stream is stored under that participant's ID.
        */
       peerConnection.ontrack = (event) => {
-        console.log("[WebRTC] remote track received:", {
-          remoteUserId,
-          kind: event.track.kind,
-          trackId: event.track.id,
-          readyState: event.track.readyState,
-        });
-
         setRemoteStreams((currentStreams) => {
           const nextStreams = new Map(currentStreams);
 
@@ -198,12 +184,7 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
       /*
        * Connection lifecycle logging.
        */
-      peerConnection.onconnectionstatechange = () => {
-        console.log("[WebRTC] connection state:", {
-          remoteUserId,
-          state: peerConnection.connectionState,
-        });
-      };
+      peerConnection.onconnectionstatechange = () => {};
 
       return peerConnection;
     },
@@ -279,8 +260,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
        * The caller will retry when local media exists.
        */
       if (!localStreamRef.current) {
-        console.log("[WebRTC] waiting for local media:", remoteUserId);
-
         return;
       }
 
@@ -313,8 +292,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
       initiatedPeersRef.current.add(remoteUserId);
 
       try {
-        console.log("[WebRTC] initiating connection:", remoteUserId);
-
         const offer = await peerConnection.createOffer();
 
         await peerConnection.setLocalDescription(offer);
@@ -324,13 +301,7 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
           targetUserId: remoteUserId,
           offer,
         });
-
-        console.log("[WebRTC] offer sent:", remoteUserId);
       } catch (error) {
-        /*
-         * Allow a future attempt if offer creation
-         * failed.
-         */
         initiatedPeersRef.current.delete(remoteUserId);
 
         console.error("[WebRTC] failed to create/send offer:", remoteUserId, error);
@@ -349,12 +320,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
        * signaling message and process it later.
        */
       if (!localStreamRef.current) {
-        console.log(
-          "[WebRTC] queueing signal until local media exists:",
-          message.type,
-          message.fromUserId,
-        );
-
         pendingSignalsRef.current.push(message);
 
         return;
@@ -366,19 +331,7 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
        * OFFER
        */
       if (message.type === "WEBRTC_OFFER") {
-        console.log("[WebRTC] offer received:", message.fromUserId);
-
-        /*
-         * We use deterministic initiation, so an
-         * incoming offer should only arrive while
-         * our side is stable.
-         */
         if (peerConnection.signalingState !== "stable") {
-          console.log("[WebRTC] ignoring offer because connection is not stable:", {
-            remoteUserId: message.fromUserId,
-            signalingState: peerConnection.signalingState,
-          });
-
           return;
         }
 
@@ -396,8 +349,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
           answer,
         });
 
-        console.log("[WebRTC] answer sent:", message.fromUserId);
-
         return;
       }
 
@@ -405,22 +356,13 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
        * ANSWER
        */
       if (message.type === "WEBRTC_ANSWER") {
-        console.log("[WebRTC] answer received:", message.fromUserId);
-
         if (peerConnection.signalingState !== "have-local-offer") {
-          console.log("[WebRTC] ignoring answer because connection is not waiting for one:", {
-            remoteUserId: message.fromUserId,
-            signalingState: peerConnection.signalingState,
-          });
-
           return;
         }
 
         await peerConnection.setRemoteDescription(message.answer);
 
         await flushPendingIceCandidates(message.fromUserId, peerConnection);
-
-        console.log("[WebRTC] remote answer applied:", message.fromUserId);
 
         return;
       }
@@ -436,18 +378,12 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
           const pending = pendingIceCandidatesRef.current.get(message.fromUserId) ?? [];
 
           pending.push(message.candidate);
-
           pendingIceCandidatesRef.current.set(message.fromUserId, pending);
-
-          console.log("[WebRTC] ICE candidate queued:", message.fromUserId);
-
           return;
         }
 
         try {
           await peerConnection.addIceCandidate(message.candidate);
-
-          console.log("[WebRTC] ICE candidate added:", message.fromUserId);
         } catch (error) {
           console.error("[WebRTC] failed to add ICE candidate:", {
             remoteUserId: message.fromUserId,
@@ -528,8 +464,6 @@ export function useWebRTC(sendMessage: SendMessage, localStream: MediaStream | n
 
       return nextStreams;
     });
-
-    console.log("[WebRTC] participant removed:", remoteUserId);
   }, []);
 
   /*

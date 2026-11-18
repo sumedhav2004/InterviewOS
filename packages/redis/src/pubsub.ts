@@ -2,7 +2,6 @@ import { redis } from "./index";
 
 export async function publish(channel: string, message: string): Promise<void> {
   await redis.publish(channel, message);
-  console.log("PUBLISHED: ", message);
 }
 
 export async function subscribe(

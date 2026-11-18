@@ -2,9 +2,6 @@ import { config as loadEnv } from "dotenv";
 import { z } from "zod";
 import path from "node:path";
 
-console.log("__dirname:", __dirname);
-console.log("cwd:", process.cwd());
-console.log("env path:", path.resolve(__dirname, "../../../infrastructure/.env"));
 loadEnv({
   path: path.resolve(__dirname, "../../../infrastructure/.env"),
 });

@@ -84,20 +84,15 @@ export class RedisQueue<T extends { id: string }> {
         return job.id === jobId;
       });
 
-      // Job is no longer in processing.
-      // Maybe another worker already handled it.
       if (!serializedJob) {
         await redis.unwatch();
         continue;
       }
 
-      // Build atomic recovery transaction
       const tx = redis.multi();
 
       tx.lPush(QUEUE_KEY, serializedJob);
-
       tx.lRem(PROCESSING_KEY, 1, serializedJob);
-
       tx.zRem(PROCESSING_TIME_KEY, jobId);
 
       // Execute only if watched keys haven't changed

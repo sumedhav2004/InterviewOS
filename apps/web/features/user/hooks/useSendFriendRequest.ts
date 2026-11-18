@@ -34,9 +34,6 @@ export const useSendFriendRequest = (userId: string) => {
         try {
           const request = await userApi.getFriendRequestForTwoUsers(me.id, profile.id);
 
-          console.log("Friend request API response:", request);
-          console.log("Expected ACCEPTED value:", FriendRequestStatus.ACCEPTED);
-
           if (cancelled) return;
 
           if (!request) {
@@ -82,8 +79,6 @@ export const useSendFriendRequest = (userId: string) => {
       setLoading(false);
     }
   }, [profileUser, currentUser, loading]);
-
-  console.log("Current friendStatus:", friendStatus);
 
   return {
     friendStatus,

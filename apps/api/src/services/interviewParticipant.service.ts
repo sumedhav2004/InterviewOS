@@ -108,11 +108,6 @@ export class InterviewParticipantService {
       throw new AppError("Interview Not Found", 404, "INTERVIEW_NOT_FOUND");
     }
 
-    console.log({
-      userId,
-      interviewId,
-    });
-
     const participant = await this.participantRepository.findParticipant(userId, interviewId);
 
     if (interview.createdById !== userId && !participant) {

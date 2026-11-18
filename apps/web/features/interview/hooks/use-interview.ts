@@ -17,7 +17,6 @@ export function useInterview({ interviewId, isLoaded, isSignedIn }: UseInterview
 
   const refreshInterview = useCallback(async () => {
     const data = await interviewApi.getInterview(interviewId);
-    console.log("INTERVIEW DATA FROM useinterview(): ", data);
     setInterview(data);
   }, [interviewId]);
 

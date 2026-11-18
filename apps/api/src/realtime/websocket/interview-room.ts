@@ -117,15 +117,7 @@ export class InterviewRoom {
   broadcast(interviewId: string, message: unknown, excludeUserId?: string) {
     const room = this.rooms.get(interviewId);
 
-    console.log("[WS ROOM] BROADCAST", {
-      interviewId,
-      message,
-      connectedUsers: room ? Array.from(room.keys()) : [],
-    });
-
     if (!room) {
-      console.log("[WS ROOM] NO ROOM FOUND", interviewId);
-
       return;
     }
 
@@ -139,8 +131,6 @@ export class InterviewRoom {
       const { socket } = entry;
 
       if (socket.readyState === WebSocket.OPEN) {
-        console.log("[WS ROOM] SENDING TO", userId, message);
-
         socket.send(payload);
       }
     }
