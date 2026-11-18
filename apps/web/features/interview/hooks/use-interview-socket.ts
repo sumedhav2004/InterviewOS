@@ -31,6 +31,12 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
    */
   const [participants, setParticipants] = useState<Participant[]>([]);
 
+  const onMessageRef = useRef(onMessage);
+
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
+
   useEffect(() => {
     if (!isLoaded || !isSignedIn) {
       return;
@@ -71,7 +77,7 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
 
         console.log("[WS] message:", message);
 
-        onMessage?.(message);
+        onMessageRef.current?.(message);
 
         switch (message.type) {
           case "AUTHENTICATED": {
@@ -159,7 +165,7 @@ export function useInterviewSocket(interviewId: string, onMessage?: MessageHandl
 
       socketRef.current = null;
     };
-  }, [getToken, isLoaded, isSignedIn, interviewId, onMessage]);
+  }, [getToken, isLoaded, isSignedIn, interviewId]);
 
   const sendMessage = useCallback((message: unknown) => {
     const socket = socketRef.current;
